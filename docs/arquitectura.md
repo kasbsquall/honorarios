@@ -7,35 +7,24 @@ Honorarios permite que un freelancer peruano cobre a clientes del exterior en US
 ## 1. Componentes
 
 ```mermaid
-flowchart LR
-  subgraph Cliente["Cliente en el exterior"]
-    F["Freighter<br/>(cuenta G…)"]
-    P["pay.html<br/>link de pago"]
-  end
+flowchart TB
+  CL["Cliente en el exterior<br/>Freighter · cuenta G…"]
+  PG["pay.html<br/>link de pago"]
+  POOL["Pool XLM / USDC<br/>path payment"]
+  H["Contrato Honorarios<br/>CCYLKLKC…DLD5"]
+  RES["Reserva 8%<br/>queda en el contrato"]
+  SW["Smart wallet del freelancer<br/>cuenta C… · passkey"]
+  D["Panel del freelancer<br/>index.html"]
+  R["Relayer SDF<br/>paga comisiones"]
 
-  subgraph Freelancer["Freelancer en Perú"]
-    PK["Passkey<br/>(huella / Face ID)"]
-    SW["Smart wallet OZ<br/>(cuenta C…)"]
-    D["index.html<br/>panel"]
-  end
-
-  subgraph Stellar["Stellar testnet"]
-    POOL["Pool XLM/USDC<br/>(path payment)"]
-    USDC["USDC SAC<br/>CBIELTK6…DAMA"]
-    H["Contrato Honorarios<br/>CCYLKLKC…DLD5"]
-    R["Relayer SDF<br/>paga comisiones"]
-  end
-
-  P --> F
-  F -- "1. compra USDC con XLM" --> POOL
-  F -- "2. pay()" --> H
-  H -- "92% neto" --> USDC
-  USDC --> SW
-  H -- "8% queda en el contrato" --> H
-  D -- "lee reserva y eventos Paid" --> H
-  PK --> SW
-  D -- "withdraw_tax() firmado con passkey" --> R
-  R --> H
+  CL --> PG
+  PG -->|"si falta USDC: compra con XLM"| POOL
+  PG -->|"pay(payer, freelancer, gross, ref)"| H
+  H -->|"92% neto en USDC"| SW
+  H -->|"8%"| RES
+  D -.->|"lee tax_reserve y eventos Paid"| H
+  D -->|"withdraw_tax firmado con passkey"| R
+  R -->|"envía y paga la comisión"| RES
 ```
 
 ## 2. Flujo de un cobro
