@@ -1,0 +1,15 @@
+# Bitácora de decisiones · Honorarios (Stellar Odyssey Perú)
+
+Append-only. Cada entrada con su fuente.
+
+## 2026-09-19
+
+- **Proyecto elegido: Honorarios Sin Fronteras.** Freelancer peruano cobra a cliente extranjero en USDC; el contrato separa neto y reserva de impuesto. Salió primero (78.5/100) en un panel de jurado simulado con la rúbrica oficial (bases: funcionalidad 30, Stellar 25, originalidad 20, viabilidad 15, docs 10). Factoring tokenizado y API RUC x402 descartados por competencia existente (≥5 repos de invoice factoring en Soroban; RUC por x402 ya existe en Base).
+- **Reserva de 8%.** Tasa del pago a cuenta de cuarta categoría. Umbral 2026 sin pago a cuenta: S/ 4,010 mensuales (R.S. 000390-2025/SUNAT, fuente secundaria lpderecho.pe). Pendiente: norma específica para cobros en cripto (no encontrada), código de documento para cliente no domiciliado en el RHE.
+- **USDC testnet:** issuer Circle `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` (developers.circle.com). SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`. Path payment XLM→USDC funciona por pool de terceros. Próximo reset de testnet: 16 dic 2026.
+- **Passkeys:** usar `smart-account-kit` + OpenZeppelin Channels (passkey-kit archivado jul 2026, Launchtube retirado). Requiere `@stellar/stellar-sdk` 16.3.x.
+- **Contrato desplegado:** `CCYLKLKCXUOO2XSVC7O7HAIOT4CRYBZIS4NBOJATMGL4JOV3DRYUDLD5` (stellar-cli 28, soroban-sdk 27). Pago de prueba 10 USDC → 9.2 neto + 0.8 reserva, receipt_ref E001-1: tx `44edbc20936b141e8b6a343b6a4c4e3db6e891f503b23bd139f7422a151401b5`.
+
+## Abierto
+- Checkpoint obligatorio 23 sept 23:59: diagrama de flujo + repo público.
+- Frontend: link de pago con Freighter + path payment; wallet passkey del freelancer; borrador de RHE; alerta de umbral S/ 4,010.
