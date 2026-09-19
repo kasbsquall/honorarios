@@ -136,3 +136,9 @@ Otros hallazgos verificados y corregidos:
 Queda abierto y declarado en los límites: el circuito a soles no se cierra desde testnet, el
 umbral no contempla el tramo especial de directores y mandatarios, y no hay pruebas automatizadas
 del frontend.
+
+## 2026-09-19 · Video publicado
+
+Video demo v7 (2:17) en https://www.youtube.com/watch?v=sALrFKb56xk. Corresponde a la corrida del
+contrato `CDGZLOQD…5YETA` que cita el README. Fuentes en `video/`: `clips.py` corta la grabación,
+`audio_gen.py` genera la narración y `remotion/` compone.

@@ -4,7 +4,7 @@
 
 Cobra a clientes del exterior en USDC sobre Stellar y separa automáticamente la reserva para tu pago a cuenta de cuarta categoría (SUNAT, Perú).
 
-**App:** https://honorarios-pe.vercel.app · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
+**App:** https://honorarios-pe.vercel.app · **Video demo:** https://www.youtube.com/watch?v=sALrFKb56xk · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
 
 Proyecto para la hackathon Stellar Odyssey Perú (19 al 26 de septiembre de 2026). Todo el código se escribió durante el evento.
 
@@ -35,7 +35,7 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 
 ## Evidencia on-chain (testnet)
 
-Es la misma corrida que se ve en el video demo, de principio a fin.
+Es la misma corrida que se ve en el [video demo](https://www.youtube.com/watch?v=sALrFKb56xk), de principio a fin.
 
 | Qué | Enlace |
 |---|---|
