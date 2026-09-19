@@ -17,14 +17,14 @@ import { getNetworkDetails, requestAccess, signTransaction } from "@stellar/frei
 export const NETWORK = Networks.TESTNET;
 export const RPC_URL = "https://soroban-testnet.stellar.org";
 export const HORIZON_URL = "https://horizon-testnet.stellar.org";
-export const CONTRACT_ID = "CCYLKLKCXUOO2XSVC7O7HAIOT4CRYBZIS4NBOJATMGL4JOV3DRYUDLD5";
+export const CONTRACT_ID = "CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG";
 export const USDC = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 export const TAX_BPS = 800n;
 export const EXPLORER = "https://stellar.expert/explorer/testnet";
 const DECIMALS = 7;
 const PATH_SLIPPAGE = 1.05;
 // Ledger del despliegue del contrato: no hay eventos antes de esto.
-const DEPLOY_LEDGER = 4_762_900;
+const DEPLOY_LEDGER = 4_763_800;
 // El RPC de testnet recorre como maximo ~10k ledgers por consulta.
 const EVENT_SCAN_STEP = 9_000;
 
@@ -54,7 +54,7 @@ export function short(addr: string) {
 }
 
 // Firmante solo para pruebas locales en testnet (npm run dev + ?dev=client|freelancer).
-// Las llaves viven en .env.local, que no se sube al repo. En build de produccion no existe.
+// Las llaves viven en .env.development.local (Vite no lo carga en build), que no se sube al repo. En build de produccion no existe.
 function devKeypair(): Keypair | null {
   if (!import.meta.env.DEV) return null;
   const role = new URLSearchParams(location.search).get("dev");

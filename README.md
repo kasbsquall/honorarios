@@ -14,13 +14,13 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 
 ## Evidencia on-chain (testnet)
 
-- Contrato: [`CCYLKLKCXUOO2XSVC7O7HAIOT4CRYBZIS4NBOJATMGL4JOV3DRYUDLD5`](https://lab.stellar.org/r/testnet/contract/CCYLKLKCXUOO2XSVC7O7HAIOT4CRYBZIS4NBOJATMGL4JOV3DRYUDLD5)
-- Pago de prueba de 10 USDC (9.2 neto, 0.8 reserva): [`44edbc20…01b5`](https://stellar.expert/explorer/testnet/tx/44edbc20936b141e8b6a343b6a4c4e3db6e891f503b23bd139f7422a151401b5)
+- Contrato: [`CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG`](https://lab.stellar.org/r/testnet/contract/CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG)
+- Cobro de 500 USDC desde el link de pago (460 neto, 40 reserva): [`261cfebe…83e9`](https://stellar.expert/explorer/testnet/tx/261cfebeb681d143338f855bbfc10833b249ee0289aa15fe035305ec250583e9)
 - USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`
 
-- Smart wallet con passkey (OpenZeppelin, vía smart-account-kit): [`CCYPK3R3…EYO3`](https://stellar.expert/explorer/testnet/contract/CCYPK3R3RARYHSKZBZGMM4434JTNHTF4W7G5ZKXDCPAGKI7ZD375EYO3)
-  - Cobro de 200 USDC hacia la smart wallet: [`037b846d…afaf`](https://stellar.expert/explorer/testnet/tx/037b846d8ef93c2f5143a7ba028952a39537b5f258e039928dff0d646d6fafaf)
-  - Retiro de la reserva firmado con passkey, comisión pagada por el relayer: [`fd5a33d5…165d`](https://stellar.expert/explorer/testnet/tx/fd5a33d5537bef9a1b317b14914a73923afb222fe495f0c67d22a5d504f8165d)
+- Smart wallet con passkey (OpenZeppelin, vía smart-account-kit): [`CBNKXPVM…XHUP`](https://stellar.expert/explorer/testnet/contract/CBNKXPVM3XT5OJJSP6AQKIOYYKECMCGJEZLGB4LZB2XJ35AHWSUXXHUP)
+  - Cobro de 200 USDC hacia la smart wallet: [`f93ea435…e0e6`](https://stellar.expert/explorer/testnet/tx/f93ea435cd96e2e344973fd4e16fc44041eacb0a2a0f79e33d383ff59a9ae0e6)
+  - Retiro de la reserva firmado con passkey, comisión pagada por el relayer: [`417f8def…2a2b`](https://stellar.expert/explorer/testnet/tx/417f8defb56b14054d22ae63a45d711a60189d3227d69eb67be0c310492c2a2b)
 
 ## Frontend (`web/`)
 

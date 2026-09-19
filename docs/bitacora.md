@@ -21,3 +21,10 @@ Append-only. Cada entrada con su fuente.
 - **Eventos:** el RPC de testnet recorre ~10k ledgers por consulta; se lee por tramos desde el ledger de despliegue (4,762,900).
 - **Passkey:** `smart-account-kit` 0.8.0 con los contratos OZ de testnet y el relayer público de SDF (`demo/.env.example` del repo stellar/smart-account-kit). Smart wallet `CCYPK3R3…EYO3`; retiro con passkey tx `fd5a33d5…165d`. El kit no está auditado (lo dice su README).
 - Pendiente: borrador de recibo por honorarios, diagrama del checkpoint, prueba manual con Freighter real, modo oscuro sin verificar.
+
+## 2026-09-19 (noche)
+
+- **Revisión de seguridad** (agente security-reviewer). Aplicado: TTL de reserva e instancia (~30 días, umbral 7), `InvalidParty` (freelancer == payer o == contrato), `ReceiptRefTooLong` (> 32). 9 tests. Descartado: hallazgo sobre `.env` (ya cubierto por `.env*.local` en `web/.gitignore`). XSS, redondeo y overflow sin hallazgos.
+- **Contrato redesplegado:** `CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG` (el anterior `CCYLKLKC…DLD5` queda obsoleto). Simulación con payer == freelancer devuelve `Error(Contract, #3)`.
+- **Evidencia nueva:** cobro 500 USDC `261cfebe…83e9`; smart wallet `CBNKXPVM…XHUP`; cobro 200 `f93ea435…e0e6`; retiro con passkey `417f8def…2a2b`.
+- **Deploy:** https://honorarios-pe.vercel.app (Vercel). Llaves de desarrollo movidas a `.env.development.local`; verificado que el bundle de producción no contiene ninguna.

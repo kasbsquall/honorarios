@@ -85,3 +85,46 @@ fn cannot_withdraw_more_than_reserve() {
 
     assert_eq!(result, Err(Ok(Error::InsufficientReserve)));
 }
+
+#[test]
+fn rejects_payer_as_freelancer() {
+    let s = setup();
+    let receipt = String::from_str(&s.env, "E001-16");
+
+    let result = s.contract.try_pay(&s.payer, &s.payer, &100_0000000, &receipt);
+
+    assert_eq!(result, Err(Ok(Error::InvalidParty)));
+}
+
+#[test]
+fn rejects_contract_as_freelancer() {
+    let s = setup();
+    let receipt = String::from_str(&s.env, "E001-17");
+
+    let result = s.contract.try_pay(&s.payer, &s.contract.address, &100_0000000, &receipt);
+
+    assert_eq!(result, Err(Ok(Error::InvalidParty)));
+}
+
+#[test]
+fn rejects_long_receipt_ref() {
+    let s = setup();
+    let long = String::from_str(&s.env, "E001-000000000000000000000000000001");
+
+    let result = s.contract.try_pay(&s.payer, &s.freelancer, &100_0000000, &long);
+
+    assert_eq!(result, Err(Ok(Error::ReceiptRefTooLong)));
+}
+
+#[test]
+fn pay_extends_reserve_ttl() {
+    use soroban_sdk::testutils::storage::Persistent as _;
+    let s = setup();
+    s.contract.pay(&s.payer, &s.freelancer, &100_0000000, &String::from_str(&s.env, "E001-18"));
+
+    let ttl = s.env.as_contract(&s.contract.address, || {
+        s.env.storage().persistent().get_ttl(&DataKey::TaxReserve(s.freelancer.clone()))
+    });
+
+    assert!(ttl >= TTL_THRESHOLD);
+}

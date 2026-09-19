@@ -11,7 +11,7 @@ flowchart TB
   CL["Cliente en el exterior<br/>Freighter · cuenta G…"]
   PG["pay.html<br/>link de pago"]
   POOL["Pool XLM / USDC<br/>path payment"]
-  H["Contrato Honorarios<br/>CCYLKLKC…DLD5"]
+  H["Contrato Honorarios<br/>CAJAMA32…BXSG"]
   RES["Reserva 8%<br/>queda en el contrato"]
   SW["Smart wallet del freelancer<br/>cuenta C… · passkey"]
   D["Panel del freelancer<br/>index.html"]
@@ -103,17 +103,17 @@ El contrato no guarda montos en soles ni tipos de cambio. La regla tributaria qu
 | `tax_reserve(freelancer)` | lectura | Saldo reservado |
 | `withdraw_tax(freelancer, to, amount)` | `freelancer` | Mueve reserva, emite `TaxWithdrawn` |
 
-Errores: `InvalidAmount` (monto ≤ 0) e `InsufficientReserve` (retiro mayor a la reserva). Cubiertos por 5 tests en `contracts/split/src/test.rs`.
+Errores: `InvalidAmount` (monto ≤ 0), `InsufficientReserve` (retiro mayor a la reserva), `InvalidParty` (el freelancer es el pagador o el propio contrato) y `ReceiptRefTooLong` (N° de recibo de más de 32 caracteres). La reserva y la instancia renuevan su TTL a ~30 días en cada `pay` y `withdraw_tax`. Cubiertos por 9 tests en `contracts/split/src/test.rs`.
 
 ## 6. Evidencia en testnet
 
 | Qué | Enlace |
 |---|---|
-| Contrato | [CCYLKLKC…DLD5](https://stellar.expert/explorer/testnet/contract/CCYLKLKCXUOO2XSVC7O7HAIOT4CRYBZIS4NBOJATMGL4JOV3DRYUDLD5) |
-| Cobro de 500 USDC desde el link de pago | [c2584bac…987f](https://stellar.expert/explorer/testnet/tx/c2584bac1d2b3bedbd3616ed18dcd7267ce5ecc60755ea6c47a9583f496b987f) |
-| Smart wallet con passkey | [CCYPK3R3…EYO3](https://stellar.expert/explorer/testnet/contract/CCYPK3R3RARYHSKZBZGMM4434JTNHTF4W7G5ZKXDCPAGKI7ZD375EYO3) |
-| Cobro de 200 USDC a la smart wallet | [037b846d…afaf](https://stellar.expert/explorer/testnet/tx/037b846d8ef93c2f5143a7ba028952a39537b5f258e039928dff0d646d6fafaf) |
-| Retiro de reserva firmado con passkey | [fd5a33d5…165d](https://stellar.expert/explorer/testnet/tx/fd5a33d5537bef9a1b317b14914a73923afb222fe495f0c67d22a5d504f8165d) |
+| Contrato | [CAJAMA32…BXSG](https://stellar.expert/explorer/testnet/contract/CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG) |
+| Cobro de 500 USDC desde el link de pago | [261cfebe…83e9](https://stellar.expert/explorer/testnet/tx/261cfebeb681d143338f855bbfc10833b249ee0289aa15fe035305ec250583e9) |
+| Smart wallet con passkey | [CBNKXPVM…XHUP](https://stellar.expert/explorer/testnet/contract/CBNKXPVM3XT5OJJSP6AQKIOYYKECMCGJEZLGB4LZB2XJ35AHWSUXXHUP) |
+| Cobro de 200 USDC a la smart wallet | [f93ea435…e0e6](https://stellar.expert/explorer/testnet/tx/f93ea435cd96e2e344973fd4e16fc44041eacb0a2a0f79e33d383ff59a9ae0e6) |
+| Retiro de reserva firmado con passkey | [417f8def…2a2b](https://stellar.expert/explorer/testnet/tx/417f8defb56b14054d22ae63a45d711a60189d3227d69eb67be0c310492c2a2b) |
 
 ## 7. Qué falta hasta la entrega (25 de septiembre)
 
