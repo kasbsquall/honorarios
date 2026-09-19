@@ -38,6 +38,10 @@ node web/e2e/record.mjs    # cobro con Freighter (firmante de desarrollo)
 node web/e2e/passkey.mjs   # passkey con autenticador WebAuthn virtual
 ```
 
+## Arquitectura
+
+Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/arquitectura.md)
+
 ## Contrato
 
 `contracts/split/src/lib.rs`
