@@ -104,3 +104,35 @@ Del juez técnico, con cambio de contrato y redespliegue:
 cobro de 500 USDC `1c41c40d…3e13` (el cliente compró USDC con XLM), retiro de 40 USDC
 `76aca849…86b9`. El video v6 se regrabó y se volvió a narrar: la narración decía "nueve pruebas"
 y "pago a cuenta real", y ninguna de las dos cosas era ya cierta.
+
+## 2026-09-19 · Tercer jurado simulado
+
+Tres jueces agnósticos (técnico, producto, negocio con cumplimiento) puntuaron 82, 79 y 79, y
+los tres colocaron el proyecto en el podio. Dos de ellos, por separado, encontraron el mismo
+error, que se había introducido ese mismo día al agregar los campos de otras rentas:
+
+- **El 8% se aplicaba sobre una base que incluía las rentas de quinta categoría.** La quinta
+  cuenta para saber si se cruza el umbral del mes, pero no entra en la base del pago a cuenta de
+  cuarta, que retiene el empleador por su propio procedimiento. Con S/ 1,875 de cuarta y S/ 3,000
+  de quinta el panel mostraba S/ 390 en vez de S/ 150. Corregido en `web/src/panel.ts`: se separan
+  la base de cuarta y el total frente al umbral, y el desglose ahora muestra las dos líneas.
+
+Otros hallazgos verificados y corregidos:
+
+- El texto afirmaba que la reserva cubre el pago sin compararla con nada. Ahora convierte la
+  reserva a soles con el tipo de cambio y dice cuánto falta o si alcanza.
+- `ensureUsdc` calculaba el `sendMax` con la mejor ruta de Horizon y ejecutaba `path: []`. En
+  testnet funciona porque hay pool directo, en la red principal habría fallado o ejecutado a peor
+  precio. Ahora se ejecuta la misma ruta que fijó el precio (`web/src/stellar.ts`).
+- `paidEvents` pedía 100 eventos por ventana sin paginar, así que a partir del cobro 101 la lista
+  se quedaba corta sin avisar. Ahora pagina por cursor hasta agotar cada ventana.
+- El botón de retiro deshabilitado y la reserva en cero del panel de ejemplo no explicaban nada.
+- `docs/arquitectura.md` citaba el despliegue del contrato anterior; el README llamaba pruebas E2E
+  a los guiones de grabación, decía "no paga comisiones" sin la condición del relayer, y atribuía
+  la compra de USDC con XLM a la transacción del cobro. El path payment es la transacción
+  `787ff6d5…6563`, verificada en Horizon: 437.22 XLM por 460 USDC, cinco segundos antes del cobro.
+  Ahora aparece en su propia fila de la tabla de evidencia.
+
+Queda abierto y declarado en los límites: el circuito a soles no se cierra desde testnet, el
+umbral no contempla el tramo especial de directores y mandatarios, y no hay pruebas automatizadas
+del frontend.

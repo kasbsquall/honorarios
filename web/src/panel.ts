@@ -55,7 +55,7 @@ function renderIntro(error = "") {
       <button class="btn" id="create"><i class="ph-light ph-fingerprint"></i>Crear wallet con passkey</button>
       <button class="btn ghost" id="login"><i class="ph-light ph-key"></i>Ya tengo passkey</button>
     </div>
-    <p class="alt">Sin frase semilla y sin pagar comisiones: tu huella o Face ID firma. <button class="linkbtn" id="freighter">Prefiero usar Freighter</button></p>
+    <p class="alt">Sin frase semilla: tu huella o Face ID firma. Las comisiones las cubre el relayer de SDF en testnet. <button class="linkbtn" id="freighter">Prefiero usar Freighter</button></p>
     <p class="alt"><button class="linkbtn" id="demo"><i class="ph-light ph-eye"></i> Ver un panel de ejemplo</button> con la cuenta de la demo, sin instalar nada.</p>
     ${error ? `<p class="error" role="alert">${esc(error)}${
       error.includes("extensión Freighter")
@@ -141,17 +141,17 @@ function renderPanel() {
 
   app.innerHTML = `
   ${loadError ? `<p class="error" role="alert"><i class="ph-light ph-warning"></i> No pudimos leer tus cobros de la red. Lo que ves no es tu saldo: recarga en un momento. <button class="linkbtn" id="retry">Reintentar</button></p>` : ""}
-  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye"></i> Panel de ejemplo en solo lectura, con la cuenta de la demo grabada en testnet. Los cobros y la reserva se leen de la cadena. <a href="${EXPLORER}/contract/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right"></i></a></p>` : ""}
+  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye"></i> Panel de ejemplo con la cuenta de la demo grabada en testnet: los cobros y la reserva se leen de la cadena en vivo. Puedes crear un link de prueba; retirar necesita la passkey de esa cuenta, y su reserva ya se retiró en la demo. <a href="${EXPLORER}/contract/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right"></i></a></p>` : ""}
   <section class="hero rise" style="--i:0">
     <div>
       <p class="lbl"><i class="ph-light ph-vault"></i> Reserva preventiva · 8% de cada cobro</p>
       <p class="kpi num ${loading ? "sk" : ""}">${val(() => fromUnits(reserve!))}<small>USDC</small></p>
-      <p class="kpi-note">Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera S/ 4,010; si no, sigue siendo tuya.</p>
+      <p class="kpi-note">${mode === "demo" && reserve === 0n ? "Esta cuenta ya retiró su reserva durante la demo, por eso está en cero. " : ""}Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera S/ 4,010; si no, sigue siendo tuya.</p>
       <form id="withdraw" class="withdraw">
         <label class="field"><span class="lbl">Enviar reserva a (cuenta G… o C…)</span><input class="num" name="to" required placeholder="Cuenta desde la que pagarás a SUNAT"></label>
         <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "").replace(/\.?0+$/, "") : ""}"></label>
         <button class="btn ghost" type="submit" ${!reserve ? "disabled" : ""}><i class="ph-light ph-arrow-square-out"></i>Retirar reserva</button>
-        <p class="wd-out" role="status"></p>
+        <p class="wd-out" role="status">${!reserve && !loading ? `<span class="u">${loadError ? "No pudimos leer tu reserva, así que no se puede retirar todavía." : "No hay reserva que retirar: aparece aquí en cuanto recibas un cobro."}</span>` : ""}</p>
       </form>
     </div>
     <dl class="stats">
@@ -250,14 +250,16 @@ function renderThreshold(gross: bigint | null) {
   const retenido = readNum(HELD_KEY);
   const usdc = gross === null ? null : Number(fromUnits(gross, 2).replace(/,/g, ""));
   const aqui = usdc !== null && fx ? usdc * fx : null;
-  // El umbral se mide sobre el total de ingresos del mes, no solo sobre lo que pasa por esta app.
-  const pen = aqui === null ? null : aqui + otras + quinta;
+  // Base del pago a cuenta: solo rentas de cuarta. La quinta la retiene el empleador
+  // con su propio procedimiento, pero sí cuenta para saber si se cruza el umbral.
+  const cuarta = aqui === null ? null : aqui + otras;
+  const pen = cuarta === null ? null : cuarta + quinta;
   const ratio = pen === null ? 0 : Math.min(pen / THRESHOLD_PEN, 1);
   const over = pen !== null && pen > THRESHOLD_PEN;
   const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   const month = new Date().toLocaleDateString("es-PE", { month: "long", year: "numeric" });
   // Lo ya retenido por un cliente peruano se descuenta del pago del mes.
-  const due = pen === null ? null : over ? Math.max(pen * PAYMENT_RATE - retenido, 0) : 0;
+  const due = cuarta === null ? null : over ? Math.max(cuarta * PAYMENT_RATE - retenido, 0) : 0;
   const state =
     pen === null ? `<span class="badge"><i class="ph-light ph-question"></i>Falta tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Supera el umbral</span>`
@@ -269,17 +271,26 @@ function renderThreshold(gross: bigint | null) {
     <div class="meter"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
     <dl class="th-rows">
       <div><dt>Cobrado por esta app</dt><dd class="num">${aqui === null ? "—" : soles(aqui)}</dd></div>
-      <div><dt>Otras rentas del mes que declaraste aquí</dt><dd class="num">${soles(otras + quinta)}</dd></div>
-      <div><dt>Total del mes</dt><dd class="num">${pen === null ? "—" : soles(pen)}</dd></div>
-      <div><dt>Umbral del mes</dt><dd class="num">${soles(THRESHOLD_PEN)}</dd></div>
-      <div><dt>Regla</dt><dd>8% del total del mes si lo supera, S/ 0 si no</dd></div>
-      <div><dt>Ya te retuvieron</dt><dd class="num">${soles(retenido)}</dd></div>
+      <div><dt>Otras rentas de cuarta del mes</dt><dd class="num">${soles(otras)}</dd></div>
+      <div><dt><b>Base del pago a cuenta</b> (cuarta)</dt><dd class="num">${cuarta === null ? "—" : soles(cuarta)}</dd></div>
+      <div><dt>Rentas de quinta, solo para el umbral</dt><dd class="num">${soles(quinta)}</dd></div>
+      <div><dt>Total del mes frente al umbral</dt><dd class="num">${pen === null ? "—" : soles(pen)} <span class="u">de ${soles(THRESHOLD_PEN)}</span></dd></div>
+      <div><dt>Regla</dt><dd>si el total supera el umbral, 8% de la base de cuarta; si no, S/ 0</dd></div>
+      <div><dt>Retenciones de cuarta ya practicadas</dt><dd class="num">− ${soles(retenido)}</dd></div>
     </dl>
     <p class="th-help">${
       pen === null
         ? "Ingresa el tipo de cambio para estimar tu pago a cuenta de este mes."
         : over
-          ? "Tu reserva se acerca a este pago, no lo calza exacto: la reserva está en USDC y la deuda en soles, así que el tipo de cambio del día en que pagues mueve el resultado."
+          ? (() => {
+              // Comparar de verdad la reserva con la deuda, en vez de afirmar que la cubre.
+              const enReserva = reserve === null || !fx ? null : Number(fromUnits(reserve, 2).replace(/,/g, "")) * fx;
+              if (enReserva === null) return "La reserva está en USDC y la deuda en soles, así que el tipo de cambio del día en que pagues mueve el resultado.";
+              const falta = (due ?? 0) - enReserva;
+              return falta > 0.5
+                ? `Tu reserva equivale a ${soles(enReserva)} con este tipo de cambio: faltan ${soles(falta)} para cubrir el pago. La reserva está en USDC y la deuda en soles, así que el tipo de cambio del día en que pagues mueve el resultado.`
+                : `Tu reserva equivale a ${soles(enReserva)} con este tipo de cambio y alcanza para el pago. Como está en USDC y la deuda es en soles, el tipo de cambio del día en que pagues mueve el resultado.`;
+            })()
           : "Con lo declarado aquí no habría pago a cuenta. Espera al cierre del mes antes de retirar la reserva: un cobro más puede cruzar el umbral y el 8% se aplica al total del mes."
     }</p>
     <p class="th-help"><i class="ph-light ph-warning-circle"></i> Esto es un estimado con lo que esta app puede saber. El umbral se mide sobre todos tus ingresos del mes, incluidas las rentas de cuarta cobradas fuera de aquí y las de quinta si estás en planilla. Y el 8% es pago a cuenta: en la declaración anual el impuesto se recalcula sobre la renta neta, así que puede quedar saldo por pagar o a favor.</p>

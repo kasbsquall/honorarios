@@ -73,3 +73,5 @@ dialog.rhe[open] { animation: rise 220ms var(--ease) both }
 .note a { color: var(--ink) }
 .th-rows .src, .howto .src { color: var(--ink-3); font-size: var(--t-s); line-height: 1.55 }
 .howto .src b { color: var(--ink-2); font-weight: 500 }
+/* Aclaracion secundaria junto a un dato o un control deshabilitado. */
+.u { color: var(--ink-3); font-size: var(--t-s) }

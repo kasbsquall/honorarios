@@ -110,7 +110,7 @@ Errores: `InvalidAmount` (monto ≤ 0), `InsufficientReserve` (retiro mayor a la
 | Qué | Enlace |
 |---|---|
 | Contrato | [CDGZLOQD…5YETA](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA) |
-| Despliegue | [bf81a604…88cf](https://stellar.expert/explorer/testnet/tx/bf81a604603564519e1d4af8b3dd366a0dcafbcc258359ddfd7429e877ef88cf) |
+| Despliegue | [9a23da89…429a](https://stellar.expert/explorer/testnet/tx/9a23da8911334ea067299fcbe32b69741d0382c9a2d0aeff9fa6a0c8a172429a) |
 | Smart wallet con passkey de la demo | [CD6E…7GXD](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
 | Cobro de 500 USDC con compra de USDC vía XLM | [1c41c40d…3e13](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
 | Retiro de reserva firmado con passkey | [76aca849…86b9](https://stellar.expert/explorer/testnet/tx/76aca84969e050b397aafae6cce7372d6bfd59bc32dc1f14a63b0d0ffd5d86b9) |

@@ -113,7 +113,12 @@ export async function ensureUsdc(payer: string, amount: bigint): Promise<string 
   const missing = amount - (balance ?? 0n);
   const paths = await horizon.strictReceivePaths([Asset.native()], USDC, fromUnits(missing, 7)).call();
   if (!paths.records.length) throw new Error("No hay ruta XLM a USDC disponible en testnet.");
-  const sendMax = (Number(paths.records[0].source_amount) * PATH_SLIPPAGE).toFixed(7);
+  const best = paths.records[0];
+  const sendMax = (Number(best.source_amount) * PATH_SLIPPAGE).toFixed(7);
+  // El sendMax corresponde a esta ruta: hay que ejecutar la misma, no una vacia.
+  const hops = best.path.map((a: { asset_code?: string; asset_issuer?: string }) =>
+    a.asset_code && a.asset_issuer ? new Asset(a.asset_code, a.asset_issuer) : Asset.native(),
+  );
 
   const account = await horizon.loadAccount(payer);
   const builder = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK });
@@ -125,7 +130,7 @@ export async function ensureUsdc(payer: string, amount: bigint): Promise<string 
       destination: payer,
       destAsset: USDC,
       destAmount: fromUnits(missing, 7),
-      path: [],
+      path: hops,
     }),
   );
   const tx = builder.setTimeout(120).build();
@@ -190,18 +195,24 @@ export async function paidEvents(freelancer: string): Promise<Paid[]> {
   const windows: number[] = [];
   for (let start = from; start <= sequence; start += EVENT_SCAN_STEP) windows.push(start);
 
-  const pages = await Promise.all(
-    windows.map((start) =>
-      server.getEvents({
-        startLedger: start,
-        endLedger: Math.min(start + EVENT_SCAN_STEP, sequence + 1),
-        filters: [{ type: "contract", contractIds: [CONTRACT_ID], topics }],
-        limit: 100,
-      }),
-    ),
-  );
+  // Cada ventana se pagina hasta agotarla: con limit fijo, los cobros sobrantes
+  // desaparecian sin aviso y la lista mostraba menos de los que hay.
+  const scan = async (start: number) => {
+    const endLedger = Math.min(start + EVENT_SCAN_STEP, sequence + 1);
+    const filters = [{ type: "contract" as const, contractIds: [CONTRACT_ID], topics }];
+    const out: Awaited<ReturnType<typeof server.getEvents>>["events"] = [];
+    let page = await server.getEvents({ startLedger: start, endLedger, filters, limit: 100 });
+    out.push(...page.events);
+    while (page.events.length === 100 && page.cursor) {
+      page = await server.getEvents({ cursor: page.cursor, filters, limit: 100 });
+      out.push(...page.events);
+    }
+    return out;
+  };
+
+  const pages = await Promise.all(windows.map(scan));
   return pages
-    .flatMap((p) => p.events)
+    .flat()
     .map((e) => {
       const v = scValToNative(e.value);
       return {

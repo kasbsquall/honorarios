@@ -16,11 +16,11 @@ Un freelancer peruano que cobra a clientes del exterior no tiene agente de reten
 
 Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: el 92% va a la wallet del freelancer y el 8% queda reservado a su nombre dentro del contrato. Solo el freelancer puede retirar esa reserva, por ejemplo para pagar a SUNAT.
 
-1. El freelancer crea su wallet con una passkey (huella o Face ID). No hay frase semilla y no paga comisiones.
+1. El freelancer crea su wallet con una passkey (huella o Face ID). No hay frase semilla y las comisiones las patrocina el relayer de SDF.
 2. Genera un link de cobro con monto, N° de recibo y concepto, y se lo envía a su cliente.
 3. El cliente paga con Freighter. Si no tiene USDC, la app lo compra con XLM mediante un path payment.
 4. El contrato reparte 92/8 y emite un evento `Paid` con la referencia del recibo.
-5. El panel lee del contrato lo cobrado en el mes y calcula el pago a cuenta real (8% del total si supera S/ 4,010, cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
+5. El panel lee del contrato lo cobrado en el mes y estima el pago a cuenta (8% de las rentas de cuarta, si el total del mes supera S/ 4,010; cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
 
 ## Cómo usa Stellar
 
@@ -42,7 +42,8 @@ Es la misma corrida que se ve en el video demo, de principio a fin.
 | Contrato | [`CDGZLOQD…5YETA`](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA) |
 | Despliegue del contrato | [`9a23da89…429a`](https://stellar.expert/explorer/testnet/tx/9a23da8911334ea067299fcbe32b69741d0382c9a2d0aeff9fa6a0c8a172429a) |
 | Smart wallet creada con passkey en la demo | [`CD6E…7GXD`](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
-| Cobro de 500 USDC (460 neto, 40 reserva), el cliente compró USDC con XLM | [`1c41c40d…3e13`](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
+| El cliente compró con XLM los 460 USDC que le faltaban: 437.22 XLM por path payment | [`787ff6d5…6563`](https://stellar.expert/explorer/testnet/tx/787ff6d5681d7ba78fbefdbc1b5926c560d272a1ee4a59fbee63139467136563) |
+| Cobro de 500 USDC: 460 al freelancer, 40 a la reserva | [`1c41c40d…3e13`](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
 | Retiro de la reserva firmado con passkey | [`76aca849…86b9`](https://stellar.expert/explorer/testnet/tx/76aca84969e050b397aafae6cce7372d6bfd59bc32dc1f14a63b0d0ffd5d86b9) |
 
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
@@ -54,7 +55,7 @@ Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/a
 ```
 contracts/split/   contrato Soroban (Rust) y sus 19 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
-web/e2e/           pruebas E2E en testnet con Playwright
+web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
 docs/              arquitectura y bitácora de decisiones
 ```
