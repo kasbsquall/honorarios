@@ -2,6 +2,7 @@ import {
   Asset,
   BASE_FEE,
   Horizon,
+  Keypair,
   Networks,
   Operation,
   TransactionBuilder,
@@ -52,7 +53,21 @@ export function short(addr: string) {
   return `${addr.slice(0, 4)}…${addr.slice(-4)}`;
 }
 
+// Firmante solo para pruebas locales en testnet (npm run dev + ?dev=client|freelancer).
+// Las llaves viven en .env.local, que no se sube al repo. En build de produccion no existe.
+function devKeypair(): Keypair | null {
+  if (!import.meta.env.DEV) return null;
+  const role = new URLSearchParams(location.search).get("dev");
+  const secret =
+    role === "client" ? import.meta.env.VITE_DEV_CLIENT_SECRET
+    : role === "freelancer" ? import.meta.env.VITE_DEV_FREELANCER_SECRET
+    : undefined;
+  return secret ? Keypair.fromSecret(secret) : null;
+}
+
 export async function connectWallet(): Promise<string> {
+  const dev = devKeypair();
+  if (dev) return dev.publicKey();
   const access = await requestAccess();
   if (access.error) throw new Error("Freighter rechazó la conexión.");
   const net = await getNetworkDetails();
@@ -61,6 +76,12 @@ export async function connectWallet(): Promise<string> {
 }
 
 async function sign(xdrTx: string, address: string): Promise<string> {
+  const dev = devKeypair();
+  if (dev && dev.publicKey() === address) {
+    const tx = TransactionBuilder.fromXDR(xdrTx, NETWORK);
+    tx.sign(dev);
+    return tx.toXDR();
+  }
   const res = await signTransaction(xdrTx, { networkPassphrase: NETWORK, address });
   if (res.error) throw new Error("La firma fue cancelada en Freighter.");
   return res.signedTxXdr;
