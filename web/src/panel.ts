@@ -1,6 +1,10 @@
 import "./styles.css";
 import "./panel.css";
-import { type Paid, connectWallet, fromUnits, paidEvents, short, taxReserve, toUnits } from "./stellar";
+import { StrKey } from "@stellar/stellar-sdk";
+import { connectPasskey, createPasskeyWallet, restorePasskey, withdrawWithPasskey } from "./passkey";
+import {
+  EXPLORER, type Paid, connectWallet, fromUnits, paidEvents, short, taxReserve, toUnits, withdrawWithWallet,
+} from "./stellar";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
 
 // Umbral 2026 bajo el cual no hay pago a cuenta de cuarta categoria (R.S. 000390-2025/SUNAT).
@@ -10,11 +14,22 @@ const FX_KEY = "honorarios.fx";
 const app = document.getElementById("app")!;
 document.getElementById("brand")!.insertAdjacentHTML("afterbegin", MARK);
 
+type Mode = "passkey" | "freighter";
 let me = "";
+let mode: Mode = "passkey";
 let events: Paid[] | null = null;
 let reserve: bigint | null = null;
 
-renderIntro();
+restorePasskey().then((id) => (id ? enter(id, "passkey") : renderIntro()));
+
+function enter(address: string, how: Mode) {
+  me = address;
+  mode = how;
+  document.getElementById("who")!.innerHTML =
+    `${how === "passkey" ? `<i class="ph-light ph-fingerprint"></i> Passkey · ` : ""}${short(me)}`;
+  renderPanel();
+  load();
+}
 
 function renderIntro(error = "") {
   app.innerHTML = `
@@ -22,22 +37,31 @@ function renderIntro(error = "") {
     <p class="lbl">Para freelancers en Perú que cobran al exterior</p>
     <h1>Cobra en USDC y deja apartado tu pago a cuenta desde el primer dólar.</h1>
     <p>Cada cobro pasa por un contrato en Stellar: el 92% llega a tu wallet y el 8% queda reservado a tu nombre para SUNAT.</p>
-    <button class="btn" id="connect"><i class="ph-light ph-plugs-connected"></i>Conectar Freighter</button>
+    <label class="field name"><span class="lbl">Tu nombre</span><input id="name" maxlength="40" placeholder="Como quieres que aparezca en tu passkey"></label>
+    <div class="actions">
+      <button class="btn" id="create"><i class="ph-light ph-fingerprint"></i>Crear wallet con passkey</button>
+      <button class="btn ghost" id="login"><i class="ph-light ph-key"></i>Ya tengo passkey</button>
+    </div>
+    <p class="alt">Sin frase semilla y sin pagar comisiones: tu huella o Face ID firma. <button class="linkbtn" id="freighter">Prefiero usar Freighter</button></p>
     ${error ? `<p class="error" role="alert">${esc(error)}</p>` : ""}
   </section>`;
-  app.querySelector("#connect")!.addEventListener("click", async (e) => {
-    const b = e.currentTarget as HTMLButtonElement;
-    b.disabled = true;
-    b.innerHTML = `<span class="spin"></span>Esperando a Freighter`;
-    try {
-      me = await connectWallet();
-      document.getElementById("who")!.textContent = short(me);
-      renderPanel();
-      load();
-    } catch (err) {
-      renderIntro(err instanceof Error ? err.message : "No se pudo conectar.");
-    }
-  });
+
+  const run = (id: string, busy: string, how: Mode, fn: () => Promise<string>) =>
+    app.querySelector(`#${id}`)!.addEventListener("click", async (e) => {
+      const b = e.currentTarget as HTMLButtonElement;
+      app.querySelectorAll("button").forEach((x) => (x.disabled = true));
+      b.innerHTML = `<span class="spin"></span>${busy}`;
+      try {
+        enter(await fn(), how);
+      } catch (err) {
+        renderIntro(err instanceof Error ? err.message : "No se pudo conectar.");
+      }
+    });
+
+  run("create", "Creando tu wallet", "passkey", () =>
+    createPasskeyWallet(app.querySelector<HTMLInputElement>("#name")!.value.trim()));
+  run("login", "Esperando tu passkey", "passkey", connectPasskey);
+  run("freighter", "Esperando a Freighter", "freighter", connectWallet);
 }
 
 async function load() {
@@ -79,6 +103,12 @@ function renderPanel() {
       <p class="lbl"><i class="ph-light ph-vault"></i> Reserva para tu pago a cuenta</p>
       <p class="kpi num ${loading ? "sk" : ""}">${reserve === null ? "0.00" : fromUnits(reserve)}<small>USDC</small></p>
       <p class="kpi-note">Solo tú puedes mover este saldo. Vive en el contrato, separado de tu neto.</p>
+      <form id="withdraw" class="withdraw">
+        <label class="field"><span class="lbl">Enviar reserva a (cuenta G… o C…)</span><input class="num" name="to" required placeholder="Cuenta desde la que pagarás a SUNAT"></label>
+        <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "") : ""}"></label>
+        <button class="btn ghost" type="submit" ${!reserve ? "disabled" : ""}><i class="ph-light ph-arrow-square-out"></i>Retirar reserva</button>
+        <p class="wd-out" role="status"></p>
+      </form>
     </div>
     <dl class="stats">
       <div><dt><i class="ph-light ph-wallet"></i> Neto recibido</dt><dd class="num ${loading ? "sk" : ""}">${fromUnits(net)} <small>USDC</small></dd></div>
@@ -118,6 +148,40 @@ function renderPanel() {
 
   renderThreshold(loading ? null : monthGross(list));
   bindLinkForm();
+  bindWithdraw();
+}
+
+function bindWithdraw() {
+  const form = app.querySelector<HTMLFormElement>("#withdraw")!;
+  const out = form.querySelector(".wd-out")!;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = new FormData(form);
+    const to = String(d.get("to")).trim();
+    const amount = toUnits(String(d.get("amount")));
+    if (!StrKey.isValidEd25519PublicKey(to) && !StrKey.isValidContract(to)) {
+      out.innerHTML = `<span class="error">Esa dirección no es válida en Stellar.</span>`;
+      return;
+    }
+    if (amount <= 0n || (reserve !== null && amount > reserve)) {
+      out.innerHTML = `<span class="error">El monto debe ser mayor a 0 y no pasar tu reserva.</span>`;
+      return;
+    }
+    const btn = form.querySelector("button")!;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spin"></span>${mode === "passkey" ? "Confirma con tu passkey" : "Firma en Freighter"}`;
+    try {
+      const hash = mode === "passkey" ? await withdrawWithPasskey(me, to, amount) : await withdrawWithWallet(me, to, amount);
+      reserve = await taxReserve(me);
+      renderPanel();
+      app.querySelector("#withdraw .wd-out")!.innerHTML =
+        `Retiraste ${fromUnits(amount)} USDC. <a href="${EXPLORER}/tx/${hash}" target="_blank" rel="noopener">Ver transacción <i class="ph-light ph-arrow-up-right"></i></a>`;
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="ph-light ph-arrow-square-out"></i>Retirar reserva`;
+      out.innerHTML = `<span class="error">${esc(err instanceof Error ? err.message : "No se pudo retirar.")}</span>`;
+    }
+  });
 }
 
 function renderThreshold(gross: bigint | null) {

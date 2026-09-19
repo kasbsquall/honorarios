@@ -30,3 +30,13 @@
 @media (min-width: 900px) { .cards { grid-template-columns: 1fr 1fr } }
 .emptybox { grid-column: 1 / -1; border: 1px dashed var(--rule-strong); padding: 48px 24px; display: grid; justify-items: center; gap: 12px; color: var(--ink-2); text-align: center; font-size: var(--t-s) }
 .emptybox i { font-size: 2rem }
+.intro .name { width: min(100%, 360px) }
+.actions { display: flex; gap: 12px; flex-wrap: wrap }
+.alt { font-size: var(--t-s) }
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
+.linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.withdraw { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 28px; max-width: 520px }
+@media (min-width: 600px) { .withdraw { grid-template-columns: 1fr 140px } .withdraw .btn, .withdraw .wd-out { grid-column: 1 / -1; justify-self: start } }
+.wd-out { font-size: var(--t-s); color: var(--ink-2) }
+.wd-out:empty { display: none }
+.net i.ph-light { color: var(--accent) }

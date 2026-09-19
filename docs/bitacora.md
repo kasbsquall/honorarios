@@ -13,3 +13,11 @@ Append-only. Cada entrada con su fuente.
 ## Abierto
 - Checkpoint obligatorio 23 sept 23:59: diagrama de flujo + repo público.
 - Frontend: link de pago con Freighter + path payment; wallet passkey del freelancer; borrador de RHE; alerta de umbral S/ 4,010.
+
+## 2026-09-19 (tarde)
+
+- **Dirección visual:** sistema "Precisión suiza" (Archivo + IBM Plex Mono, bermellón #D2461E) con la tarjeta talón de la propuesta editorial. Elección del usuario. Propuestas en `design/`.
+- **Frontend** en `web/` (Vite + TS). Prueba E2E con firmante de desarrollo: pago de 500 USDC, tx `c2584bac…987f`.
+- **Eventos:** el RPC de testnet recorre ~10k ledgers por consulta; se lee por tramos desde el ledger de despliegue (4,762,900).
+- **Passkey:** `smart-account-kit` 0.8.0 con los contratos OZ de testnet y el relayer público de SDF (`demo/.env.example` del repo stellar/smart-account-kit). Smart wallet `CCYPK3R3…EYO3`; retiro con passkey tx `fd5a33d5…165d`. El kit no está auditado (lo dice su README).
+- Pendiente: borrador de recibo por honorarios, diagrama del checkpoint, prueba manual con Freighter real, modo oscuro sin verificar.

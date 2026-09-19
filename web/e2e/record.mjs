@@ -20,7 +20,7 @@ page.on("pageerror", (e) => console.error("pageerror:", e.message));
 // 1. Panel del freelancer
 await page.goto(`${BASE}/?dev=freelancer`);
 await pause(1200);
-await page.getByRole("button", { name: "Conectar Freighter" }).click();
+await page.getByRole("button", { name: "Prefiero usar Freighter" }).click();
 await page.locator(".kpi:not(.sk)").waitFor({ timeout: 60_000 });
 const reserveBefore = await page.locator(".kpi").innerText();
 console.log("reserva antes:", reserveBefore.replace(/\s+/g, " "));
@@ -31,10 +31,10 @@ await page.locator("#fx").press("Tab");
 await pause(900);
 
 const ref = `E001-${Date.now() % 1000}`;
-await page.locator('input[name="amount"]').pressSequentially("500", { delay: 60 });
-await page.locator('input[name="ref"]').pressSequentially(ref, { delay: 40 });
-await page.locator('input[name="concept"]').pressSequentially("Diseño de identidad", { delay: 30 });
-await page.locator('input[name="name"]').pressSequentially("Kevin Soto", { delay: 30 });
+await page.locator('#newlink input[name="amount"]').pressSequentially("500", { delay: 60 });
+await page.locator('#newlink input[name="ref"]').pressSequentially(ref, { delay: 40 });
+await page.locator('#newlink input[name="concept"]').pressSequentially("Diseño de identidad", { delay: 30 });
+await page.locator('#newlink input[name="name"]').pressSequentially("Kevin Soto", { delay: 30 });
 await page.getByRole("button", { name: "Crear link" }).click();
 const link = await page.locator("#linkout code").innerText();
 console.log("link:", link);
@@ -56,7 +56,7 @@ await pause(3000);
 
 // 3. De vuelta al panel: el cobro aparece leído de la red
 await page.goto(`${BASE}/?dev=freelancer`);
-await page.getByRole("button", { name: "Conectar Freighter" }).click();
+await page.getByRole("button", { name: "Prefiero usar Freighter" }).click();
 await page.locator(".kpi:not(.sk)").waitFor({ timeout: 60_000 });
 console.log("reserva despues:", (await page.locator(".kpi").innerText()).replace(/\s+/g, " "));
 await pause(1800);

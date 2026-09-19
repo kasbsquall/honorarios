@@ -141,6 +141,13 @@ export async function payInvoice(payer: string, freelancer: string, gross: bigin
   return sent.sendTransactionResponse?.hash ?? "";
 }
 
+export async function withdrawWithWallet(freelancer: string, to: string, amount: bigint): Promise<string> {
+  const client = (await honorarios(freelancer)) as any;
+  const tx = await client.withdraw_tax({ freelancer, to, amount });
+  const sent = await tx.signAndSend();
+  return sent.sendTransactionResponse?.hash ?? "";
+}
+
 export async function taxReserve(freelancer: string): Promise<bigint> {
   const client = (await honorarios()) as any;
   const tx = await client.tax_reserve({ freelancer });
