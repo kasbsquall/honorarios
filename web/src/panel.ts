@@ -1,0 +1,184 @@
+import "./styles.css";
+import "./panel.css";
+import { type Paid, connectWallet, fromUnits, paidEvents, short, taxReserve, toUnits } from "./stellar";
+import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
+
+// Umbral 2026 bajo el cual no hay pago a cuenta de cuarta categoria (R.S. 000390-2025/SUNAT).
+const THRESHOLD_PEN = 4010;
+const FX_KEY = "honorarios.fx";
+
+const app = document.getElementById("app")!;
+document.getElementById("brand")!.insertAdjacentHTML("afterbegin", MARK);
+
+let me = "";
+let events: Paid[] | null = null;
+let reserve: bigint | null = null;
+
+renderIntro();
+
+function renderIntro(error = "") {
+  app.innerHTML = `
+  <section class="intro rise">
+    <p class="lbl">Para freelancers en Perú que cobran al exterior</p>
+    <h1>Cobra en USDC y deja apartado tu pago a cuenta desde el primer dólar.</h1>
+    <p>Cada cobro pasa por un contrato en Stellar: el 92% llega a tu wallet y el 8% queda reservado a tu nombre para SUNAT.</p>
+    <button class="btn" id="connect"><i class="ph-light ph-plugs-connected"></i>Conectar Freighter</button>
+    ${error ? `<p class="error" role="alert">${esc(error)}</p>` : ""}
+  </section>`;
+  app.querySelector("#connect")!.addEventListener("click", async (e) => {
+    const b = e.currentTarget as HTMLButtonElement;
+    b.disabled = true;
+    b.innerHTML = `<span class="spin"></span>Esperando a Freighter`;
+    try {
+      me = await connectWallet();
+      document.getElementById("who")!.textContent = short(me);
+      renderPanel();
+      load();
+    } catch (err) {
+      renderIntro(err instanceof Error ? err.message : "No se pudo conectar.");
+    }
+  });
+}
+
+async function load() {
+  try {
+    [reserve, events] = await Promise.all([taxReserve(me), paidEvents(me)]);
+  } catch {
+    reserve = null;
+    events = [];
+    app.querySelector("#load-error")?.classList.remove("hidden");
+  }
+  renderPanel();
+}
+
+function monthGross(list: Paid[]) {
+  const now = new Date();
+  return list
+    .filter((p) => p.at.getMonth() === now.getMonth() && p.at.getFullYear() === now.getFullYear())
+    .reduce((s, p) => s + p.gross, 0n);
+}
+
+function readFx(): number | null {
+  try {
+    const v = Number(localStorage.getItem(FX_KEY));
+    return v > 0 ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+function renderPanel() {
+  const loading = events === null;
+  const list = events ?? [];
+  const net = list.reduce((s, p) => s + p.net, 0n);
+
+  app.innerHTML = `
+  <p id="load-error" class="error hidden" role="alert">No pudimos leer tus cobros de la red. Recarga la página en un momento.</p>
+  <section class="hero rise" style="--i:0">
+    <div>
+      <p class="lbl"><i class="ph-light ph-vault"></i> Reserva para tu pago a cuenta</p>
+      <p class="kpi num ${loading ? "sk" : ""}">${reserve === null ? "0.00" : fromUnits(reserve)}<small>USDC</small></p>
+      <p class="kpi-note">Solo tú puedes mover este saldo. Vive en el contrato, separado de tu neto.</p>
+    </div>
+    <dl class="stats">
+      <div><dt><i class="ph-light ph-wallet"></i> Neto recibido</dt><dd class="num ${loading ? "sk" : ""}">${fromUnits(net)} <small>USDC</small></dd></div>
+      <div><dt><i class="ph-light ph-rows"></i> Cobros</dt><dd class="num ${loading ? "sk" : ""}">${list.length}</dd></div>
+      <div><dt><i class="ph-light ph-percent"></i> Tasa de reserva</dt><dd class="num">8 <small>%</small></dd></div>
+    </dl>
+  </section>
+  <section class="grid2">
+    <div class="block rise" style="--i:1" id="threshold"></div>
+    <form class="block rise" style="--i:2" id="newlink">
+      <p class="lbl"><i class="ph-light ph-link-simple"></i> Nuevo link de cobro</p>
+      <div class="row2">
+        <label class="field"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" inputmode="decimal" required pattern="\\d+(\\.\\d{1,7})?" placeholder="500.00"></label>
+        <label class="field"><span class="lbl">N° de recibo</span><input class="num" name="ref" required maxlength="20" placeholder="E001-2"></label>
+      </div>
+      <label class="field"><span class="lbl">Concepto</span><input name="concept" required maxlength="80" placeholder="Diseño de identidad"></label>
+      <label class="field"><span class="lbl">Tu nombre visible</span><input name="name" maxlength="60" placeholder="Opcional"></label>
+      <button class="btn" type="submit"><i class="ph-light ph-plus"></i>Crear link</button>
+      <div id="linkout" class="linkout hidden"></div>
+    </form>
+  </section>
+  <section class="rise" style="--i:3">
+    <div class="sec-h"><h2>Cobros</h2><span class="lbl">Leídos de la red Stellar</span></div>
+    <div class="cards">${
+      loading
+        ? `<div class="receipt sk" style="height:260px"></div><div class="receipt sk" style="height:260px"></div>`
+        : list.length
+          ? list.map((p, i) => `<div class="rise" style="--i:${Math.min(i, 7)}">${receiptCard({
+              gross: p.gross, title: `De ${short(p.payer)}`, ref: p.ref, text: RECEIPT_ES,
+              badge: `<span class="badge ok"><i class="ph-light ph-check"></i>Cobrado</span>`,
+              footLeft: p.at.toLocaleDateString("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
+              txHash: p.txHash,
+            })}</div>`).join("")
+          : `<div class="emptybox"><i class="ph-light ph-receipt"></i><p>Todavía no tienes cobros. Crea un link y envíalo a tu cliente.</p></div>`
+    }</div>
+  </section>`;
+
+  renderThreshold(loading ? null : monthGross(list));
+  bindLinkForm();
+}
+
+function renderThreshold(gross: bigint | null) {
+  const box = app.querySelector("#threshold")!;
+  const fx = readFx();
+  const usdc = gross === null ? null : Number(fromUnits(gross, 2).replace(/,/g, ""));
+  const pen = usdc !== null && fx ? usdc * fx : null;
+  const ratio = pen === null ? 0 : Math.min(pen / THRESHOLD_PEN, 1);
+  const over = pen !== null && pen > THRESHOLD_PEN;
+  const state =
+    pen === null ? `<span class="badge"><i class="ph-light ph-question"></i>Falta tipo de cambio</span>`
+    : over ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Te toca pago a cuenta</span>`
+    : `<span class="badge ok"><i class="ph-light ph-check"></i>Bajo el umbral</span>`;
+
+  box.innerHTML = `
+    <div class="rc-top"><p class="lbl"><i class="ph-light ph-gauge"></i> Umbral mensual SUNAT</p>${state}</div>
+    <p class="th-num num">${pen === null ? "S/ —" : "S/ " + pen.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}<small>de S/ 4,010.00</small></p>
+    <div class="meter"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
+    <p class="th-help">${
+      over
+        ? "Este mes cobraste más de S/ 4,010. Te corresponde declarar y pagar el 8% como pago a cuenta. Tu reserva ya lo cubre."
+        : "Si en el mes cobras hasta S/ 4,010 no haces pago a cuenta. La reserva igual se guarda para tu declaración anual."
+    }</p>
+    <label class="field fx"><span class="lbl">Tipo de cambio que usas (S/ por USDC)</span>
+      <input class="num" id="fx" inputmode="decimal" placeholder="Ej. el del día de cobro" value="${fx ?? ""}">
+      <small>Umbral 2026 según R.S. 000390-2025/SUNAT. La app no fija el tipo de cambio: usa el que aplicarás al declarar.</small>
+    </label>`;
+
+  box.querySelector<HTMLInputElement>("#fx")!.addEventListener("change", (e) => {
+    const v = Number((e.target as HTMLInputElement).value.replace(",", "."));
+    try { localStorage.setItem(FX_KEY, v > 0 ? String(v) : ""); } catch { /* sin storage */ }
+    renderThreshold(gross);
+  });
+}
+
+function bindLinkForm() {
+  const form = app.querySelector<HTMLFormElement>("#newlink")!;
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const d = new FormData(form);
+    const amount = String(d.get("amount"));
+    if (toUnits(amount) <= 0n) return;
+    const params = new URLSearchParams({
+      to: me, amount, ref: String(d.get("ref")), concept: String(d.get("concept")),
+    });
+    const name = String(d.get("name") ?? "").trim();
+    if (name) params.set("name", name);
+    const url = `${location.origin}/pay.html?${params}`;
+    const out = form.querySelector("#linkout")!;
+    out.classList.remove("hidden");
+    out.innerHTML = `<code class="mono">${esc(url)}</code>
+      <div class="row2"><button type="button" class="btn ghost" id="copy"><i class="ph-light ph-copy"></i>Copiar</button>
+      <a class="btn ghost" href="${esc(url)}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right"></i>Abrir</a></div>`;
+    out.querySelector("#copy")!.addEventListener("click", async (ev) => {
+      const b = ev.currentTarget as HTMLButtonElement;
+      try {
+        await navigator.clipboard.writeText(url);
+        b.innerHTML = `<i class="ph-light ph-check"></i>Copiado`;
+      } catch {
+        b.innerHTML = `Copia el texto de arriba`;
+      }
+    });
+  });
+}

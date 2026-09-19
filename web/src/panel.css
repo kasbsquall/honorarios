@@ -1,0 +1,32 @@
+.intro { padding: 96px 0 160px; display: grid; gap: 24px; max-width: 60ch; justify-items: start }
+.intro h1 { font-size: clamp(2.2rem, 1.2rem + 3vw, 3.8rem); line-height: .95; letter-spacing: -.035em; font-stretch: 88% }
+.intro p:not(.lbl) { color: var(--ink-2) }
+
+.hero { display: grid; gap: 40px; padding: 48px 0 64px; border-bottom: 1px solid var(--rule-strong) }
+@media (min-width: 900px) { .hero { grid-template-columns: 7fr 5fr; align-items: end } }
+.kpi { font-size: clamp(3.2rem, 1.5rem + 6.5vw, 6.5rem); line-height: .88; letter-spacing: -.05em; margin: 20px 0 16px; overflow-wrap: anywhere; justify-self: start }
+.kpi small, .stats small, .th-num small { font-size: var(--t-s); letter-spacing: 0; color: var(--ink-3); margin-left: 8px }
+.kpi-note { color: var(--ink-2); font-size: var(--t-s); max-width: 44ch }
+.stats { border-top: 1px solid var(--rule-strong) }
+.stats div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: var(--t-s) }
+.stats dt { color: var(--ink-2) }
+
+.grid2 { display: grid; gap: 1px; background: var(--rule-strong); border: 1px solid var(--rule-strong); margin: 64px 0 96px }
+@media (min-width: 900px) { .grid2 { grid-template-columns: 1fr 1fr } }
+.block { background: var(--surface); padding: 28px 24px; display: grid; gap: 18px; align-content: start; min-width: 0 }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.th-num { font-size: var(--t-2xl); line-height: 1; letter-spacing: -.04em; overflow-wrap: anywhere }
+.meter { height: 8px; background: var(--sunk) }
+.meter i { display: block; height: 100%; background: var(--ink); transform-origin: left; transition: transform 300ms var(--ease) }
+.meter i.over { background: var(--warn) }
+.th-help { font-size: var(--t-s); color: var(--ink-2) }
+.fx { border-top: 1px solid var(--rule); padding-top: 18px }
+.linkout { display: grid; gap: 12px; border-top: 1px solid var(--rule); padding-top: 18px }
+.linkout code { font-size: var(--t-xs); overflow-wrap: anywhere; color: var(--ink-2) }
+
+.sec-h { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 24px; flex-wrap: wrap }
+.sec-h h2 { font-size: var(--t-xl) }
+.cards { display: grid; gap: 24px; padding-bottom: 128px }
+@media (min-width: 900px) { .cards { grid-template-columns: 1fr 1fr } }
+.emptybox { grid-column: 1 / -1; border: 1px dashed var(--rule-strong); padding: 48px 24px; display: grid; justify-items: center; gap: 12px; color: var(--ink-2); text-align: center; font-size: var(--t-s) }
+.emptybox i { font-size: 2rem }

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 310 48" width="310" height="48" role="img" aria-label="Honorarios">
+<style>@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,560,0,1&amp;display=swap');.w{font-family:Fraunces,Georgia,serif;font-size:38px;font-weight:560;letter-spacing:-1.1px;font-variation-settings:'opsz' 144}</style>
+<mask id="m"><rect width="48" height="48" fill="#fff"/><circle cx="40.6" cy="8" r="2.6" fill="#000"/><circle cx="40.6" cy="40" r="2.6" fill="#000"/><path fill="#000" d="M11 17h3v5.5h2V17h3v14h-3v-5.5h-2V31h-3zM22 21h11v2H22zM22 27h7v2h-7z"/></mask><g mask="url(#m)"><rect x="4" y="8" width="36.2" height="32" fill="#1E1B16"/><rect x="41" y="8" width="3" height="32" fill="#B23A1E"/></g>
+<text x="58" y="38" class="w" fill="#1E1B16">Honorarios</text>
+</svg>

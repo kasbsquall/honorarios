@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honorarios · Andino contemporáneo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<style>
+:root{
+  /* primitivos */
+  --arcilla-50:#F6F0E8; --arcilla-100:#EDE4D8; --arcilla-200:#DDD0BF; --arcilla-400:#A8927C;
+  --arcilla-600:#6E5747; --arcilla-800:#4A2E22; --arcilla-900:#2B1F19; --arcilla-950:#1C1512;
+  --ocre-300:#D9A95B; --ocre-500:#B8872F; --terracota-500:#B5532F; --terracota-400:#CF6C45;
+  /* semánticos claro */
+  --bg:var(--arcilla-50); --surface:#FBF7F1; --surface-2:var(--arcilla-100);
+  --line:rgba(74,46,34,.10); --line-strong:rgba(74,46,34,.22);
+  --text:var(--arcilla-900); --text-2:var(--arcilla-600); --text-3:var(--arcilla-400);
+  --mark:var(--arcilla-800); --neto:var(--arcilla-800);
+  --accent:var(--terracota-500); --on-accent:#FBF3EC;
+  --warn:var(--ocre-500); --ok:#5E6B3A;
+  --shadow:0 1px 0 rgba(74,46,34,.06), 0 8px 24px -12px rgba(74,46,34,.25);
+  --r:3px;
+  --f-display:"Bricolage Grotesque", Georgia, serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, monospace;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:var(--arcilla-950); --surface:#241B16; --surface-2:#2E231D;
+  --line:rgba(237,228,216,.08); --line-strong:rgba(237,228,216,.18);
+  --text:#EDE4D8; --text-2:#B9A794; --text-3:#7D6A5A;
+  --mark:#E4D6C4; --neto:#D9C8B3; --accent:var(--terracota-400); --on-accent:#1C1512;
+  --warn:var(--ocre-300); --ok:#A3B06F;
+  --shadow:0 1px 0 rgba(0,0,0,.2), 0 10px 28px -14px rgba(10,6,4,.8);
+}}
+:root[data-theme="dark"]{
+  --bg:var(--arcilla-950); --surface:#241B16; --surface-2:#2E231D;
+  --line:rgba(237,228,216,.08); --line-strong:rgba(237,228,216,.18);
+  --text:#EDE4D8; --text-2:#B9A794; --text-3:#7D6A5A;
+  --mark:#E4D6C4; --neto:#D9C8B3; --accent:var(--terracota-400); --on-accent:#1C1512;
+  --warn:var(--ocre-300); --ok:#A3B06F;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:400 16px/1.55 var(--f-display);font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums lining-nums slashed-zero}
+h1,h2,h3{font-weight:600;text-wrap:balance}
+p{text-wrap:pretty}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+@media(min-width:768px){.wrap{padding:0 48px}}
+section{padding:112px 0 0}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);display:flex;gap:8px;align-items:center}
+.sec-title{font-size:39px;letter-spacing:-.02em;line-height:1.05;margin:12px 0 40px}
+.ph{font-size:18px;vertical-align:-3px}
+/* textura */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.035;z-index:9;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* banda de pallay: la trama modular usada como filete */
+.pallay{height:8px;background:
+  repeating-linear-gradient(90deg,var(--line-strong) 0 4px,transparent 4px 5px,var(--line-strong) 5px 9px,transparent 9px 10px);
+  -webkit-mask:linear-gradient(0deg,#000 0 3px,transparent 3px 5px,#000 5px);mask:linear-gradient(0deg,#000 0 3px,transparent 3px 5px,#000 5px)}
+/* motion */
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.rise{animation:rise 250ms var(--ease) both;animation-delay:calc(var(--b,0) * 60ms)}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes cell{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+.mk rect{animation:cell 220ms var(--ease) both;transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* portada */
+.hero{padding-top:56px;display:grid;gap:48px}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid var(--line)}
+.topbar .lk{display:flex;gap:10px;align-items:center;font-weight:600;letter-spacing:-.01em}
+.hero-logo{display:flex;align-items:center;gap:clamp(16px,3vw,36px)}
+.hero-logo svg{width:clamp(88px,14vw,168px);height:auto;flex:none}
+.hero-logo h1{font-size:clamp(52px,10vw,132px);letter-spacing:-.04em;line-height:.86}
+.rationale{display:grid;gap:4px;max-width:640px;color:var(--text-2);font-size:18px}
+.rationale b{color:var(--text);font-weight:600}
+@media(min-width:1024px){.hero{grid-template-columns:1.5fr 1fr;align-items:end}}
+
+/* variantes */
+.variants{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media(min-width:768px){.variants{grid-template-columns:2fr 2fr 1fr}}
+.var{padding:40px 28px;display:flex;flex-direction:column;gap:28px;min-height:220px;justify-content:space-between}
+.var.light{background:#F6F0E8;color:#2B1F19;--mark:#4A2E22;--accent:#B5532F}
+.var.dark{background:#1C1512;color:#EDE4D8;--mark:#E4D6C4;--accent:#CF6C45}
+.var.small{background:var(--surface)}
+.var .cap{font:500 11px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;opacity:.6}
+.lockup{display:flex;gap:12px;align-items:center;font-size:31px;font-weight:600;letter-spacing:-.02em}
+.row24{display:flex;gap:16px;align-items:center}
+.row24 span{font-size:14px;font-weight:600}
+
+/* paleta */
+.palette{display:grid;gap:40px}
+@media(min-width:1024px){.palette{grid-template-columns:1fr 1fr}}
+.swatches{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media(min-width:560px){.swatches{grid-template-columns:repeat(4,1fr)}}
+.sw{background:var(--surface);padding:0 0 12px}
+.sw i{display:block;height:72px;margin-bottom:10px}
+.sw b{display:block;font:500 12px/1.3 var(--f-mono);padding:0 12px}
+.sw small{display:block;font:400 11px/1.3 var(--f-mono);color:var(--text-2);padding:0 12px}
+.accent-note{display:flex;gap:10px;margin-top:16px;color:var(--text-2);font-size:14px}
+
+/* tipografía */
+.scale{border-top:1px solid var(--line)}
+.scale div{display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line)}
+.scale small{font:400 12px var(--f-mono);color:var(--text-3)}
+.scale p{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pair{display:grid;gap:24px;margin-bottom:40px}
+@media(min-width:768px){.pair{grid-template-columns:1fr 1fr}}
+.pair article{padding:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.pair .big{font-size:76px;line-height:.9;letter-spacing:-.035em;margin:18px 0 12px}
+
+/* componentes */
+.comps{display:grid;gap:24px}
+@media(min-width:1024px){.comps{grid-template-columns:1fr 1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:20px}
+.panel h3{font-size:14px;font-weight:500;color:var(--text-2);display:flex;gap:8px;align-items:center}
+.btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{font:600 15px/1 var(--f-display);border-radius:var(--r);padding:14px 20px;border:1px solid transparent;cursor:pointer;display:inline-flex;gap:8px;align-items:center;
+  transition:transform 120ms var(--ease),background-color 150ms var(--ease),box-shadow 150ms var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.btn-primary{background:var(--text);color:var(--bg)}
+
+.btn-primary:hover,.btn-primary.is-hover{opacity:.88}
+.btn-secondary{background:transparent;color:var(--text);border-color:var(--line-strong)}
+.btn-secondary:hover,.btn-secondary.is-hover{background:var(--surface-2)}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+.is-focus{outline:2px solid var(--text);outline-offset:3px}
+.states{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.states figure{display:grid;gap:8px;justify-items:start}
+.states figcaption{font:400 11px var(--f-mono);color:var(--text-3)}
+.field label{display:block;font-size:13px;color:var(--text-2);margin-bottom:8px}
+.amount{display:flex;align-items:center;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--bg);transition:border-color 150ms}
+.amount:focus-within{border-color:var(--text);box-shadow:0 0 0 3px var(--line)}
+.amount span{padding:0 14px;font:500 14px var(--f-mono);color:var(--text-2)}
+.amount input{flex:1;min-width:0;border:0;background:none;color:var(--text);font:500 28px/1 var(--f-mono);font-variant-numeric:tabular-nums;padding:16px 0;outline:none;text-align:right}
+.amount em{font-style:normal;padding:0 14px;font:500 13px var(--f-mono);color:var(--text-2);border-left:1px solid var(--line)}
+.hint{font-size:13px;color:var(--text-3);margin-top:8px}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{font:500 12px/1 var(--f-mono);padding:7px 10px 7px 8px;border-radius:var(--r);display:inline-flex;gap:6px;align-items:center;background:var(--surface-2);color:var(--text-2)}
+.badge .ph{font-size:14px;vertical-align:0}
+.badge.ok{color:var(--ok)} .badge.warn{color:var(--warn)} .badge.pend{color:var(--text-2)}
+
+/* tarjeta de cobro */
+.charge{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:24px;display:grid;gap:18px}
+.charge .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.charge .client{font-weight:600} .charge .meta{font-size:13px;color:var(--text-3)}
+.charge .total{font:500 40px/1 var(--f-mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.charge .total small{font-size:14px;color:var(--text-2);margin-left:6px}
+.split{display:flex;gap:2px;height:14px}
+.split i{display:block;height:100%;border-radius:1px;transform-origin:left;animation:grow 520ms var(--ease) both}
+.split .n{flex:92;background:var(--neto)} .split .r{flex:8;background:var(--accent);animation-delay:70ms}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px}
+.legend div{display:grid;gap:2px}
+.legend .k{display:flex;gap:6px;align-items:center;color:var(--text-2)}
+.legend .k b{width:8px;height:8px;border-radius:1px;display:inline-block}
+.legend .v{font:500 18px var(--f-mono)}
+.legend div:last-child{text-align:right;justify-items:end}
+
+/* mocks */
+.mocks{display:grid;gap:32px;padding-bottom:120px}
+@media(min-width:1100px){.mocks{grid-template-columns:420px 1fr;align-items:start}}
+.device{border:1px solid var(--line-strong);border-radius:var(--r);overflow:hidden;background:var(--bg);box-shadow:var(--shadow)}
+.chrome{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font:400 12px var(--f-mono);color:var(--text-3);background:var(--surface-2)}
+.pay{padding:28px 24px;display:grid;gap:24px}
+.pay .from{display:flex;gap:12px;align-items:center}
+.avatar{width:40px;height:40px;border-radius:var(--r);background:var(--surface-2);display:grid;place-items:center;font-weight:600;color:var(--text-2)}
+.pay h2{font-size:25px;letter-spacing:-.015em;line-height:1.15}
+.pay .due{font:500 56px/1 var(--f-mono);letter-spacing:-.03em}
+.pay .due small{font-size:16px;color:var(--text-2);margin-left:8px;letter-spacing:0}
+.trust{display:grid;gap:10px;font-size:13px;color:var(--text-2);border-top:1px solid var(--line);padding-top:18px}
+.trust div{display:flex;gap:10px;align-items:flex-start}
+.btn-block{width:100%;justify-content:center;padding:18px}
+.dash{display:grid}
+@media(min-width:768px){.dash{grid-template-columns:200px 1fr}}
+.side{border-right:1px solid var(--line);padding:20px 14px;display:none;flex-direction:column;gap:2px;font-size:14px}
+@media(min-width:768px){.side{display:flex}}
+.side a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:var(--r);color:var(--text-2);text-decoration:none}
+.side a[aria-current]{background:var(--surface-2);color:var(--text)}
+.side a:hover{color:var(--text)}
+.main{padding:24px;display:grid;gap:24px;min-width:0}
+.kpi{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media(min-width:640px){.kpi{grid-template-columns:1.6fr 1fr}}
+.kpi > div{background:var(--surface);padding:22px;display:grid;gap:10px;align-content:start}
+.kpi .lab{font-size:13px;color:var(--text-2);display:flex;gap:8px;align-items:center}
+.kpi .hero-n{font:500 64px/.9 var(--f-mono);letter-spacing:-.035em}
+.kpi .hero-n small{font-size:15px;color:var(--text-2);letter-spacing:0;margin-left:6px}
+.kpi .sub{font-size:13px;color:var(--text-3)}
+.reserve-n{font:500 34px/1 var(--f-mono);color:var(--accent)}
+.meter{height:6px;background:var(--surface-2);border-radius:1px;overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0;background:var(--warn);transform-origin:left;animation:grow 520ms var(--ease) both}
+.alert{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface)}
+.alert .ph{font-size:22px;color:var(--warn)}
+.alert p{font-size:14px;color:var(--text-2)} .alert b{color:var(--text)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);text-align:left;padding:0 0 10px;border-bottom:1px solid var(--line)}
+td{padding:13px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+td.r,th.r{text-align:right}
+tbody tr{animation:rise 240ms var(--ease) both;animation-delay:calc(200ms + var(--i) * 30ms)}
+.tablewrap{overflow-x:auto}
+.tablewrap table{min-width:520px}
+.draft{display:grid;gap:14px;padding:20px;border:1px dashed var(--line-strong);border-radius:var(--r)}
+.draft .hd{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.draft dl{display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:14px}
+.draft dt{color:var(--text-2)} .draft dd{font-family:var(--f-mono);text-align:right}
+.note{font-size:12px;color:var(--text-3);font-family:var(--f-mono)}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;font-size:13px;color:var(--text-3)}
+.theme-t{background:none;border:1px solid var(--line-strong);color:var(--text);border-radius:var(--r);padding:8px 10px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;font:500 12px var(--f-mono)}
+.theme-t:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 24 24">
+    <g fill="var(--mark)">
+      <rect x="0" y="0" width="4" height="4" rx=".6"/><rect x="5" y="0" width="4" height="4" rx=".6"/><rect x="10" y="0" width="4" height="4" rx=".6"/><rect x="15" y="0" width="4" height="4" rx=".6"/><rect x="20" y="0" width="4" height="4" rx=".6"/>
+      <rect x="0" y="5" width="4" height="4" rx=".6"/><rect x="5" y="5" width="4" height="4" rx=".6"/><rect x="10" y="5" width="4" height="4" rx=".6"/><rect x="15" y="5" width="4" height="4" rx=".6"/><rect x="20" y="5" width="4" height="4" rx=".6"/>
+      <rect x="0" y="10" width="4" height="4" rx=".6"/><rect x="5" y="10" width="4" height="4" rx=".6"/><rect x="10" y="10" width="4" height="4" rx=".6"/><rect x="15" y="10" width="4" height="4" rx=".6"/><rect x="20" y="10" width="4" height="4" rx=".6"/>
+      <rect x="0" y="15" width="4" height="4" rx=".6"/><rect x="5" y="15" width="4" height="4" rx=".6"/><rect x="10" y="15" width="4" height="4" rx=".6"/><rect x="15" y="15" width="4" height="4" rx=".6"/>
+      <rect x="0" y="20" width="4" height="4" rx=".6"/><rect x="5" y="20" width="4" height="4" rx=".6"/><rect x="10" y="20" width="4" height="4" rx=".6"/><rect x="20" y="20" width="4" height="4" rx=".6"/>
+    </g>
+    <g fill="var(--accent)"><rect x="20" y="15" width="4" height="4" rx=".6"/><rect x="15" y="20" width="4" height="4" rx=".6"/></g>
+  </symbol>
+</svg>
+
+<header class="wrap topbar">
+  <span class="lk"><svg width="24" height="24"><use href="#mark"/></svg>Honorarios</span>
+  <button class="theme-t" id="tt" type="button"><i class="ph ph-circle-half"></i>Tema</button>
+</header>
+
+<main class="wrap">
+  <!-- Portada -->
+  <div class="hero">
+    <div class="rise" style="--b:0">
+      <p class="eyebrow"><i class="ph ph-squares-four"></i>Propuesta 3 · Andino contemporáneo</p>
+      <div class="hero-logo" style="margin-top:28px">
+        <svg class="mk" viewBox="0 0 24 24" aria-hidden="true"><use href="#mark"/></svg>
+        <h1>Honorarios</h1>
+      </div>
+    </div>
+    <div class="rationale rise" style="--b:1">
+      <p><b>Un tocapu de 25 módulos.</b> Veintitrés quedan en arcilla y dos cambian a terracota.</p>
+      <p>Dos de veinticinco es exactamente el 8%: la reserva para SUNAT tejida dentro del cobro.</p>
+      <p>El escalón que forman en la esquina viene del pallay, sin citar ningún motivo literal.</p>
+    </div>
+  </div>
+
+  <!-- Variantes -->
+  <section class="rise" style="--b:2">
+    <p class="eyebrow"><i class="ph ph-stack"></i>01 · Logo</p>
+    <h2 class="sec-title">Variantes</h2>
+    <div class="variants">
+      <div class="var light"><span class="cap">Sobre arcilla clara</span><span class="lockup"><svg width="40" height="40"><use href="#mark"/></svg>Honorarios</span></div>
+      <div class="var dark"><span class="cap">Sobre arcilla oscura</span><span class="lockup"><svg width="40" height="40"><use href="#mark"/></svg>Honorarios</span></div>
+      <div class="var small"><span class="cap">Tamaño mínimo 24 / 16 px</span>
+        <div class="row24"><svg width="24" height="24"><use href="#mark"/></svg><span>Honorarios</span></div>
+        <div class="row24"><svg width="16" height="16"><use href="#mark"/></svg><svg width="24" height="24" style="background:#1C1512;--mark:#E4D6C4;--accent:#CF6C45;padding:3px;border-radius:3px;box-sizing:content-box"><use href="#mark"/></svg></div>
+      </div>
+    </div>
+    <div class="pallay" style="margin-top:32px" aria-hidden="true"></div>
+  </section>
+
+  <!-- Paleta -->
+  <section>
+    <p class="eyebrow"><i class="ph ph-palette"></i>02 · Color</p>
+    <h2 class="sec-title">Paleta y tokens</h2>
+    <div class="palette">
+      <div>
+        <p class="eyebrow" style="margin-bottom:14px"><i class="ph ph-sun"></i>Claro</p>
+        <div class="swatches">
+          <div class="sw"><i style="background:#F6F0E8"></i><b>--bg</b><small>#F6F0E8</small></div>
+          <div class="sw"><i style="background:#FBF7F1"></i><b>--surface</b><small>#FBF7F1</small></div>
+          <div class="sw"><i style="background:#EDE4D8"></i><b>--surface-2</b><small>#EDE4D8</small></div>
+          <div class="sw"><i style="background:#2B1F19"></i><b>--text</b><small>#2B1F19</small></div>
+          <div class="sw"><i style="background:#6E5747"></i><b>--text-2</b><small>#6E5747</small></div>
+          <div class="sw"><i style="background:#4A2E22"></i><b>--neto</b><small>#4A2E22</small></div>
+          <div class="sw"><i style="background:#B8872F"></i><b>--warn</b><small>#B8872F ocre</small></div>
+          <div class="sw"><i style="background:#B5532F"></i><b>--accent</b><small>#B5532F reserva</small></div>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow" style="margin-bottom:14px"><i class="ph ph-moon"></i>Oscuro</p>
+        <div class="swatches">
+          <div class="sw"><i style="background:#1C1512"></i><b>--bg</b><small>#1C1512</small></div>
+          <div class="sw"><i style="background:#241B16"></i><b>--surface</b><small>#241B16</small></div>
+          <div class="sw"><i style="background:#2E231D"></i><b>--surface-2</b><small>#2E231D</small></div>
+          <div class="sw"><i style="background:#EDE4D8"></i><b>--text</b><small>#EDE4D8</small></div>
+          <div class="sw"><i style="background:#B9A794"></i><b>--text-2</b><small>#B9A794</small></div>
+          <div class="sw"><i style="background:#D9C8B3"></i><b>--neto</b><small>#D9C8B3</small></div>
+          <div class="sw"><i style="background:#D9A95B"></i><b>--warn</b><small>#D9A95B ocre</small></div>
+          <div class="sw"><i style="background:#CF6C45"></i><b>--accent</b><small>#CF6C45 reserva</small></div>
+        </div>
+      </div>
+    </div>
+    <p class="accent-note"><i class="ph ph-info"></i>La terracota se reserva para un solo significado: el 8% apartado para el pago a cuenta. Nada más en la interfaz la usa.</p>
+  </section>
+
+  <!-- Tipografía -->
+  <section>
+    <p class="eyebrow"><i class="ph ph-text-aa"></i>03 · Tipografía</p>
+    <h2 class="sec-title">Par y escala 1.25</h2>
+    <div class="pair">
+      <article><p class="eyebrow">Voz · Bricolage Grotesque (OFL)</p><p class="big">Cobra</p><p style="color:var(--text-2)">Titulares y texto. Eje óptico que se ajusta solo; en display tiene un trazo cálido, casi manual.</p></article>
+      <article><p class="eyebrow">Cifras · IBM Plex Mono (OFL)</p><p class="big num">92/8</p><p style="color:var(--text-2)">Montos, direcciones y fechas. Tabular, con cero cruzado, alineado en columnas.</p></article>
+    </div>
+    <div class="scale">
+      <div><small>61 px</small><p style="font-size:61px;letter-spacing:-.035em;line-height:1;font-weight:600">Display</p></div>
+      <div><small>49 px</small><p style="font-size:49px;letter-spacing:-.022em;line-height:1.05;font-weight:600">Titular uno</p></div>
+      <div><small>39 px</small><p style="font-size:39px;letter-spacing:-.02em;font-weight:600">Titular dos</p></div>
+      <div><small>31 px</small><p style="font-size:31px;letter-spacing:-.015em;font-weight:600">Titular tres</p></div>
+      <div><small>25 px</small><p style="font-size:25px;font-weight:500">Subtítulo</p></div>
+      <div><small>20 px</small><p style="font-size:20px">Texto destacado</p></div>
+      <div><small>16 px</small><p>Texto base del panel y del link de pago</p></div>
+      <div><small>13 px</small><p style="font-size:13px;color:var(--text-2)">Nota, metadato, leyenda</p></div>
+    </div>
+  </section>
+
+  <!-- Componentes -->
+  <section>
+    <p class="eyebrow"><i class="ph ph-cube"></i>04 · Componentes</p>
+    <h2 class="sec-title">Piezas del sistema</h2>
+    <div class="comps">
+      <div class="panel">
+        <h3><i class="ph ph-cursor-click"></i>Botones</h3>
+        <div class="states">
+          <figure><button class="btn btn-primary">Cobrar</button><figcaption>primario · reposo</figcaption></figure>
+          <figure><button class="btn btn-primary is-hover">Cobrar</button><figcaption>hover</figcaption></figure>
+          <figure><button class="btn btn-primary is-focus">Cobrar</button><figcaption>focus</figcaption></figure>
+          <figure><button class="btn btn-primary" disabled>Cobrar</button><figcaption>deshabilitado</figcaption></figure>
+          <figure><button class="btn btn-secondary">Copiar link</button><figcaption>secundario · reposo</figcaption></figure>
+          <figure><button class="btn btn-secondary is-hover">Copiar link</button><figcaption>hover</figcaption></figure>
+          <figure><button class="btn btn-secondary is-focus">Copiar link</button><figcaption>focus</figcaption></figure>
+          <figure><button class="btn btn-secondary" disabled>Copiar link</button><figcaption>deshabilitado</figcaption></figure>
+        </div>
+        <h3 style="margin-top:8px"><i class="ph ph-tag"></i>Estado</h3>
+        <div class="badges">
+          <span class="badge ok"><i class="ph ph-check-circle"></i>Pagado</span>
+          <span class="badge pend"><i class="ph ph-hourglass-medium"></i>Pendiente</span>
+          <span class="badge warn"><i class="ph ph-warning"></i>Cerca del umbral</span>
+          <span class="badge"><i class="ph ph-file-text"></i>Borrador</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><i class="ph ph-currency-circle-dollar"></i>Input de monto</h3>
+        <div class="field">
+          <label for="amt">Monto a cobrar</label>
+          <div class="amount"><span>$</span><input id="amt" inputmode="decimal" value="1,250.00" aria-describedby="amt-h"><em>USDC</em></div>
+          <p class="hint" id="amt-h">Recibes 1,150.00 neto · 100.00 va a tu reserva</p>
+        </div>
+        <h3><i class="ph ph-receipt"></i>Tarjeta de cobro</h3>
+        <article class="charge">
+          <div class="top"><div><p class="client">Cliente de ejemplo</p><p class="meta num">Cobro de ejemplo · USDC</p></div><span class="badge ok"><i class="ph ph-check-circle"></i>Pagado</span></div>
+          <p class="total num">1,250.00<small>USDC</small></p>
+          <div class="split" role="img" aria-label="92% neto, 8% reserva"><i class="n"></i><i class="r"></i></div>
+          <div class="legend">
+            <div><span class="k"><b style="background:var(--neto)"></b>Neto para ti · 92%</span><span class="v num">1,150.00</span></div>
+            <div><span class="k"><b style="background:var(--accent)"></b>Reserva SUNAT · 8%</span><span class="v num">100.00</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mocks -->
+  <section>
+    <p class="eyebrow"><i class="ph ph-browsers"></i>05 · Pantallas clave</p>
+    <h2 class="sec-title">Link de pago y panel</h2>
+    <div class="mocks">
+      <div class="device" lang="en">
+        <div class="chrome"><i class="ph ph-lock-simple"></i>honorarios.app/pay/…</div>
+        <div class="pay">
+          <div class="from"><span class="avatar">F</span><div><p style="font-weight:600">Freelancer name</p><p class="note">Lima, Peru</p></div></div>
+          <h2>Payment request for your project</h2>
+          <p class="due num">1,250.00<small>USDC</small></p>
+          <div class="field"><label>Pay with</label>
+            <div class="amount" style="padding:12px 0"><span><i class="ph ph-wallet"></i></span><span style="flex:1;color:var(--text);font-family:var(--f-display);font-size:15px;padding:0">Stellar wallet</span><em>USDC</em></div></div>
+          <button class="btn btn-primary btn-block">Pay 1,250.00 USDC<i class="ph ph-arrow-right"></i></button>
+          <div class="trust">
+            <div><i class="ph ph-link"></i><span>Settled on the Stellar network. You get a transaction receipt you can verify.</span></div>
+            <div><i class="ph ph-scales"></i><span>A contract splits the payment automatically to cover the freelancer's local tax withholding. You pay the amount shown, nothing more.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device">
+        <div class="chrome"><i class="ph ph-lock-simple"></i>honorarios.app/panel</div>
+        <div class="dash">
+          <nav class="side" aria-label="Principal">
+            <a href="#" aria-current="page"><i class="ph ph-house-line"></i>Resumen</a>
+            <a href="#"><i class="ph ph-arrows-down-up"></i>Cobros</a>
+            <a href="#"><i class="ph ph-link-simple"></i>Links de pago</a>
+            <a href="#"><i class="ph ph-vault"></i>Reserva</a>
+            <a href="#"><i class="ph ph-file-text"></i>Recibos</a>
+          </nav>
+          <div class="main">
+            <div class="kpi">
+              <div><span class="lab"><i class="ph ph-arrow-down-left"></i>Neto recibido este mes</span><p class="hero-n num">1,150.00<small>USDC</small></p><span class="sub">92% de cada cobro</span></div>
+              <div><span class="lab"><i class="ph ph-vault"></i>Reserva acumulada</span><p class="reserve-n num">100.00</p><span class="sub">USDC · 8% para tu pago a cuenta de cuarta</span></div>
+            </div>
+            <div class="alert" role="status">
+              <i class="ph ph-warning"></i>
+              <div style="flex:1;display:grid;gap:10px">
+                <p><b>Umbral mensual S/ 4,010.</b> Si tus honorarios del mes lo superan, corresponde el pago a cuenta. Monto del mes en soles: <span class="num">pendiente de tipo de cambio</span>.</p>
+                <div class="meter" aria-hidden="true"><i style="transform:scaleX(.6)"></i></div>
+                <p class="note">Barra ilustrativa · el avance real depende del tipo de cambio que defina el producto</p>
+              </div>
+            </div>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Cliente</th><th>Estado</th><th class="r">Total</th><th class="r">Neto 92%</th><th class="r">Reserva 8%</th></tr></thead>
+                <tbody>
+                  <tr style="--i:0"><td>Cliente de ejemplo A</td><td><span class="badge ok"><i class="ph ph-check-circle"></i>Pagado</span></td><td class="r num">1,250.00</td><td class="r num">1,150.00</td><td class="r num" style="color:var(--accent)">100.00</td></tr>
+                  <tr style="--i:1"><td>Cliente de ejemplo B</td><td><span class="badge pend"><i class="ph ph-hourglass-medium"></i>Pendiente</span></td><td class="r num">500.00</td><td class="r num">460.00</td><td class="r num" style="color:var(--accent)">40.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="draft">
+              <div class="hd"><span class="badge"><i class="ph ph-file-text"></i>Borrador de recibo por honorarios</span><button class="btn btn-secondary"><i class="ph ph-copy"></i>Copiar datos</button></div>
+              <dl><dt>Cobro</dt><dd>Cliente de ejemplo A</dd><dt>Monto bruto</dt><dd>1,250.00 USDC</dd><dt>Monto en soles</dt><dd>por definir</dd></dl>
+              <p class="note">Borrador para emitir tu recibo en SUNAT. Los campos exactos del recibo quedan por validar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="wrap">Honorarios · exploración de identidad · montos y nombres son de ejemplo</footer>
+<script>
+document.getElementById('tt').addEventListener('click',()=>{
+  const r=document.documentElement, dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme=dark?'light':'dark';
+});
+</script>
+</body>
+</html>

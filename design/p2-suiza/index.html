@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Honorarios · Precisión suiza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<style>
+:root{
+  --paper:#F3F1EC; --surface:#FAF9F6; --sunk:#E9E6DF;
+  --ink:#1B1A17; --ink-2:#5E5A52; --ink-3:#8D887E;
+  --rule:rgba(27,26,23,.10); --rule-strong:rgba(27,26,23,.22);
+  --accent:#D2461E; --accent-ink:#FAF9F6;
+  --ok:#3D6B4F;
+  --r:2px;
+  --f-sans:"Archivo",ui-sans-serif,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --t-xs:.64rem; --t-s:.8rem; --t-b:1rem; --t-m:1.25rem; --t-l:1.563rem; --t-xl:1.953rem; --t-2xl:3.052rem; --t-3xl:4.768rem; --t-4xl:5.96rem;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#141412; --surface:#1C1B18; --sunk:#252420;
+    --ink:#ECE9E2; --ink-2:#A8A399; --ink-3:#77726A;
+    --rule:rgba(236,233,226,.09); --rule-strong:rgba(236,233,226,.2);
+    --accent:#E8633A; --accent-ink:#141412; --ok:#7FAE8F;
+  }
+}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font:400 var(--t-b)/1.5 var(--f-sans);font-stretch:96%}
+.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums lining-nums slashed-zero}
+.wrap{max-width:1312px;margin:0 auto;padding:0 16px}
+@media (min-width:768px){.wrap{padding:0 48px}}
+.lbl{font:500 var(--t-xs)/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+h1,h2,h3{font-weight:600;text-wrap:balance}
+h2{font-size:var(--t-xl);letter-spacing:-.018em;line-height:1.1}
+p{text-wrap:pretty}
+i.ph-light{font-size:1.05em;vertical-align:-.12em}
+
+/* grid rail */
+.sec{border-top:1px solid var(--rule-strong);padding:96px 0 128px;display:grid;gap:40px}
+@media (min-width:1024px){.sec{grid-template-columns:repeat(12,1fr);column-gap:24px}.sec>.head{grid-column:1/4}.sec>.body{grid-column:4/13}}
+.head .lbl{margin-bottom:12px;display:block}
+.head p{color:var(--ink-2);font-size:var(--t-s);margin-top:12px;max-width:34ch}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:center;padding:20px 0;font-size:var(--t-s)}
+.bar .mono{color:var(--ink-3);font-size:var(--t-xs)}
+
+/* cover */
+.cover{padding:64px 0 120px;display:grid;gap:48px}
+@media (min-width:1024px){.cover{grid-template-columns:repeat(12,1fr);column-gap:24px;align-items:end;padding:120px 0 160px}.cover .mk{grid-column:1/7}.cover .txt{grid-column:8/13}}
+.mk svg{width:min(100%,520px);height:auto;display:block}
+.cover h1{font-size:var(--t-4xl);line-height:.86;letter-spacing:-.04em;font-stretch:88%;margin-bottom:28px}
+@media (max-width:600px){.cover h1{font-size:var(--t-3xl)}.big{font-size:var(--t-2xl)}}
+.rat{list-style:none;padding:0;border-top:1px solid var(--rule)}
+.rat li{display:grid;grid-template-columns:40px 1fr;padding:12px 0;border-bottom:1px solid var(--rule);font-size:var(--t-s);color:var(--ink-2)}
+.rat li span{color:var(--ink-3)}
+
+/* logo variants */
+.tiles{display:grid;gap:1px;background:var(--rule-strong);border:1px solid var(--rule-strong)}
+@media (min-width:768px){.tiles{grid-template-columns:2fr 2fr 1fr}}
+.tile{padding:48px 24px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:48px;min-height:220px}
+.tile.light{background:#F3F1EC;color:#1B1A17}.tile.dark{background:#141412;color:#ECE9E2}.tile.small{background:var(--surface)}
+.tile .lbl{color:inherit;opacity:.55}
+.lockup{display:flex;align-items:center;gap:12px;font-weight:600;font-size:1.75rem;letter-spacing:-.025em}
+.ring{display:block;flex:none}
+.ring .m{stroke:currentColor}.ring .a{stroke:var(--accent)}
+.tile.light{--accent:#D2461E}.tile.dark{--accent:#E8633A}
+.sizes{display:flex;align-items:end;gap:20px}
+
+/* palette */
+.sw{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule)}
+@media (min-width:768px){.sw{grid-template-columns:repeat(4,1fr)}}
+.sw div{background:var(--surface);padding:12px 12px 14px}
+.sw b{display:block;height:56px;border-radius:var(--r);margin-bottom:10px;border:1px solid var(--rule)}
+.sw code{font:400 var(--t-xs)/1.5 var(--f-mono);color:var(--ink-2);display:block}
+.sw code:first-of-type{color:var(--ink)}
+
+/* type */
+.ts{border-top:1px solid var(--rule)}
+.ts div{display:grid;grid-template-columns:88px 1fr;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid var(--rule);overflow:hidden}
+.ts .s{min-width:0}
+@media (max-width:600px){.ts div{grid-template-columns:1fr;gap:4px}.ts .s[style*="t-4xl"]{font-size:var(--t-2xl)!important}}
+
+/* components */
+.comp{display:grid;gap:48px}
+@media (min-width:1024px){.comp{grid-template-columns:1fr 1fr}}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{font:600 var(--t-s)/1 var(--f-sans);height:44px;padding:0 20px;border-radius:var(--r);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform 120ms var(--ease),background-color 150ms var(--ease),opacity 150ms var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible,.field input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-p{background:var(--ink);color:var(--paper)}
+.btn-p:hover,.btn-p.is-hover{background:var(--ink-2)}
+.btn-s{background:transparent;color:var(--ink);border-color:var(--rule-strong)}
+.btn-s:hover,.btn-s.is-hover{background:var(--sunk)}
+.btn[disabled]{opacity:.38;cursor:not-allowed;transform:none}
+.btn.is-focus{outline:2px solid var(--accent);outline-offset:2px}
+.field{display:grid;gap:8px;max-width:420px}
+.field .in{display:flex;align-items:baseline;border-bottom:1px solid var(--ink);padding:4px 0}
+.field .in span{font:500 var(--t-m)/1 var(--f-mono);color:var(--ink-3);margin-right:12px}
+.field input{all:unset;flex:1;min-width:0;font:400 var(--t-xl)/1 var(--f-mono);font-variant-numeric:tabular-nums slashed-zero;letter-spacing:-.03em;color:var(--ink)}
+.field small{font-size:var(--t-xs);color:var(--ink-3);font-family:var(--f-mono)}
+.badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid var(--rule-strong);border-radius:var(--r);font:500 var(--t-xs)/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.badge.ok{color:var(--ok);border-color:currentColor}
+.badge.warn{color:var(--accent);border-color:currentColor}
+
+/* payment card */
+.card{background:var(--surface);border:1px solid var(--rule-strong);border-radius:var(--r);padding:20px}
+.card .top{display:flex;justify-content:space-between;align-items:start;margin-bottom:28px}
+.big{font:400 var(--t-3xl)/.9 var(--f-mono);letter-spacing:-.045em;font-variant-numeric:tabular-nums slashed-zero}
+.big small{font-size:var(--t-s);letter-spacing:0;color:var(--ink-3);margin-left:8px}
+.split{display:flex;height:8px;gap:2px;margin:24px 0 12px}
+.split i{display:block;height:100%;transform-origin:left;animation:grow 520ms var(--ease) both}
+.split .n{flex:92;background:var(--ink)}
+.split .r{flex:8;background:var(--accent);animation-delay:70ms}
+.ticks{display:flex;justify-content:space-between;font:400 var(--t-xs)/1 var(--f-mono);color:var(--ink-3)}
+.legs{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--rule);margin-top:16px}
+.legs div{padding:12px 0}
+.legs div+div{padding-left:16px;border-left:1px solid var(--rule)}
+.legs .v{font:500 var(--t-m)/1.2 var(--f-mono);font-variant-numeric:tabular-nums}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* screens */
+.screens{display:grid;gap:48px}
+@media (min-width:1100px){.screens{grid-template-columns:5fr 7fr;align-items:start}}
+.frame{border:1px solid var(--rule-strong);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.frame .chrome{display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--rule);font:400 var(--t-xs)/1 var(--f-mono);color:var(--ink-3)}
+.pay{padding:32px 24px 28px}
+.pay .from{display:flex;gap:10px;align-items:center;font-size:var(--t-s);color:var(--ink-2);margin-bottom:40px}
+.pay .big{font-size:3.6rem}
+@media (max-width:600px){.pay .big{font-size:var(--t-2xl)}}
+.kv{list-style:none;padding:0;margin:32px 0;border-top:1px solid var(--rule)}
+.kv li{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:var(--t-s)}
+.kv li span:first-child{color:var(--ink-2)}
+.pay .btn{width:100%;justify-content:center;height:52px}
+.trust{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:var(--t-xs);color:var(--ink-3);font-family:var(--f-mono)}
+
+.dash{display:grid}
+.dash .hero{padding:28px 24px;display:grid;gap:28px;border-bottom:1px solid var(--rule)}
+@media (min-width:640px){.dash .hero{grid-template-columns:1.4fr 1fr}}
+.gauge{display:grid;gap:10px;align-content:start}
+.gauge .track{position:relative;height:8px;background:var(--sunk)}
+.gauge .fill{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(.62);animation:grow 600ms var(--ease) both}
+.gauge .cap{position:absolute;right:0;top:-6px;bottom:-6px;width:1px;background:var(--accent)}
+.alert{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:14px 24px;border-bottom:1px solid var(--rule);font-size:var(--t-s);background:var(--sunk)}
+.alert i{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:var(--t-s)}
+th{text-align:left;font:500 var(--t-xs)/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:12px 8px;border-bottom:1px solid var(--rule)}
+td{padding:12px 8px;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{padding-left:24px}th:last-child,td:last-child{padding-right:24px}
+td.r,th.r{text-align:right}
+tbody tr{animation:rise 240ms var(--ease) both;animation-delay:calc(200ms + var(--i)*30ms)}
+.tbl{overflow-x:auto}
+.draft{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:20px 24px}
+.note{font:400 var(--t-xs)/1.5 var(--f-mono);color:var(--ink-3);margin-top:16px}
+footer{border-top:1px solid var(--rule-strong);padding:24px 0 48px;font:400 var(--t-xs)/1.5 var(--f-mono);color:var(--ink-3)}
+
+.rise{animation:rise 250ms var(--ease) both;animation-delay:calc(var(--b,0)*60ms)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.draw{animation:draw 620ms var(--ease) both 120ms}
+@keyframes draw{from{stroke-dashoffset:91}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:767px){.sec{padding:64px 0 88px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ring" viewBox="0 0 24 24">
+    <g transform="rotate(-90 12 12)" fill="none" stroke-width="4">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" pathLength="100" stroke-dasharray="90 10" stroke-dashoffset="-9"/>
+      <circle cx="12" cy="12" r="8.5" stroke="var(--accent)" pathLength="100" stroke-dasharray="6 94" stroke-dashoffset="-1"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header class="bar">
+    <span class="lockup" style="font-size:1rem;gap:8px"><svg class="ring" width="20" height="20"><use href="#ring"/></svg>Honorarios</span>
+    <span class="mono">P2 · Precisión suiza · v0.1</span>
+  </header>
+
+  <section class="cover">
+    <div class="mk rise" style="--b:0">
+      <svg viewBox="0 0 240 240" role="img" aria-label="Símbolo de Honorarios">
+        <g stroke="var(--rule-strong)" stroke-width=".5">
+          <line x1="120" y1="0" x2="120" y2="240"/><line x1="0" y1="120" x2="240" y2="120"/>
+        </g>
+        <g transform="rotate(-90 120 120)" fill="none" stroke-width="40">
+          <circle cx="120" cy="120" r="85" pathLength="100" stroke="var(--ink)" stroke-dasharray="90 10" stroke-dashoffset="-9" class="draw"/>
+          <circle cx="120" cy="120" r="85" pathLength="100" stroke="var(--accent)" stroke-dasharray="6 94" stroke-dashoffset="-1"/>
+        </g>
+        <text x="152" y="14" font-family="IBM Plex Mono" font-size="9" fill="var(--ink-3)">28.8°</text>
+      </svg>
+    </div>
+    <div class="txt rise" style="--b:1">
+      <span class="lbl">Símbolo y racional</span>
+      <h1 style="margin-top:16px">Honorarios</h1>
+      <ol class="rat">
+        <li><span class="mono">01</span>Un anillo de medición dividido en 100 unidades: 92 para el neto y 8 para la reserva.</li>
+        <li><span class="mono">02</span>El arco de 28,8° en bermellón marca las doce en punto, donde un instrumento pone su referencia.</li>
+        <li><span class="mono">03</span>Lectura rápida a 24 px como un dial; leído de cerca, la proporción es exacta.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><span class="lbl">01 · Logo</span><h2>Variantes</h2><p>Símbolo en tinta con arco de acento. El acento se mantiene en ambos fondos; la tinta invierte.</p></div>
+    <div class="body tiles">
+      <div class="tile light"><span class="lockup"><svg class="ring" width="36" height="36"><use href="#ring"/></svg>Honorarios</span><span class="lbl">Sobre claro · #F3F1EC</span></div>
+      <div class="tile dark"><span class="lockup"><svg class="ring" width="36" height="36"><use href="#ring"/></svg>Honorarios</span><span class="lbl">Sobre oscuro · #141412</span></div>
+      <div class="tile small"><div class="sizes"><svg class="ring" width="48" height="48"><use href="#ring"/></svg><svg class="ring" width="24" height="24"><use href="#ring"/></svg><svg class="ring" width="16" height="16"><use href="#ring"/></svg></div><span class="lbl">48 · 24 · 16 px</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><span class="lbl">02 · Color</span><h2>Tokens</h2><p>Grises cálidos de una sola familia. Un acento con un único significado: dinero reservado para SUNAT.</p></div>
+    <div class="body">
+      <div class="sw">
+        <div><b style="background:var(--paper)"></b><code>--paper</code><code>#F3F1EC / #141412</code></div>
+        <div><b style="background:var(--surface)"></b><code>--surface</code><code>#FAF9F6 / #1C1B18</code></div>
+        <div><b style="background:var(--sunk)"></b><code>--sunk</code><code>#E9E6DF / #252420</code></div>
+        <div><b style="background:var(--ink)"></b><code>--ink</code><code>#1B1A17 / #ECE9E2</code></div>
+        <div><b style="background:var(--ink-2)"></b><code>--ink-2</code><code>#5E5A52 / #A8A399</code></div>
+        <div><b style="background:var(--ink-3)"></b><code>--ink-3</code><code>#8D887E / #77726A</code></div>
+        <div><b style="background:var(--accent)"></b><code>--accent · reserva</code><code>#D2461E / #E8633A</code></div>
+        <div><b style="background:var(--ok)"></b><code>--ok · confirmado</code><code>#3D6B4F / #7FAE8F</code></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><span class="lbl">03 · Tipografía</span><h2>Archivo + IBM Plex Mono</h2><p>Archivo (OFL) para texto, con ancho variable para condensar titulares. Plex Mono (OFL) para toda cifra. Escala 1.25.</p></div>
+    <div class="body ts">
+      <div><span class="lbl">5.96 rem</span><span class="s num" style="font-size:var(--t-4xl);letter-spacing:-.045em;line-height:1">1,250.00</span></div>
+      <div><span class="lbl">3.05 rem</span><span class="s" style="font-size:var(--t-2xl);font-weight:600;letter-spacing:-.03em;line-height:1;font-stretch:88%">Cobros del mes</span></div>
+      <div><span class="lbl">1.95 rem</span><span class="s" style="font-size:var(--t-xl);font-weight:600;letter-spacing:-.018em">Reserva acumulada</span></div>
+      <div><span class="lbl">1.25 rem</span><span class="s" style="font-size:var(--t-m);font-weight:500">Borrador de recibo por honorarios</span></div>
+      <div><span class="lbl">1.00 rem</span><span class="s">El contrato separa el 8 % de cada cobro.</span></div>
+      <div><span class="lbl">0.64 rem</span><span class="s lbl" style="color:var(--ink-2)">Neto · Reserva · USDC</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><span class="lbl">04 · Componentes</span><h2>Piezas base</h2><p>Radio único de 2 px. Estados mostrados de forma estática para revisión.</p></div>
+    <div class="body comp">
+      <div style="display:grid;gap:40px">
+        <div style="display:grid;gap:12px"><span class="lbl">Primario · default / hover / focus / disabled</span>
+          <div class="row"><button class="btn btn-p">Cobrar <i class="ph-light ph-arrow-right"></i></button><button class="btn btn-p is-hover">Cobrar</button><button class="btn btn-p is-focus">Cobrar</button><button class="btn btn-p" disabled>Cobrar</button></div></div>
+        <div style="display:grid;gap:12px"><span class="lbl">Secundario · default / hover / focus / disabled</span>
+          <div class="row"><button class="btn btn-s"><i class="ph-light ph-link-simple"></i> Copiar link</button><button class="btn btn-s is-hover">Copiar link</button><button class="btn btn-s is-focus">Copiar link</button><button class="btn btn-s" disabled>Copiar link</button></div></div>
+        <label class="field"><span class="lbl">Monto a cobrar</span><span class="in"><span>USDC</span><input inputmode="decimal" value="1,250.00" aria-label="Monto en USDC"></span><small>Neto 1,150.00 · Reserva 100.00</small></label>
+        <div style="display:grid;gap:12px"><span class="lbl">Estado</span>
+          <div class="row"><span class="badge"><i class="ph-light ph-clock"></i>Pendiente</span><span class="badge ok"><i class="ph-light ph-check"></i>Pagado</span><span class="badge warn"><i class="ph-light ph-warning"></i>Umbral</span><span class="badge"><i class="ph-light ph-file-text"></i>Borrador</span></div></div>
+      </div>
+      <article class="card">
+        <div class="top"><div><span class="lbl">Cobro · ejemplo</span><p style="font-size:var(--t-s);margin-top:4px">Cliente del exterior</p></div><span class="badge ok"><i class="ph-light ph-check"></i>Pagado</span></div>
+        <div class="big">1,250.00<small>USDC</small></div>
+        <div class="split" aria-label="Reparto 92 por ciento neto, 8 por ciento reserva"><i class="n"></i><i class="r"></i></div>
+        <div class="ticks" style="display:grid;grid-template-columns:92fr 8fr"><span>0</span><span style="text-align:right;white-space:nowrap">92 / 100</span></div>
+        <div class="legs">
+          <div><span class="lbl"><i class="ph-light ph-wallet"></i> Neto 92 %</span><div class="v">1,150.00</div></div>
+          <div><span class="lbl" style="color:var(--accent)"><i class="ph-light ph-vault"></i> Reserva 8 %</span><div class="v">100.00</div></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><span class="lbl">05 · Pantallas</span><h2>Link de pago y panel</h2><p>El cliente ve el link en inglés; el freelancer ve el panel en español. Cifras de ejemplo, no son datos reales.</p></div>
+    <div class="body screens">
+      <div class="frame rise" style="--b:1">
+        <div class="chrome"><span><i class="ph-light ph-lock-simple"></i> honorarios.app/pay/…</span><span>EN</span></div>
+        <div class="pay">
+          <div class="from"><svg class="ring" width="20" height="20"><use href="#ring"/></svg>Payment request from a freelancer in Peru</div>
+          <span class="lbl">Amount due</span>
+          <div class="big" style="margin-top:12px">1,250.00<small>USDC</small></div>
+          <ul class="kv">
+            <li><span>Network</span><span class="mono">Stellar</span></li>
+            <li><span>Asset</span><span class="mono">USDC</span></li>
+            <li><span>Concept</span><span>Professional services</span></li>
+          </ul>
+          <button class="btn btn-p">Pay 1,250.00 USDC <i class="ph-light ph-arrow-right"></i></button>
+          <div class="trust"><span><i class="ph-light ph-seal-check"></i> Settled on-chain</span><span><i class="ph-light ph-receipt"></i> Receipt issued in Peru</span></div>
+        </div>
+      </div>
+
+      <div class="frame dash rise" style="--b:2">
+        <div class="chrome"><span>Panel · Honorarios</span><span>ES</span></div>
+        <div class="hero">
+          <div><span class="lbl">Reserva acumulada · pago a cuenta 4.ª cat.</span><div class="big" style="margin-top:12px;color:var(--ink)">260.00<small>USDC</small></div></div>
+          <div class="gauge"><span class="lbl">Ingresos del mes vs. umbral</span>
+            <div class="track"><div class="fill"></div><div class="cap"></div></div>
+            <div class="ticks"><span class="num">S/ 0</span><span class="num">S/ 4,010</span></div></div>
+        </div>
+        <div class="alert"><i class="ph-light ph-warning"></i><span>Al superar <b class="num">S/ 4,010</b> de ingresos en el mes, corresponde efectuar el pago a cuenta con tu reserva.</span></div>
+        <div class="tbl"><table>
+          <thead><tr><th>Cobro</th><th>Estado</th><th class="r">Bruto</th><th class="r">Reserva 8 %</th></tr></thead>
+          <tbody>
+            <tr style="--i:0"><td class="mono">#0003</td><td><span class="badge ok">Pagado</span></td><td class="r num">1,250.00</td><td class="r num">100.00</td></tr>
+            <tr style="--i:1"><td class="mono">#0002</td><td><span class="badge ok">Pagado</span></td><td class="r num">1,000.00</td><td class="r num">80.00</td></tr>
+            <tr style="--i:2"><td class="mono">#0001</td><td><span class="badge ok">Pagado</span></td><td class="r num">1,000.00</td><td class="r num">80.00</td></tr>
+            <tr style="--i:3"><td class="mono">#0004</td><td><span class="badge">Pendiente</span></td><td class="r num">500.00</td><td class="r num">40.00</td></tr>
+          </tbody>
+        </table></div>
+        <div class="draft"><span style="font-size:var(--t-s)"><i class="ph-light ph-file-text"></i> Borrador de recibo por honorarios listo para #0003</span><button class="btn btn-s">Revisar borrador</button></div>
+      </div>
+    </div>
+    <p class="note body">Pendiente de definir: tipo de cambio USDC a soles para medir el umbral, y campos exactos del recibo por honorarios.</p>
+  </section>
+
+  <footer>Honorarios · Dirección P2 · Archivo y IBM Plex Mono bajo SIL OFL · Iconos Phosphor Light</footer>
+</div>
+</body>
+</html>
