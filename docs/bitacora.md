@@ -28,3 +28,13 @@ Append-only. Cada entrada con su fuente.
 - **Contrato redesplegado:** `CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG` (el anterior `CCYLKLKC…DLD5` queda obsoleto). Simulación con payer == freelancer devuelve `Error(Contract, #3)`.
 - **Evidencia nueva:** cobro 500 USDC `261cfebe…83e9`; smart wallet `CBNKXPVM…XHUP`; cobro 200 `f93ea435…e0e6`; retiro con passkey `417f8def…2a2b`.
 - **Deploy:** https://honorarios-pe.vercel.app (Vercel). Llaves de desarrollo movidas a `.env.development.local`; verificado que el bundle de producción no contiene ninguna.
+
+## 2026-09-19 · Regla del pago a cuenta en el panel
+
+Decisión: el contrato se mantiene (8% por cobro). El panel pasa a calcular el pago a cuenta real del mes: 8% del total percibido si supera S/ 4,010 y S/ 0 si no. La reserva se renombra "Reserva preventiva 8%" y el panel pide esperar al cierre del mes antes de liberarla, porque un cobro adicional puede cruzar el umbral y el 8% se aplica a todo el mes.
+
+Por qué: la suma de los 8% por cobro coincide exactamente con la obligación cuando el mes supera el umbral. Antes el panel daba a entender que el 8% siempre era de SUNAT.
+
+Fuentes: R.S. 000390-2025/SUNAT (umbral S/ 4,010 y S/ 48,125 para suspensión), D.S. 301-2025-EF (UIT 2026 S/ 5,500). Declaración y pago en Formulario Virtual 616 con Clave SOL, solo en soles. Suspensión con Formulario 1609 (número pendiente de verificar en fuente primaria).
+
+Pendiente de verificar: fechas del cronograma por último dígito del RUC (se enlaza a sunat.gob.pe sin fijar fechas), tratamiento de cobros en cripto (sin criterio SUNAT publicado).

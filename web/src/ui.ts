@@ -11,8 +11,8 @@ type ReceiptText = { kicker: string; net: string; tax: string; stub: string };
 export const RECEIPT_ES: ReceiptText = {
   kicker: "Cobro",
   net: "Neto para ti · 92%",
-  tax: "Reserva 4ta categoría · 8%",
-  stub: "Reserva SUNAT",
+  tax: "Reserva preventiva · 8%",
+  stub: "Reserva 8%",
 };
 
 export const RECEIPT_EN: ReceiptText = {

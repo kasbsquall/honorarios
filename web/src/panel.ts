@@ -10,6 +10,8 @@ import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
 
 // Umbral 2026 bajo el cual no hay pago a cuenta de cuarta categoria (R.S. 000390-2025/SUNAT).
 const THRESHOLD_PEN = 4010;
+// Pago a cuenta de cuarta categoria: 8% de la renta bruta percibida en el mes.
+const PAYMENT_RATE = 0.08;
 const FX_KEY = "honorarios.fx";
 
 const app = document.getElementById("app")!;
@@ -37,7 +39,7 @@ function renderIntro(error = "") {
   <section class="intro rise">
     <p class="lbl">Para freelancers en Perú que cobran al exterior</p>
     <h1>Cobra en USDC y deja apartado tu pago a cuenta desde el primer dólar.</h1>
-    <p>Cada cobro pasa por un contrato en Stellar: el 92% llega a tu wallet y el 8% queda reservado a tu nombre para SUNAT.</p>
+    <p>Cada cobro pasa por un contrato en Stellar: el 92% llega a tu wallet y el 8% queda reservado a tu nombre. Si el mes supera S/ 4,010, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
     <label class="field name"><span class="lbl">Tu nombre</span><input id="name" maxlength="40" placeholder="Como quieres que aparezca en tu passkey"></label>
     <div class="actions">
       <button class="btn" id="create"><i class="ph-light ph-fingerprint"></i>Crear wallet con passkey</button>
@@ -101,9 +103,9 @@ function renderPanel() {
   <p id="load-error" class="error hidden" role="alert">No pudimos leer tus cobros de la red. Recarga la página en un momento.</p>
   <section class="hero rise" style="--i:0">
     <div>
-      <p class="lbl"><i class="ph-light ph-vault"></i> Reserva para tu pago a cuenta</p>
+      <p class="lbl"><i class="ph-light ph-vault"></i> Reserva preventiva · 8% de cada cobro</p>
       <p class="kpi num ${loading ? "sk" : ""}">${reserve === null ? "0.00" : fromUnits(reserve)}<small>USDC</small></p>
-      <p class="kpi-note">Solo tú puedes mover este saldo. Vive en el contrato, separado de tu neto.</p>
+      <p class="kpi-note">Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera S/ 4,010; si no, sigue siendo tuya.</p>
       <form id="withdraw" class="withdraw">
         <label class="field"><span class="lbl">Enviar reserva a (cuenta G… o C…)</span><input class="num" name="to" required placeholder="Cuenta desde la que pagarás a SUNAT"></label>
         <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "").replace(/\.?0+$/, "") : ""}"></label>
@@ -194,23 +196,42 @@ function renderThreshold(gross: bigint | null) {
   const pen = usdc !== null && fx ? usdc * fx : null;
   const ratio = pen === null ? 0 : Math.min(pen / THRESHOLD_PEN, 1);
   const over = pen !== null && pen > THRESHOLD_PEN;
+  const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  const month = new Date().toLocaleDateString("es-PE", { month: "long", year: "numeric" });
+  const due = pen === null ? null : over ? pen * PAYMENT_RATE : 0;
   const state =
     pen === null ? `<span class="badge"><i class="ph-light ph-question"></i>Falta tipo de cambio</span>`
-    : over ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Te toca pago a cuenta</span>`
+    : over ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Supera el umbral</span>`
     : `<span class="badge ok"><i class="ph-light ph-check"></i>Bajo el umbral</span>`;
 
   box.innerHTML = `
-    <div class="rc-top"><p class="lbl"><i class="ph-light ph-gauge"></i> Umbral mensual SUNAT</p>${state}</div>
-    <p class="th-num num">${pen === null ? "S/ —" : "S/ " + pen.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}<small>de S/ 4,010.00</small></p>
+    <div class="rc-top"><p class="lbl"><i class="ph-light ph-calendar-blank"></i> Pago a cuenta · ${month}</p>${state}</div>
+    <p class="th-num num">${due === null ? "S/ —" : soles(due)}<small>estimado del mes</small></p>
     <div class="meter"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
+    <dl class="th-rows">
+      <div><dt>Cobrado en el mes</dt><dd class="num">${pen === null ? "—" : soles(pen)}</dd></div>
+      <div><dt>Umbral 2026</dt><dd class="num">${soles(THRESHOLD_PEN)}</dd></div>
+      <div><dt>Regla</dt><dd>8% del total del mes si lo supera, S/ 0 si no</dd></div>
+    </dl>
     <p class="th-help">${
-      over
-        ? "Este mes cobraste más de S/ 4,010. Te corresponde declarar y pagar el 8% como pago a cuenta. Tu reserva ya lo cubre."
-        : "Si en el mes cobras hasta S/ 4,010 no haces pago a cuenta. La reserva igual se guarda para tu declaración anual."
+      pen === null
+        ? "Ingresa el tipo de cambio para calcular tu pago a cuenta de este mes."
+        : over
+          ? "Tu reserva del mes cubre este pago: la obligación es el 8% de todo lo cobrado en el mes y eso es lo que se apartó."
+          : "Si el mes cierra así, no haces pago a cuenta. Espera al cierre del mes antes de retirar la reserva: un cobro más puede cruzar el umbral y el 8% se aplica al total del mes."
     }</p>
-    <label class="field fx"><span class="lbl">Tipo de cambio que usas (S/ por USDC)</span>
-      <input class="num" id="fx" inputmode="decimal" placeholder="Ej. el del día de cobro" value="${fx ?? ""}">
-      <small>Umbral 2026 según R.S. 000390-2025/SUNAT. La app no fija el tipo de cambio: usa el que aplicarás al declarar.</small>
+    <details class="howto">
+      <summary><i class="ph-light ph-list-numbers"></i> Cómo se paga a SUNAT</summary>
+      <ol>
+        <li>Retira la reserva a tu wallet o exchange y conviértela a soles. SUNAT solo recibe soles.</li>
+        <li>Entra a SUNAT Operaciones en Línea con tu Clave SOL: Mis declaraciones y pagos, Trabajadores independientes (Formulario Virtual 616).</li>
+        <li>Declara lo cobrado en el mes y paga con el NPS o en línea. El vencimiento depende del último dígito de tu RUC: <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">revisa el cronograma de obligaciones mensuales en sunat.gob.pe <i class="ph-light ph-arrow-up-right"></i></a></li>
+      </ol>
+      <p>Si proyectas cobrar hasta S/ 48,125 en el año puedes pedir la suspensión de pagos a cuenta (Formulario 1609). Si un cliente peruano ya te retuvo el 8%, ese monto se descuenta del pago del mes.</p>
+    </details>
+    <label class="field fx"><span class="lbl">Tipo de cambio (S/ por USDC)</span>
+      <input class="num" id="fx" inputmode="decimal" placeholder="TC compra SBS del día de cobro" value="${fx ?? ""}">
+      <small>Umbral según R.S. 000390-2025/SUNAT. La norma usa el tipo de cambio compra SBS del día en que cobras; aquí se usa uno solo para todo el mes como aproximación. No hay criterio SUNAT publicado para cobros en cripto: confírmalo con tu contador.</small>
     </label>`;
 
   box.querySelector<HTMLInputElement>("#fx")!.addEventListener("change", (e) => {

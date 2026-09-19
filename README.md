@@ -20,7 +20,7 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 2. Genera un link de cobro con monto, N° de recibo y concepto, y se lo envía a su cliente.
 3. El cliente paga con Freighter. Si no tiene USDC, la app lo compra con XLM mediante un path payment.
 4. El contrato reparte 92/8 y emite un evento `Paid` con la referencia del recibo.
-5. El panel muestra la reserva, cuánto falta para el umbral mensual de S/ 4,010 y un borrador del recibo por honorarios listo para copiar en SUNAT.
+5. El panel calcula el pago a cuenta real del mes (8% del total si supera S/ 4,010, cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
 
 ## Cómo usa Stellar
 
@@ -101,6 +101,7 @@ Todo el repositorio. El historial de commits empieza el 19 de septiembre de 2026
 - Solo testnet. `smart-account-kit` y el relayer no tienen auditoría independiente, según su propio README.
 - No encontramos una norma de SUNAT específica para honorarios cobrados en cripto. El tipo de cambio para medir el umbral lo ingresa el freelancer y la app no lo fija.
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.
+- La reserva del 8% es preventiva: si el mes no supera S/ 4,010 no hay pago a cuenta y el freelancer puede retirarla al cierre del mes. Con clientes peruanos que retienen, la retención se descuenta del pago del mes.
 - La reserva es una ayuda de organización y no reemplaza la asesoría de un contador.
 
 ## Licencia
