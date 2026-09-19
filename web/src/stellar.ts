@@ -17,14 +17,14 @@ import { getNetworkDetails, requestAccess, signTransaction } from "@stellar/frei
 export const NETWORK = Networks.TESTNET;
 export const RPC_URL = "https://soroban-testnet.stellar.org";
 export const HORIZON_URL = "https://horizon-testnet.stellar.org";
-export const CONTRACT_ID = "CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG";
+export const CONTRACT_ID = "CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL";
 export const USDC = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 export const TAX_BPS = 800n;
 export const EXPLORER = "https://stellar.expert/explorer/testnet";
 const DECIMALS = 7;
 const PATH_SLIPPAGE = 1.05;
 // Ledger del despliegue del contrato: no hay eventos antes de esto.
-const DEPLOY_LEDGER = 4_763_800;
+const DEPLOY_LEDGER = 4_765_600;
 // El RPC de testnet recorre como maximo ~10k ledgers por consulta.
 const EVENT_SCAN_STEP = 9_000;
 
@@ -152,6 +152,14 @@ export async function taxReserve(freelancer: string): Promise<bigint> {
   const client = (await honorarios()) as any;
   const tx = await client.tax_reserve({ freelancer });
   return BigInt(tx.result);
+}
+
+/** Bruto cobrado en el mes, leido del contrato: no depende de cuantos eventos guarde el RPC. */
+export async function monthGross(freelancer: string): Promise<{ period: number; gross: bigint }> {
+  const client = (await honorarios()) as any;
+  const period = Number((await client.current_period()).result);
+  const tx = await client.month_gross({ freelancer, period });
+  return { period, gross: BigInt(tx.result) };
 }
 
 export type Paid = {

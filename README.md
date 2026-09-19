@@ -20,7 +20,7 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 2. Genera un link de cobro con monto, N° de recibo y concepto, y se lo envía a su cliente.
 3. El cliente paga con Freighter. Si no tiene USDC, la app lo compra con XLM mediante un path payment.
 4. El contrato reparte 92/8 y emite un evento `Paid` con la referencia del recibo.
-5. El panel calcula el pago a cuenta real del mes (8% del total si supera S/ 4,010, cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
+5. El panel lee del contrato lo cobrado en el mes y calcula el pago a cuenta real (8% del total si supera S/ 4,010, cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
 
 ## Cómo usa Stellar
 
@@ -35,13 +35,15 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 
 ## Evidencia on-chain (testnet)
 
+Es la misma corrida que se ve en el video demo, de principio a fin.
+
 | Qué | Enlace |
 |---|---|
-| Contrato | [`CAJAMA32…BXSG`](https://stellar.expert/explorer/testnet/contract/CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG) |
-| Cobro de 500 USDC desde el link de pago (460 neto, 40 reserva) | [`261cfebe…83e9`](https://stellar.expert/explorer/testnet/tx/261cfebeb681d143338f855bbfc10833b249ee0289aa15fe035305ec250583e9) |
-| Smart wallet con passkey | [`CBNKXPVM…XHUP`](https://stellar.expert/explorer/testnet/contract/CBNKXPVM3XT5OJJSP6AQKIOYYKECMCGJEZLGB4LZB2XJ35AHWSUXXHUP) |
-| Cobro de 200 USDC a la smart wallet | [`f93ea435…e0e6`](https://stellar.expert/explorer/testnet/tx/f93ea435cd96e2e344973fd4e16fc44041eacb0a2a0f79e33d383ff59a9ae0e6) |
-| Retiro de la reserva firmado con passkey | [`417f8def…2a2b`](https://stellar.expert/explorer/testnet/tx/417f8defb56b14054d22ae63a45d711a60189d3227d69eb67be0c310492c2a2b) |
+| Contrato | [`CD7M4P64…E4YL`](https://stellar.expert/explorer/testnet/contract/CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL) |
+| Despliegue del contrato | [`bf81a604…88cf`](https://stellar.expert/explorer/testnet/tx/bf81a604603564519e1d4af8b3dd366a0dcafbcc258359ddfd7429e877ef88cf) |
+| Smart wallet creada con passkey en la demo | [`CCZ2…FJVT`](https://stellar.expert/explorer/testnet/contract/CCZ2DVYZXP2PENOEDIFUMK5RXG44TVILVKAGC76XEHYYLRMD4YC5FJVT) |
+| Cobro de 500 USDC (460 neto, 40 reserva), el cliente compró USDC con XLM | [`90ab3000…6832`](https://stellar.expert/explorer/testnet/tx/90ab3000636518aa5f7936d78770cc432cabb74a2dacabab6f4f90cf893e6832) |
+| Retiro de la reserva firmado con passkey | [`55a1bd3e…2101`](https://stellar.expert/explorer/testnet/tx/55a1bd3e256829967120c1ddffd5b76405c5e304689bdc1ca754f0f8154c2101) |
 
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
 
@@ -50,7 +52,7 @@ USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZL
 Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/arquitectura.md).
 
 ```
-contracts/split/   contrato Soroban (Rust) y sus 9 tests
+contracts/split/   contrato Soroban (Rust) y sus 14 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
 web/e2e/           pruebas E2E en testnet con Playwright
 design/            tres propuestas de identidad visual
@@ -63,9 +65,11 @@ docs/              arquitectura y bitácora de decisiones
 |---|---|---|
 | `pay(payer, freelancer, gross, receipt_ref)` | `payer` | Neto al freelancer, 8% al contrato, evento `Paid` |
 | `tax_reserve(freelancer)` | lectura | Saldo reservado |
+| `month_gross(freelancer, period)` | lectura | Bruto cobrado en un mes, para comparar con el umbral |
+| `current_period()` | lectura | Periodo tributario del ledger actual |
 | `withdraw_tax(freelancer, to, amount)` | `freelancer` | Mueve la reserva, evento `TaxWithdrawn` |
 
-Rechaza montos ≤ 0, retiros mayores a la reserva, pagos donde el freelancer es el pagador o el propio contrato, y N° de recibo de más de 32 caracteres. La reserva renueva su TTL en cada operación.
+El acumulado del mes vive en el contrato, así el panel no depende de cuántos eventos guarde el RPC. Rechaza montos ≤ 0, retiros mayores a la reserva, pagos donde el freelancer es el pagador o el propio contrato, y N° de recibo de más de 32 caracteres. La reserva renueva su TTL en cada operación.
 
 ## Ejecutar
 
@@ -96,11 +100,20 @@ node web/e2e/passkey.mjs   # passkey con autenticador WebAuthn virtual
 
 Todo el repositorio. El historial de commits empieza el 19 de septiembre de 2026 y [docs/bitacora.md](docs/bitacora.md) registra cada decisión con su fuente: elección del proyecto, tasa y umbral tributario, liquidez de USDC en testnet, passkeys, revisión de seguridad y redespliegue del contrato.
 
+## Cómo se sostiene
+
+El plan es cobrar una comisión pequeña por cada cobro liquidado, que paga el freelancer solo cuando cobra. Todavía no hay precio validado con usuarios y por eso no aparece ninguna cifra aquí. El contrato es MIT y cualquiera puede auditarlo.
+
+## De la reserva a SUNAT
+
+SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un ancla que liquida soles por SEP-24 (Anclap, "Sol Digital" PEN) y lo muestra en el paso 1 de "Cómo se paga a SUNAT". Esa liquidación ocurre en la red principal; esta app corre en testnet, así que el retiro a un banco peruano no se ejecuta desde aquí.
+
 ## Límites conocidos
 
 - Solo testnet. `smart-account-kit` y el relayer no tienen auditoría independiente, según su propio README.
 - No encontramos una norma de SUNAT específica para honorarios cobrados en cripto. El tipo de cambio para medir el umbral lo ingresa el freelancer y la app no lo fija.
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.
+- El ancla de soles vive en la red principal. Desde testnet solo se consulta su información, no se hace el retiro.
 - La reserva del 8% es preventiva: si el mes no supera S/ 4,010 no hay pago a cuenta y el freelancer puede retirarla al cierre del mes. Con clientes peruanos que retienen, la retención se descuenta del pago del mes.
 - La reserva es una ayuda de organización y no reemplaza la asesoría de un contador.
 

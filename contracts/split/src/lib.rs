@@ -21,6 +21,25 @@ const TTL_EXTEND_TO: u32 = 30 * DAY_LEDGERS;
 enum DataKey {
     Token,
     TaxReserve(Address),
+    /// Bruto cobrado por un freelancer en un periodo (mes) determinado.
+    MonthGross(Address, u32),
+}
+
+/// Periodo tributario del ledger actual: anio * 12 + (mes - 1), en UTC.
+/// El umbral mensual de SUNAT se mide sobre lo percibido en el mes, asi que el
+/// acumulado vive en el contrato y no depende de cuantos eventos guarde el RPC.
+pub fn period_of(timestamp: u64) -> u32 {
+    // Algoritmo civil_from_days de Howard Hinnant, con la era desplazada a 0000-03-01.
+    let z = (timestamp / 86_400) as i64 + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    (y as u32) * 12 + (m as u32 - 1)
 }
 
 #[contracterror]
@@ -48,6 +67,8 @@ pub struct Paid {
     pub net: i128,
     pub tax: i128,
     pub receipt_ref: String,
+    /// Periodo tributario del cobro (anio * 12 + mes - 1).
+    pub period: u32,
 }
 
 #[contractevent]
@@ -92,6 +113,12 @@ impl Honorarios {
             return Err(Error::ReceiptRefTooLong);
         }
 
+        let period = period_of(env.ledger().timestamp());
+        let month_key = DataKey::MonthGross(freelancer.clone(), period);
+        let month: i128 = env.storage().persistent().get(&month_key).unwrap_or(0);
+        env.storage().persistent().set(&month_key, &(month + gross));
+        keep_alive(&env, &month_key);
+
         let tax = gross * TAX_BPS / BPS_DENOMINATOR;
         let net = gross - tax;
         let client = token::Client::new(&env, &Self::token(env.clone()));
@@ -105,7 +132,7 @@ impl Honorarios {
             keep_alive(&env, &key);
         }
 
-        Paid { freelancer, payer, gross, net, tax, receipt_ref }.publish(&env);
+        Paid { freelancer, payer, gross, net, tax, receipt_ref, period }.publish(&env);
         Ok(net)
     }
 
@@ -113,6 +140,20 @@ impl Honorarios {
         env.storage()
             .persistent()
             .get(&DataKey::TaxReserve(freelancer))
+            .unwrap_or(0)
+    }
+
+    /// Periodo tributario del ledger actual, para consultar el acumulado del mes.
+    pub fn current_period(env: Env) -> u32 {
+        period_of(env.ledger().timestamp())
+    }
+
+    /// Bruto cobrado por el freelancer en ese periodo. Es el numero que se compara
+    /// contra el umbral mensual de SUNAT.
+    pub fn month_gross(env: Env, freelancer: Address, period: u32) -> i128 {
+        env.storage()
+            .persistent()
+            .get(&DataKey::MonthGross(freelancer, period))
             .unwrap_or(0)
     }
 

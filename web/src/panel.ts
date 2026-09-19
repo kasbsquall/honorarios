@@ -3,7 +3,7 @@ import "./panel.css";
 import { StrKey } from "@stellar/stellar-sdk";
 import { connectPasskey, createPasskeyWallet, restorePasskey, withdrawWithPasskey } from "./passkey";
 import {
-  EXPLORER, type Paid, connectWallet, fromUnits, paidEvents, short, taxReserve, toUnits, withdrawWithWallet,
+  EXPLORER, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, short, taxReserve, toUnits, withdrawWithWallet,
 } from "./stellar";
 import { openRheDraft } from "./rhe";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
@@ -22,6 +22,8 @@ let me = "";
 let mode: Mode = "passkey";
 let events: Paid[] | null = null;
 let reserve: bigint | null = null;
+// Acumulado del mes leido del contrato: sobrevive a la ventana de eventos del RPC.
+let monthly: bigint | null = null;
 
 restorePasskey().then((id) => (id ? enter(id, "passkey") : renderIntro()));
 
@@ -69,10 +71,14 @@ function renderIntro(error = "") {
 
 async function load() {
   try {
-    [reserve, events] = await Promise.all([taxReserve(me), paidEvents(me)]);
+    const [r, e, m] = await Promise.all([taxReserve(me), paidEvents(me), chainMonthGross(me)]);
+    reserve = r;
+    events = e;
+    monthly = m.gross;
   } catch {
     reserve = null;
     events = [];
+    monthly = null;
     app.querySelector("#load-error")?.classList.remove("hidden");
   }
   renderPanel();
@@ -149,7 +155,7 @@ function renderPanel() {
     }</div>
   </section>`;
 
-  renderThreshold(loading ? null : monthGross(list));
+  renderThreshold(loading ? null : (monthly ?? monthGross(list)));
   bindLinkForm();
   bindWithdraw();
   app.querySelectorAll<HTMLButtonElement>(".rhe-open").forEach((b) =>
@@ -212,6 +218,7 @@ function renderThreshold(gross: bigint | null) {
       <div><dt>Cobrado en el mes</dt><dd class="num">${pen === null ? "—" : soles(pen)}</dd></div>
       <div><dt>Umbral 2026</dt><dd class="num">${soles(THRESHOLD_PEN)}</dd></div>
       <div><dt>Regla</dt><dd>8% del total del mes si lo supera, S/ 0 si no</dd></div>
+      <div><dt>Fuente del dato</dt><dd>acumulado del mes leído del contrato</dd></div>
     </dl>
     <p class="th-help">${
       pen === null
@@ -223,7 +230,9 @@ function renderThreshold(gross: bigint | null) {
     <details class="howto">
       <summary><i class="ph-light ph-list-numbers"></i> Cómo se paga a SUNAT</summary>
       <ol>
-        <li>Retira la reserva a tu wallet o exchange y conviértela a soles. SUNAT solo recibe soles.</li>
+        <li>Retira la reserva a tu wallet y conviértela a soles. SUNAT solo recibe soles.
+          <div id="offramp" class="offramp"><span class="spin"></span> Consultando anclas de soles en Stellar…</div>
+        </li>
         <li>Entra a SUNAT Operaciones en Línea con tu Clave SOL: Mis declaraciones y pagos, Trabajadores independientes (Formulario Virtual 616).</li>
         <li>Declara lo cobrado en el mes y paga con el NPS o en línea. El vencimiento depende del último dígito de tu RUC: <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">revisa el cronograma de obligaciones mensuales en sunat.gob.pe <i class="ph-light ph-arrow-up-right"></i></a></li>
       </ol>
@@ -234,11 +243,32 @@ function renderThreshold(gross: bigint | null) {
       <small>Umbral según R.S. 000390-2025/SUNAT. La norma usa el tipo de cambio compra SBS del día en que cobras; aquí se usa uno solo para todo el mes como aproximación. No hay criterio SUNAT publicado para cobros en cripto: confírmalo con tu contador.</small>
     </label>`;
 
+  renderOfframp();
+
   box.querySelector<HTMLInputElement>("#fx")!.addEventListener("change", (e) => {
     const v = Number((e.target as HTMLInputElement).value.replace(",", "."));
     try { localStorage.setItem(FX_KEY, v > 0 ? String(v) : ""); } catch { /* sin storage */ }
     renderThreshold(gross);
   });
+}
+
+// Ancla SEP-24 que liquida en soles. Se consulta en vivo: si deja de ofrecer PEN, se nota.
+const ANCHOR = { home: "https://www.anclap.com", toml: "https://api.anclap.com/.well-known/stellar.toml", info: "https://api.anclap.com/transfer24/info", name: "Anclap" };
+
+async function renderOfframp() {
+  const box = app.querySelector("#offramp");
+  if (!box) return;
+  try {
+    const info = await fetch(ANCHOR.info).then((r) => r.json());
+    const pen = info?.withdraw?.PEN;
+    if (!pen?.enabled) throw new Error("sin PEN");
+    const fee = typeof pen.fee_percent === "number" ? ` · comisión ${pen.fee_percent}%` : "";
+    box.innerHTML = `<i class="ph-light ph-bank"></i> <b>${ANCHOR.name}</b> retira soles por SEP-24 en la red principal${esc(fee)}.
+      <a href="${ANCHOR.toml}" target="_blank" rel="noopener">Ver su stellar.toml <i class="ph-light ph-arrow-up-right"></i></a>
+      <small>Consultado en vivo. Esta app corre en testnet, así que el retiro a un banco peruano no se ejecuta desde aquí.</small>`;
+  } catch {
+    box.innerHTML = `<i class="ph-light ph-bank"></i> No pudimos consultar el ancla ahora. En la red principal hay anclas que liquidan soles por SEP-24; revisa <a href="${ANCHOR.home}" target="_blank" rel="noopener">${ANCHOR.name}</a>.`;
+  }
 }
 
 function bindLinkForm() {

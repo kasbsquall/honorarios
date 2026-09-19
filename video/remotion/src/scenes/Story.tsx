@@ -53,7 +53,7 @@ export const Cold: React.FC = () => {
             </div>
             <div style={{opacity: ramp(f, aTx, 12), fontFamily: MONO, fontSize: 24, color: C.ink3, display: 'flex', justifyContent: 'space-between'}}>
               <span>Una sola transacción · Stellar testnet</span>
-              <span>tx 139b4f3c…9925</span>
+              <span>tx 90ab3000…6832</span>
             </div>
           </div>
           <div style={{borderLeft: `2px dashed ${C.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.surface, transform: `translate(${tear * 36}px, ${tear * 14}px) rotate(${tear * 4}deg)`, boxShadow: tear ? '0 30px 60px -30px rgba(0,0,0,0.9)' : undefined}}>
@@ -315,7 +315,42 @@ export const Stack: React.FC = () => {
   );
 };
 
-/* ---------------------------------------------------------------- 11 · cierre */
+/* ---------------------------------------------------------------- 11 · modelo */
+export const Negocio: React.FC = () => {
+  const f = useCurrentFrame();
+  const aC = cue('negocio', 'comisión');
+  const aA = cue('negocio', 'abierto');
+  const row = (at: number, icon: React.ReactNode, t: string, sub: string) => (
+    <div style={{display: 'flex', gap: 26, alignItems: 'center', opacity: ramp(f, at, 14), transform: `translateY(${(1 - ramp(f, at, 14)) * 14}px)`, borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
+      <div style={{color: C.accent}}>{icon}</div>
+      <div>
+        <div style={{fontFamily: FONT.display, fontSize: 46, fontWeight: 600, color: C.ink}}>{t}</div>
+        <div style={{fontFamily: FONT.display, fontSize: 30, color: C.ink3}}>{sub}</div>
+      </div>
+    </div>
+  );
+  return (
+    <SceneOut>
+      <Halo x={520} y={520} size={640} o={0.18} />
+      <AbsoluteFill style={{padding: '170px 140px 210px', display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 80, alignItems: 'center'}}>
+        <div>
+          <Label>Cómo se sostiene</Label>
+          <div style={{...H, fontSize: 96, marginTop: 20}}>Una comisión<br />por cobro liquidado</div>
+          <div style={{fontFamily: MONO, fontSize: 24, color: C.ink3, marginTop: 26, opacity: ramp(f, aC + 10, 12)}}>Es el plan, todavía sin precio validado</div>
+        </div>
+        <div style={{display: 'grid', gap: 26}}>
+          {row(aC, <CurrencyCircleDollar size={46} weight="light" />, 'Paga el freelancer', 'solo cuando cobra')}
+          {row(aA + 4, <FileCode size={46} weight="light" />, 'Contrato abierto', 'código MIT, auditable por cualquiera')}
+        </div>
+      </AbsoluteFill>
+      <Sfx src="whoosh.wav" at={1} vol={0.08} />
+      <Sfx src="tick.wav" at={aC} vol={0.12} />
+      <Sfx src="tick.wav" at={aA + 4} vol={0.12} />
+    </SceneOut>
+  );
+};
+
+/* ---------------------------------------------------------------- 12 · cierre */
 export const Close: React.FC = () => {
   const f = useCurrentFrame();
   const {durationInFrames} = useVideoConfig();

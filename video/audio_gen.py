@@ -40,13 +40,14 @@ SCENES = [
     ("panel", "Tu panel lee los cobros desde la red y calcula tu pago a cuenta real: ocho por ciento del mes si pasas el umbral, cero si no. Te explica cómo pagarlo en soles, con el Formulario seiscientos dieciséis, y te arma el borrador del recibo en dólares."),
     ("withdraw", "Cuando toca pagar, retiras la reserva con tu huella."),
     ("stack", "Todo esto se construyó esta semana, en testnet: Soroban, USDC de Circle, path payments y smart accounts con passkeys."),
+    ("negocio", "El plan para sostenerlo es una comisión pequeña por cada cobro liquidado. El contrato queda abierto para que cualquiera lo audite."),
     ("close", "Honorarios. Cobra afuera, declara tranquilo."),
 ]
 
 LEAD = 1.6          # seconds of music before the voice enters
 # Silencio extra tras la voz de una escena, para que la demo respire.
-EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "solution": "confident", "passkey": "enthusiastic", "pay": "excited", "chain": "confident", "code": "confident", "panel": "calm", "withdraw": "content", "stack": "proud", "close": "enthusiastic"}
-POST = {"cold": 0.8, "passkey": 4.5, "pay": 8.0, "chain": 2.5, "code": 1.5, "panel": 4.0, "withdraw": 4.5, "stack": 1.0, "close": 5.0}
+EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "solution": "confident", "passkey": "enthusiastic", "pay": "excited", "chain": "confident", "code": "confident", "panel": "calm", "withdraw": "content", "stack": "proud", "negocio": "confident", "close": "enthusiastic"}
+POST = {"cold": 0.8, "passkey": 4.5, "pay": 8.0, "chain": 2.5, "code": 1.5, "panel": 4.0, "withdraw": 4.5, "stack": 1.0, "negocio": 1.5, "close": 5.0}
 GAP = 0.28          # silence inserted between scenes, so beats do not run together
 
 

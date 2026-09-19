@@ -11,7 +11,7 @@ flowchart TB
   CL["Cliente en el exterior<br/>Freighter · cuenta G…"]
   PG["pay.html<br/>link de pago"]
   POOL["Pool XLM / USDC<br/>path payment"]
-  H["Contrato Honorarios<br/>CAJAMA32…BXSG"]
+  H["Contrato Honorarios<br/>CD7M4P64…E4YL"]
   RES["Reserva 8%<br/>queda en el contrato"]
   SW["Smart wallet del freelancer<br/>cuenta C… · passkey"]
   D["Panel del freelancer<br/>index.html"]
@@ -103,22 +103,25 @@ El contrato no guarda montos en soles ni tipos de cambio. La regla tributaria qu
 | `tax_reserve(freelancer)` | lectura | Saldo reservado |
 | `withdraw_tax(freelancer, to, amount)` | `freelancer` | Mueve reserva, emite `TaxWithdrawn` |
 
-Errores: `InvalidAmount` (monto ≤ 0), `InsufficientReserve` (retiro mayor a la reserva), `InvalidParty` (el freelancer es el pagador o el propio contrato) y `ReceiptRefTooLong` (N° de recibo de más de 32 caracteres). La reserva y la instancia renuevan su TTL a ~30 días en cada `pay` y `withdraw_tax`. Cubiertos por 9 tests en `contracts/split/src/test.rs`.
+Errores: `InvalidAmount` (monto ≤ 0), `InsufficientReserve` (retiro mayor a la reserva), `InvalidParty` (el freelancer es el pagador o el propio contrato) y `ReceiptRefTooLong` (N° de recibo de más de 32 caracteres). La reserva y la instancia renuevan su TTL a ~30 días en cada `pay` y `withdraw_tax`. Guarda además el bruto cobrado por mes (`month_gross`), que es lo que se compara con el umbral de SUNAT. Cubiertos por 14 tests en `contracts/split/src/test.rs`, tres de ellos de autorización sin `mock_all_auths`.
 
 ## 6. Evidencia en testnet
 
 | Qué | Enlace |
 |---|---|
-| Contrato | [CAJAMA32…BXSG](https://stellar.expert/explorer/testnet/contract/CAJAMA32YRPYHG5ZT2WDIRLRLPBTCKOXGOJNHIQ3IEMDUDXHGNYGBXSG) |
-| Cobro de 500 USDC desde el link de pago | [261cfebe…83e9](https://stellar.expert/explorer/testnet/tx/261cfebeb681d143338f855bbfc10833b249ee0289aa15fe035305ec250583e9) |
-| Smart wallet con passkey | [CBNKXPVM…XHUP](https://stellar.expert/explorer/testnet/contract/CBNKXPVM3XT5OJJSP6AQKIOYYKECMCGJEZLGB4LZB2XJ35AHWSUXXHUP) |
-| Cobro de 200 USDC a la smart wallet | [f93ea435…e0e6](https://stellar.expert/explorer/testnet/tx/f93ea435cd96e2e344973fd4e16fc44041eacb0a2a0f79e33d383ff59a9ae0e6) |
-| Retiro de reserva firmado con passkey | [417f8def…2a2b](https://stellar.expert/explorer/testnet/tx/417f8defb56b14054d22ae63a45d711a60189d3227d69eb67be0c310492c2a2b) |
+| Contrato | [CD7M4P64…E4YL](https://stellar.expert/explorer/testnet/contract/CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL) |
+| Despliegue | [bf81a604…88cf](https://stellar.expert/explorer/testnet/tx/bf81a604603564519e1d4af8b3dd366a0dcafbcc258359ddfd7429e877ef88cf) |
+| Smart wallet con passkey de la demo | [CCZ2…FJVT](https://stellar.expert/explorer/testnet/contract/CCZ2DVYZXP2PENOEDIFUMK5RXG44TVILVKAGC76XEHYYLRMD4YC5FJVT) |
+| Cobro de 500 USDC con compra de USDC vía XLM | [90ab3000…6832](https://stellar.expert/explorer/testnet/tx/90ab3000636518aa5f7936d78770cc432cabb74a2dacabab6f4f90cf893e6832) |
+| Retiro de reserva firmado con passkey | [55a1bd3e…2101](https://stellar.expert/explorer/testnet/tx/55a1bd3e256829967120c1ddffd5b76405c5e304689bdc1ca754f0f8154c2101) |
+
+Todos los enlaces salen de la misma corrida, la que se ve en el video demo.
 
 ## 7. Qué falta hasta la entrega (25 de septiembre)
 
 - (Hecho) Borrador del recibo por honorarios por cada cobro, para copiar al emitirlo en SUNAT.
-- Video demo y README final.
+- (Hecho) Video demo, README final, acumulado mensual en el contrato y consulta en vivo del ancla de soles.
+- Subir el video a YouTube y enviar el formulario de entrega.
 
 ## Límites conocidos
 

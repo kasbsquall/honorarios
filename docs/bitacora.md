@@ -41,4 +41,17 @@ Pendiente de verificar: fechas del cronograma por último dígito del RUC (se en
 
 ## 2026-09-19 · Video demo v1
 
-Video de 2:07 (límite de las bases: 3 minutos, stellar.mintedinpe.com/odyssey). Voz ElevenLabs "Jorge" (acento peruano), música ElevenLabs, sonidos CC0 de Kenney. Demo grabada en testnet con Playwright (`web/e2e/film.mjs`): wallet con passkey CB2D…KIUY, cobro de 500 USDC tx 139b4f3c…9925 (el cliente compró USDC con XLM vía path payment), retiro de 40 USDC tx fa9e5215…. El tipo de cambio 3.75 que aparece en el panel es de ejemplo. Fuentes en `video/`.
+Video de 2:07 (límite de las bases: 3 minutos, stellar.mintedinpe.com/odyssey). Voz ElevenLabs "Jorge" (acento peruano), música ElevenLabs, sonidos CC0 de Kenney. Demo grabada en testnet con Playwright (`web/e2e/film.mjs`): wallet con passkey CCZ2…FJVT, cobro de 500 USDC tx 139b4f3c…9925 (el cliente compró USDC con XLM vía path payment), retiro de 40 USDC tx fa9e5215…. El tipo de cambio 3.75 que aparece en el panel es de ejemplo. Fuentes en `video/`.
+
+## 2026-09-19 · Mejoras tras el jurado simulado
+
+Un panel de tres jueces agnósticos (ingeniero Stellar, inversionista, producto) puntuó el proyecto en 85, 85 y 86 sobre 100, con la rúbrica oficial. Coincidieron en cuatro debilidades y se atacaron todas:
+
+- **Autorización sin probar.** Los 9 tests corrían con `mock_all_auths`. Se agregaron tres pruebas que exigen firma real: retiro sin firma, retiro firmado por un tercero y pago sin firma del pagador. Ahora son 14 tests (`contracts/split/src/test.rs`).
+- **Historial dependiente del RPC.** El panel sumaba eventos y el RPC solo guarda unos 7 días. El contrato ahora acumula el bruto por mes (`DataKey::MonthGross`, `month_gross`, `current_period`, periodo = año*12+mes-1 en UTC) y el panel lo lee de ahí.
+- **Sin salida a soles.** El panel consulta en vivo el SEP-24 de Anclap (`api.anclap.com/transfer24/info`), que ofrece retiro en PEN ("Sol Digital") en la red principal. Se muestra en el paso 1 de "Cómo se paga a SUNAT", con la aclaración de que esta app corre en testnet.
+- **Sin modelo de negocio y evidencia descoordinada.** Se agregó al README y al video la línea de sostenibilidad (comisión por cobro liquidado, sin precio validado) y se rehízo la demo entera contra el contrato nuevo, así el video y el README citan la misma corrida.
+
+**Contrato nuevo:** `CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL`, desplegado con el SDK de JavaScript porque el CLI de Stellar ya no está instalado en el equipo (tx `bf81a604…88cf`). El anterior, `CAJAMA32…BXSG`, queda obsoleto.
+
+**Corrida de la demo:** wallet con passkey `CCZ2…FJVT`, cobro de 500 USDC `90ab3000…6832` (el cliente compró USDC con XLM), retiro de 40 USDC `55a1bd3e…2101`.

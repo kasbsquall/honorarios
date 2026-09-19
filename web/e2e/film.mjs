@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { Keypair } from "@stellar/stellar-sdk";
 
 const BASE = process.env.BASE ?? "http://localhost:5196";
-const OUT = new URL("../../video/rec/", import.meta.url).pathname.replace(/^\/(\w:)/, "$1");
+const OUT = new URL("../../video/rec_v2/", import.meta.url).pathname.replace(/^\/(\w:)/, "$1");
 mkdirSync(OUT, { recursive: true });
 const env = Object.fromEntries(readFileSync(".env.development.local", "utf8").split(/\r?\n/).filter(Boolean).map((l) => l.split("=")));
 const CLIENT = Keypair.fromSecret(env.VITE_DEV_CLIENT_SECRET.trim()).publicKey();
