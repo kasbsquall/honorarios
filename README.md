@@ -39,11 +39,11 @@ Es la misma corrida que se ve en el video demo, de principio a fin.
 
 | Qué | Enlace |
 |---|---|
-| Contrato | [`CD7M4P64…E4YL`](https://stellar.expert/explorer/testnet/contract/CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL) |
-| Despliegue del contrato | [`bf81a604…88cf`](https://stellar.expert/explorer/testnet/tx/bf81a604603564519e1d4af8b3dd366a0dcafbcc258359ddfd7429e877ef88cf) |
-| Smart wallet creada con passkey en la demo | [`CCZ2…FJVT`](https://stellar.expert/explorer/testnet/contract/CCZ2DVYZXP2PENOEDIFUMK5RXG44TVILVKAGC76XEHYYLRMD4YC5FJVT) |
-| Cobro de 500 USDC (460 neto, 40 reserva), el cliente compró USDC con XLM | [`90ab3000…6832`](https://stellar.expert/explorer/testnet/tx/90ab3000636518aa5f7936d78770cc432cabb74a2dacabab6f4f90cf893e6832) |
-| Retiro de la reserva firmado con passkey | [`55a1bd3e…2101`](https://stellar.expert/explorer/testnet/tx/55a1bd3e256829967120c1ddffd5b76405c5e304689bdc1ca754f0f8154c2101) |
+| Contrato | [`CDGZLOQD…5YETA`](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA) |
+| Despliegue del contrato | [`9a23da89…429a`](https://stellar.expert/explorer/testnet/tx/9a23da8911334ea067299fcbe32b69741d0382c9a2d0aeff9fa6a0c8a172429a) |
+| Smart wallet creada con passkey en la demo | [`CD6E…7GXD`](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
+| Cobro de 500 USDC (460 neto, 40 reserva), el cliente compró USDC con XLM | [`1c41c40d…3e13`](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
+| Retiro de la reserva firmado con passkey | [`76aca849…86b9`](https://stellar.expert/explorer/testnet/tx/76aca84969e050b397aafae6cce7372d6bfd59bc32dc1f14a63b0d0ffd5d86b9) |
 
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
 
@@ -52,7 +52,7 @@ USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZL
 Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/arquitectura.md).
 
 ```
-contracts/split/   contrato Soroban (Rust) y sus 14 tests
+contracts/split/   contrato Soroban (Rust) y sus 19 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
 web/e2e/           pruebas E2E en testnet con Playwright
 design/            tres propuestas de identidad visual
@@ -68,8 +68,9 @@ docs/              arquitectura y bitácora de decisiones
 | `month_gross(freelancer, period)` | lectura | Bruto cobrado en un mes, para comparar con el umbral |
 | `current_period()` | lectura | Periodo tributario del ledger actual |
 | `withdraw_tax(freelancer, to, amount)` | `freelancer` | Mueve la reserva, evento `TaxWithdrawn` |
+| `extend_reserve(freelancer)` | nadie | Renueva el TTL de una reserva inactiva, sin mover fondos |
 
-El acumulado del mes vive en el contrato, así el panel no depende de cuántos eventos guarde el RPC. Rechaza montos ≤ 0, retiros mayores a la reserva, pagos donde el freelancer es el pagador o el propio contrato, y N° de recibo de más de 32 caracteres. La reserva renueva su TTL en cada operación.
+El mes tributario cierra a medianoche de Lima, no en UTC, porque es el mes que SUNAT mide. La reserva redondea hacia arriba: ante un céntimo de duda, sobra en la reserva y no falta. El acumulado del mes vive en el contrato, así el panel no depende de cuántos eventos guarde el RPC. Rechaza montos ≤ 0, retiros mayores a la reserva, pagos donde el freelancer es el pagador o el propio contrato, y N° de recibo de más de 32 caracteres. La reserva renueva su TTL en cada operación.
 
 ## Ejecutar
 
@@ -111,6 +112,12 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 ## Límites conocidos
 
 - Solo testnet. `smart-account-kit` y el relayer no tienen auditoría independiente, según su propio README.
+- **El umbral se mide sobre todos tus ingresos del mes, no solo sobre lo que pasa por aquí.** El contrato solo puede sumar sus propios cobros, así que el panel pide a mano las otras rentas de cuarta, las de quinta y las retenciones ya practicadas. Con esos campos vacíos, el número que muestra se queda corto.
+- El 8% es pago a cuenta, no impuesto final: en la declaración anual se recalcula sobre la renta neta y puede quedar saldo por pagar o a favor. La app no hace ese cálculo.
+- La cifra del umbral y el tope de suspensión vienen de una fuente secundaria y no los hemos contrastado contra el texto publicado en El Peruano. La interfaz lo dice donde aparecen.
+- `month_gross` cuenta lo que entra por el contrato y cualquiera puede pagar a nombre de un tercero, así que un extraño podría inflar ese acumulado regalando dinero. Es caro de hacer y no toca la reserva, pero el número no es resistente a manipulación.
+- Las comisiones son gratis mientras el relayer público de SDF en testnet lo sea. No hay modelo de patrocinio en la red principal.
+- No hay pruebas automatizadas del frontend: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
 - No encontramos una norma de SUNAT específica para honorarios cobrados en cripto. El tipo de cambio para medir el umbral lo ingresa el freelancer y la app no lo fija.
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.
 - El ancla de soles vive en la red principal. Desde testnet solo se consulta su información, no se hace el retiro.

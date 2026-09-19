@@ -67,3 +67,9 @@ dialog.rhe[open] { animation: rise 220ms var(--ease) both }
 .offramp { margin: 10px 0 4px; padding: 12px 14px; border: 1px solid var(--rule-strong); background: var(--surface); display: grid; gap: 6px; font-size: var(--t-s); color: var(--ink2) }
 .offramp b { color: var(--ink); font-weight: 500 }
 .offramp small { font-size: var(--t-xs); color: var(--ink3) }
+
+/* Aviso de solo lectura y procedencia de las cifras tributarias. */
+.note { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; border: 1px solid var(--rule-strong); padding: 12px 16px; color: var(--ink-2); font-size: var(--t-s) }
+.note a { color: var(--ink) }
+.th-rows .src, .howto .src { color: var(--ink-3); font-size: var(--t-s); line-height: 1.55 }
+.howto .src b { color: var(--ink-2); font-weight: 500 }

@@ -12,19 +12,19 @@ import {
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { getNetworkDetails, requestAccess, signTransaction } from "@stellar/freighter-api";
+import { getNetworkDetails, isConnected, requestAccess, signTransaction } from "@stellar/freighter-api";
 
 export const NETWORK = Networks.TESTNET;
 export const RPC_URL = "https://soroban-testnet.stellar.org";
 export const HORIZON_URL = "https://horizon-testnet.stellar.org";
-export const CONTRACT_ID = "CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL";
+export const CONTRACT_ID = "CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA";
 export const USDC = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 export const TAX_BPS = 800n;
 export const EXPLORER = "https://stellar.expert/explorer/testnet";
 const DECIMALS = 7;
 const PATH_SLIPPAGE = 1.05;
 // Ledger del despliegue del contrato: no hay eventos antes de esto.
-const DEPLOY_LEDGER = 4_765_600;
+const DEPLOY_LEDGER = 4_766_344;
 // El RPC de testnet recorre como maximo ~10k ledgers por consulta.
 const EVENT_SCAN_STEP = 9_000;
 
@@ -44,8 +44,9 @@ export function fromUnits(units: bigint, digits = 2): string {
   return `${sign}${whole.toLocaleString("en-US")}${digits ? "." + frac : ""}`;
 }
 
+/** Mismo reparto que el contrato, con el mismo redondeo hacia arriba de la reserva. */
 export function split(gross: bigint) {
-  const tax = (gross * TAX_BPS) / 10_000n;
+  const tax = (gross * TAX_BPS + 9_999n) / 10_000n;
   return { gross, tax, net: gross - tax };
 }
 
@@ -65,10 +66,19 @@ function devKeypair(): Keypair | null {
   return secret ? Keypair.fromSecret(secret) : null;
 }
 
+/** Rechaza si la promesa no responde: sin extensión, Freighter no contesta nunca. */
+function within<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
+  return Promise.race([p, new Promise<T>((_, no) => setTimeout(() => no(new Error(msg)), ms))]);
+}
+
+export const FREIGHTER_INSTALL = "https://www.freighter.app/";
+
 export async function connectWallet(): Promise<string> {
   const dev = devKeypair();
   if (dev) return dev.publicKey();
-  const access = await requestAccess();
+  const here = await within(isConnected(), 4000, "no-freighter").catch(() => ({ isConnected: false }));
+  if (!here?.isConnected) throw new Error("No encontramos la extensión Freighter en este navegador.");
+  const access = await within(requestAccess(), 90_000, "Freighter no respondió. Ábrelo y vuelve a intentar.");
   if (access.error) throw new Error("Freighter rechazó la conexión.");
   const net = await getNetworkDetails();
   if (net.networkPassphrase !== NETWORK) throw new Error("Cambia Freighter a Testnet para continuar.");

@@ -55,3 +55,52 @@ Un panel de tres jueces agnósticos (ingeniero Stellar, inversionista, producto)
 **Contrato nuevo:** `CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL`, desplegado con el SDK de JavaScript porque el CLI de Stellar ya no está instalado en el equipo (tx `bf81a604…88cf`). El anterior, `CAJAMA32…BXSG`, queda obsoleto.
 
 **Corrida de la demo:** wallet con passkey `CCZ2…FJVT`, cobro de 500 USDC `90ab3000…6832` (el cliente compró USDC con XLM), retiro de 40 USDC `55a1bd3e…2101`.
+
+## 2026-09-19 · Segundo jurado simulado y endurecimiento del contrato
+
+Cuatro jueces agnósticos (negocio, ingeniería Stellar, producto, cumplimiento tributario peruano)
+puntuaron 68, 76, 82 y 62 sobre 100. Dos hallazgos se repitieron en todos y se corrigieron:
+
+- **La app se caía en la primera pantalla sin wallet.** `connectWallet` esperaba a Freighter para
+  siempre cuando la extensión no estaba instalada. Ahora se detecta con `isConnected()` y un
+  tiempo de espera, el error enlaza a la instalación, y la portada ofrece un panel de ejemplo en
+  solo lectura con la cuenta de la demo (`web/src/stellar.ts:68-85`, `web/src/panel.ts`).
+- **El panel afirmaba un saldo falso cuando fallaba la red.** El `catch` de `load()` mostraba el
+  aviso de error y `renderPanel()` lo volvía a ocultar al reescribir el HTML, y la reserva se
+  pintaba como `0.00`. Ahora el estado de error vive en una variable que el render lee, los
+  números se muestran como `—` y la lista dice que no se pudo leer la red, no que no haya cobros.
+
+Del juez tributario (todo lo que sigue está en `web/src/panel.ts`):
+
+- El umbral se mide sobre todos los ingresos del mes. Se agregaron campos para otras rentas de
+  cuarta, rentas de quinta y retenciones ya practicadas, y el total del mes las suma. El número
+  grande ya no se llama "pago a cuenta real" sino estimado, y dice que no es la declaración.
+- Se añadió la advertencia de la regularización anual y la del riesgo cambiario, porque la
+  reserva está en USDC y la deuda en soles.
+- Las cifras de la resolución de SUNAT aparecen marcadas en la propia interfaz como leídas de una
+  fuente secundaria y sin contrastar contra El Peruano. La tasa del 8% sí se cita por su norma:
+  artículo 86 del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF).
+
+Del juez técnico, con cambio de contrato y redespliegue:
+
+- **El mes tributario cerraba en UTC.** Un cobro del último día del mes a las 19:00 de Lima caía
+  en el mes siguiente. `period_of` ahora resta el huso de Perú (`contracts/split/src/lib.rs:29`).
+- **La reserva podía quedar archivada sin rescate.** Se agregó `extend_reserve(freelancer)`, que
+  renueva el TTL sin mover fondos y puede llamar cualquiera.
+- **Un monto enorme reventaba por aritmética** en vez de devolver `InvalidAmount`. Se agregó
+  `MAX_GROSS` y su validación.
+- **El redondeo favorecía al pagador.** La reserva ahora redondea hacia arriba, y `split()` en el
+  frontend hace lo mismo para no divergir del contrato.
+- **Los tres tests de autorización usaban `#[should_panic]` sin `expected`**, así que cualquier
+  pánico los aprobaba. Ahora exigen el error `Auth(InvalidAction)`, lo que además demuestra que
+  `set_auths(&[])` sí desactiva el mock. Se agregaron la invariante de custodia (lo reservado a
+  nombre de todos cabe en el balance del contrato), el redondeo, el desbordamiento, el TTL y la
+  frontera del mes en Lima. Son 19 tests.
+
+**Contrato nuevo:** `CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA`, despliegue
+`9a23da89…429a`, ledger 4,766,344. El anterior, `CD7M4P64…E4YL`, queda obsoleto.
+
+**Corrida de la demo, rehecha entera contra este contrato:** wallet con passkey `CD6E…7GXD`,
+cobro de 500 USDC `1c41c40d…3e13` (el cliente compró USDC con XLM), retiro de 40 USDC
+`76aca849…86b9`. El video v6 se regrabó y se volvió a narrar: la narración decía "nueve pruebas"
+y "pago a cuenta real", y ninguna de las dos cosas era ya cierta.

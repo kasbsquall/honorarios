@@ -53,7 +53,7 @@ export const Cold: React.FC = () => {
             </div>
             <div style={{opacity: ramp(f, aTx, 12), fontFamily: MONO, fontSize: 24, color: C.ink3, display: 'flex', justifyContent: 'space-between'}}>
               <span>Una sola transacción · Stellar testnet</span>
-              <span>tx 90ab3000…6832</span>
+              <span>tx 1c41c40d…3e13</span>
             </div>
           </div>
           <div style={{borderLeft: `2px dashed ${C.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.surface, transform: `translate(${tear * 36}px, ${tear * 14}px) rotate(${tear * 4}deg)`, boxShadow: tear ? '0 30px 60px -30px rgba(0,0,0,0.9)' : undefined}}>
@@ -207,23 +207,23 @@ const CODE = [
   '    }',
 ];
 const TESTS = [
-  'running 9 tests',
-  'test test::rejects_contract_as_freelancer ... ok',
-  'test test::rejects_non_positive_amount ... ok',
-  'test test::rejects_long_receipt_ref ... ok',
-  'test test::cannot_withdraw_more_than_reserve ... ok',
-  'test test::rejects_payer_as_freelancer ... ok',
-  'test test::pay_extends_reserve_ttl ... ok',
-  'test test::pay_splits_net_and_tax_reserve ... ok',
-  'test test::reserve_accumulates_across_payments ... ok',
+  'running 19 tests',
+  'test test::withdraw_requires_the_freelancer_signature - should panic ... ok',
+  'test test::a_third_party_cannot_withdraw_someone_elses_reserve - should panic ... ok',
+  'test test::pay_requires_the_payer_signature - should panic ... ok',
+  'test test::the_contract_never_owes_more_than_it_holds ... ok',
+  'test test::the_month_closes_at_midnight_in_lima ... ok',
+  'test test::the_reserve_rounds_up ... ok',
+  'test test::rejects_amounts_that_would_overflow_the_tax ... ok',
+  'test test::month_gross_accumulates_and_separates_periods ... ok',
   'test test::freelancer_withdraws_reserve ... ok',
   '',
-  'test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s',
+  'test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s',
 ];
 export const Code: React.FC = () => {
   const f = useCurrentFrame();
   const aS = cue('code', 'firma');
-  const aN = cue('code', 'nueve');
+  const aN = cue('code', 'diecinueve');
   const hl = ramp(f, aS - 6, 12);
   return (
     <SceneOut>

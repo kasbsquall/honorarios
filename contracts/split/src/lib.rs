@@ -25,12 +25,18 @@ enum DataKey {
     MonthGross(Address, u32),
 }
 
-/// Periodo tributario del ledger actual: anio * 12 + (mes - 1), en UTC.
+/// Huso horario de Peru: el mes tributario cierra a medianoche de Lima, no en UTC.
+const PERU_UTC_OFFSET: u64 = 5 * 3_600;
+/// Monto maximo por cobro. Deja margen de sobra sobre cualquier honorario real y
+/// evita que la multiplicacion del 8% desborde en i128.
+pub const MAX_GROSS: i128 = i128::MAX / BPS_DENOMINATOR;
+
+/// Periodo tributario del ledger actual: anio * 12 + (mes - 1), en hora de Peru.
 /// El umbral mensual de SUNAT se mide sobre lo percibido en el mes, asi que el
 /// acumulado vive en el contrato y no depende de cuantos eventos guarde el RPC.
 pub fn period_of(timestamp: u64) -> u32 {
     // Algoritmo civil_from_days de Howard Hinnant, con la era desplazada a 0000-03-01.
-    let z = (timestamp / 86_400) as i64 + 719_468;
+    let z = (timestamp.saturating_sub(PERU_UTC_OFFSET) / 86_400) as i64 + 719_468;
     let era = z.div_euclid(146_097);
     let doe = z.rem_euclid(146_097);
     let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
@@ -103,7 +109,7 @@ impl Honorarios {
         receipt_ref: String,
     ) -> Result<i128, Error> {
         payer.require_auth();
-        if gross <= 0 {
+        if gross <= 0 || gross > MAX_GROSS {
             return Err(Error::InvalidAmount);
         }
         if freelancer == payer || freelancer == env.current_contract_address() {
@@ -119,7 +125,8 @@ impl Honorarios {
         env.storage().persistent().set(&month_key, &(month + gross));
         keep_alive(&env, &month_key);
 
-        let tax = gross * TAX_BPS / BPS_DENOMINATOR;
+        // Redondeo hacia arriba: ante un centavo de duda, que sobre en la reserva.
+        let tax = (gross * TAX_BPS + BPS_DENOMINATOR - 1) / BPS_DENOMINATOR;
         let net = gross - tax;
         let client = token::Client::new(&env, &Self::token(env.clone()));
 
@@ -141,6 +148,12 @@ impl Honorarios {
             .persistent()
             .get(&DataKey::TaxReserve(freelancer))
             .unwrap_or(0)
+    }
+
+    /// Renueva el TTL de la reserva sin mover fondos. Cualquiera puede llamarla:
+    /// solo evita que una reserva inactiva quede archivada y haya que restaurarla.
+    pub fn extend_reserve(env: Env, freelancer: Address) {
+        keep_alive(&env, &DataKey::TaxReserve(freelancer));
     }
 
     /// Periodo tributario del ledger actual, para consultar el acumulado del mes.

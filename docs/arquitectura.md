@@ -1,6 +1,6 @@
 # Honorarios · Arquitectura y flujo
 
-Checkpoint de Stellar Odyssey Perú, 23 de septiembre de 2026.
+Stellar Odyssey Perú. Última revisión: 19 de septiembre de 2026.
 
 Honorarios permite que un freelancer peruano cobre a clientes del exterior en USDC sobre Stellar. Un contrato Soroban reparte cada cobro en el momento: 92% al freelancer y 8% en una reserva a su nombre para el pago a cuenta de cuarta categoría (SUNAT). Solo el freelancer puede retirar esa reserva.
 
@@ -11,7 +11,7 @@ flowchart TB
   CL["Cliente en el exterior<br/>Freighter · cuenta G…"]
   PG["pay.html<br/>link de pago"]
   POOL["Pool XLM / USDC<br/>path payment"]
-  H["Contrato Honorarios<br/>CD7M4P64…E4YL"]
+  H["Contrato Honorarios<br/>CDGZLOQD…5YETA"]
   RES["Reserva 8%<br/>queda en el contrato"]
   SW["Smart wallet del freelancer<br/>cuenta C… · passkey"]
   D["Panel del freelancer<br/>index.html"]
@@ -103,21 +103,21 @@ El contrato no guarda montos en soles ni tipos de cambio. La regla tributaria qu
 | `tax_reserve(freelancer)` | lectura | Saldo reservado |
 | `withdraw_tax(freelancer, to, amount)` | `freelancer` | Mueve reserva, emite `TaxWithdrawn` |
 
-Errores: `InvalidAmount` (monto ≤ 0), `InsufficientReserve` (retiro mayor a la reserva), `InvalidParty` (el freelancer es el pagador o el propio contrato) y `ReceiptRefTooLong` (N° de recibo de más de 32 caracteres). La reserva y la instancia renuevan su TTL a ~30 días en cada `pay` y `withdraw_tax`. Guarda además el bruto cobrado por mes (`month_gross`), que es lo que se compara con el umbral de SUNAT. Cubiertos por 14 tests en `contracts/split/src/test.rs`, tres de ellos de autorización sin `mock_all_auths`.
+Errores: `InvalidAmount` (monto ≤ 0), `InsufficientReserve` (retiro mayor a la reserva), `InvalidParty` (el freelancer es el pagador o el propio contrato) y `ReceiptRefTooLong` (N° de recibo de más de 32 caracteres). La reserva y la instancia renuevan su TTL a ~30 días en cada `pay` y `withdraw_tax`. Guarda además el bruto cobrado por mes (`month_gross`), que es lo que se compara con el umbral de SUNAT. Cubiertos por 19 tests en `contracts/split/src/test.rs`, tres de ellos de autorización sin `mock_all_auths`.
 
 ## 6. Evidencia en testnet
 
 | Qué | Enlace |
 |---|---|
-| Contrato | [CD7M4P64…E4YL](https://stellar.expert/explorer/testnet/contract/CD7M4P64BBNWUCTWIGRHFHSRPI3GH2PFREUPAESETG36KCVQODKYE4YL) |
+| Contrato | [CDGZLOQD…5YETA](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA) |
 | Despliegue | [bf81a604…88cf](https://stellar.expert/explorer/testnet/tx/bf81a604603564519e1d4af8b3dd366a0dcafbcc258359ddfd7429e877ef88cf) |
-| Smart wallet con passkey de la demo | [CCZ2…FJVT](https://stellar.expert/explorer/testnet/contract/CCZ2DVYZXP2PENOEDIFUMK5RXG44TVILVKAGC76XEHYYLRMD4YC5FJVT) |
-| Cobro de 500 USDC con compra de USDC vía XLM | [90ab3000…6832](https://stellar.expert/explorer/testnet/tx/90ab3000636518aa5f7936d78770cc432cabb74a2dacabab6f4f90cf893e6832) |
-| Retiro de reserva firmado con passkey | [55a1bd3e…2101](https://stellar.expert/explorer/testnet/tx/55a1bd3e256829967120c1ddffd5b76405c5e304689bdc1ca754f0f8154c2101) |
+| Smart wallet con passkey de la demo | [CD6E…7GXD](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
+| Cobro de 500 USDC con compra de USDC vía XLM | [1c41c40d…3e13](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
+| Retiro de reserva firmado con passkey | [76aca849…86b9](https://stellar.expert/explorer/testnet/tx/76aca84969e050b397aafae6cce7372d6bfd59bc32dc1f14a63b0d0ffd5d86b9) |
 
 Todos los enlaces salen de la misma corrida, la que se ve en el video demo.
 
-## 7. Qué falta hasta la entrega (25 de septiembre)
+## 7. Qué falta hasta la entrega
 
 - (Hecho) Borrador del recibo por honorarios por cada cobro, para copiar al emitirlo en SUNAT.
 - (Hecho) Video demo, README final, acumulado mensual en el contrato y consulta en vivo del ancla de soles.

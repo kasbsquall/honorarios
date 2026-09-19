@@ -22,9 +22,9 @@ const Callout: React.FC<{x: number; y: number; from: number; to?: number; childr
 
 /* ---------------------------------------------------------------- 4 · wallet con passkey */
 export const Passkey: React.FC = () => {
-  const from = 4.0, rate = 1.3;
-  const click = at(6.8, from, rate);
-  const ready = at(18.3, from, rate);
+  const from = 4.5, rate = 1.1;
+  const click = at(7.5, from, rate);
+  const ready = at(20.3, from, rate);
   return (
     <SceneOut>
       <Screen src="vid/passkey.mp4" tilt={[1, -2]} keys={[
@@ -51,11 +51,11 @@ export const Passkey: React.FC = () => {
 
 /* ---------------------------------------------------------------- 5 · link y pago */
 export const Pay: React.FC = () => {
-  const from = 20.5, rate = 1.32;
-  const payPage = at(24.1, from, rate);
-  const prep = at(27.2, from, rate);
-  const sign = at(34.9, from, rate);
-  const paid = at(40.5, from, rate);
+  const from = 22.0, rate = 1.25;
+  const payPage = at(26.2, from, rate);
+  const prep = at(29.3, from, rate);
+  const sign = at(38.0, from, rate);
+  const paid = at(44.1, from, rate);
   return (
     <SceneOut>
       <Screen src="vid/pay.mp4" tilt={[1, 2]} keys={[
@@ -114,7 +114,7 @@ export const Chain: React.FC = () => {
         </div>
       </Callout>
       <Callout x={1240} y={880} from={aV}>
-        <Tag icon={<ArrowSquareOut size={36} weight="light" />}>stellar.expert · tx 90ab3000…</Tag>
+        <Tag icon={<ArrowSquareOut size={36} weight="light" />}>stellar.expert · tx 1c41c40d…</Tag>
       </Callout>
       <Rec text="Captura real · Stellar Expert" />
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
@@ -126,10 +126,10 @@ export const Chain: React.FC = () => {
 
 /* ---------------------------------------------------------------- 8 · panel */
 export const Panel: React.FC = () => {
-  const from = 46.2, rate = 0.86;
-  const th = at(49.4, from, rate);
-  const how = at(52.0, from, rate);
-  const rhe = at(56.3, from, rate);
+  const from = 50.0, rate = 0.82;
+  const th = at(54.2, from, rate);
+  const how = at(56.7, from, rate);
+  const rhe = at(61.1, from, rate);
   const a616 = cue('panel', 'formulario');
   const aR = cue('panel', 'recibo');
   return (
@@ -169,9 +169,9 @@ export const Panel: React.FC = () => {
 /* ---------------------------------------------------------------- 9 · retiro */
 export const Withdraw: React.FC = () => {
   const f = useCurrentFrame();
-  const from = 62.3, rate = 2.1;
-  const click = at(64.3, from, rate);
-  const done = at(76.3, from, rate);
+  const from = 66.5, rate = 1.55;
+  const click = at(67.6, from, rate);
+  const done = at(82.0, from, rate);
   return (
     <SceneOut>
       <Screen src="vid/withdraw.mp4" tilt={[1, 2]} keys={[
@@ -183,7 +183,7 @@ export const Withdraw: React.FC = () => {
         <Tag icon={<Fingerprint size={40} weight="light" color={C.accent} />}>Confirmas con tu passkey</Tag>
       </Callout>
       <Callout x={140} y={760} from={done + 4}>
-        <Tag accent>Retiraste 40.00 USDC · tx 55a1bd3e…</Tag>
+        <Tag accent>Retiraste 40.00 USDC · tx 76aca849…</Tag>
       </Callout>
       <Halo x={700} y={420} size={600} o={0.16 * ramp(f, done, 12)} />
       <Rec />
