@@ -59,16 +59,16 @@ export const Pay: React.FC = () => {
   return (
     <SceneOut>
       <Screen src="vid/pay.mp4" tilt={[1, 2]} keys={[
-        {f: 0, cx: 1230, cy: 720, s: 1.42},
-        {f: payPage - 12, cx: 1230, cy: 740, s: 1.42},
-        {f: payPage - 11, cx: 960, cy: 420, s: 1.4},
-        {f: paid - 10, cx: 960, cy: 450, s: 1.48},
-        {f: paid + 14, cx: 1200, cy: 400, s: 1.42},
+        {f: 0, cx: 880, cy: 330, s: 1.45},
+        {f: payPage - 12, cx: 900, cy: 345, s: 1.45},
+        {f: payPage + 6, cx: 1000, cy: 355, s: 1.42},
+        {f: paid - 10, cx: 1000, cy: 380, s: 1.42},
+        {f: paid + 14, cx: 975, cy: 425, s: 1.32},
       ]} />
       <Callout x={120} y={200} from={4} to={payPage - 12}>
         <Tag>Link de cobro · 500 USDC · E001-7</Tag>
       </Callout>
-      <Callout x={640} y={400} from={prep + 16} to={sign}>
+      <Callout x={600} y={730} from={prep + 16} to={sign}>
         <Tag accent icon={<ArrowsLeftRight size={40} weight="light" />}>XLM a USDC · path payment</Tag>
       </Callout>
       <Callout x={140} y={760} from={paid} >
@@ -138,8 +138,8 @@ export const Panel: React.FC = () => {
         {f: 0, cx: 900, cy: 230, s: 1.42},
         {f: th - 4, cx: 900, cy: 230, s: 1.42},
         {f: th + 22, cx: 880, cy: 740, s: 1.42},
-        {f: how + 20, cx: 880, cy: 820, s: 1.42},
-        {f: rhe - 8, cx: 880, cy: 820, s: 1.42},
+        {f: how + 20, cx: 880, cy: 770, s: 1.42},
+        {f: rhe - 8, cx: 880, cy: 770, s: 1.42},
         {f: rhe + 16, cx: 960, cy: 600, s: 1.28},
       ]} />
       <Callout x={1280} y={200} from={10} to={th}>
