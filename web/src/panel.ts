@@ -5,6 +5,7 @@ import { connectPasskey, createPasskeyWallet, restorePasskey, withdrawWithPasske
 import {
   EXPLORER, type Paid, connectWallet, fromUnits, paidEvents, short, taxReserve, toUnits, withdrawWithWallet,
 } from "./stellar";
+import { openRheDraft } from "./rhe";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
 
 // Umbral 2026 bajo el cual no hay pago a cuenta de cuarta categoria (R.S. 000390-2025/SUNAT).
@@ -105,7 +106,7 @@ function renderPanel() {
       <p class="kpi-note">Solo tú puedes mover este saldo. Vive en el contrato, separado de tu neto.</p>
       <form id="withdraw" class="withdraw">
         <label class="field"><span class="lbl">Enviar reserva a (cuenta G… o C…)</span><input class="num" name="to" required placeholder="Cuenta desde la que pagarás a SUNAT"></label>
-        <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "") : ""}"></label>
+        <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "").replace(/.?0+$/, "") : ""}"></label>
         <button class="btn ghost" type="submit" ${!reserve ? "disabled" : ""}><i class="ph-light ph-arrow-square-out"></i>Retirar reserva</button>
         <p class="wd-out" role="status"></p>
       </form>
@@ -141,7 +142,7 @@ function renderPanel() {
               badge: `<span class="badge ok"><i class="ph-light ph-check"></i>Cobrado</span>`,
               footLeft: p.at.toLocaleDateString("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
               txHash: p.txHash,
-            })}</div>`).join("")
+            })}<button class="btn ghost rhe-open" data-i="${i}"><i class="ph-light ph-file-text"></i>Borrador de recibo por honorarios</button></div>`).join("")
           : `<div class="emptybox"><i class="ph-light ph-receipt"></i><p>Todavía no tienes cobros. Crea un link y envíalo a tu cliente.</p></div>`
     }</div>
   </section>`;
@@ -149,6 +150,8 @@ function renderPanel() {
   renderThreshold(loading ? null : monthGross(list));
   bindLinkForm();
   bindWithdraw();
+  app.querySelectorAll<HTMLButtonElement>(".rhe-open").forEach((b) =>
+    b.addEventListener("click", () => openRheDraft(list[Number(b.dataset.i)])));
 }
 
 function bindWithdraw() {

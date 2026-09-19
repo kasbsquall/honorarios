@@ -117,7 +117,7 @@ Errores: `InvalidAmount` (monto ≤ 0) e `InsufficientReserve` (retiro mayor a l
 
 ## 7. Qué falta hasta la entrega (25 de septiembre)
 
-- Borrador del recibo por honorarios con los cobros del mes.
+- (Hecho) Borrador del recibo por honorarios por cada cobro, para copiar al emitirlo en SUNAT.
 - Video demo y README final.
 
 ## Límites conocidos

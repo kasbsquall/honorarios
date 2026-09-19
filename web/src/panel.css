@@ -40,3 +40,18 @@
 .wd-out { font-size: var(--t-s); color: var(--ink-2) }
 .wd-out:empty { display: none }
 .net i.ph-light { color: var(--accent) }
+.cards > div { display: grid; gap: 12px; align-content: start }
+.rhe-open { justify-self: start }
+dialog.rhe { margin: auto; border: 1px solid var(--rule-strong); border-radius: var(--r); background: var(--surface); color: var(--ink); padding: 0;
+  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); box-shadow: var(--shadow) }
+dialog.rhe::backdrop { background: rgba(20, 20, 18, .45) }
+dialog.rhe[open] { animation: rise 220ms var(--ease) both }
+.rhe-body { padding: 28px 24px; display: grid; gap: 18px }
+.rhe-body h3 { font-size: var(--t-l); margin-top: 6px }
+.btn.icon { padding: 10px }
+.rhe-fixed { border-top: 1px solid var(--rule-strong) }
+.rhe-fixed div { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: var(--t-s) }
+.rhe-fixed dt { color: var(--ink-3) }
+.field select { font: 400 var(--t-b) var(--f-sans); background: var(--surface); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: var(--r); padding: 12px 14px; width: 100% }
+.rhe-preview { background: var(--sunk); padding: 16px; font-size: var(--t-xs); line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; border-radius: var(--r) }
+.rhe-note { font-size: var(--t-xs); color: var(--ink-2) }
