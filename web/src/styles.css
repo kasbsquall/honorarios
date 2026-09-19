@@ -16,8 +16,8 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #141412; --surface: #1C1B18; --sunk: #252420;
-    --ink: #ECE9E2; --ink-2: #A8A399; --ink-3: #77726A;
-    --rule: rgba(236, 233, 226, .09); --rule-strong: rgba(236, 233, 226, .2);
+    --ink: #F1EEE7; --ink-2: #C9C4BA; --ink-3: #A39E94;
+    --rule: rgba(236, 233, 226, .14); --rule-strong: rgba(236, 233, 226, .32);
     --accent: #E8633A; --accent-ink: #141412; --ok: #7FAE8F; --warn: #D9A94A;
     --shadow: 0 12px 32px -18px rgba(0, 0, 0, .6);
   }
@@ -110,3 +110,7 @@ i.ph-light { font-size: 1.05em; vertical-align: -.12em }
   *, *::before, *::after { animation: none !important; transition: none !important }
 }
 .field input::placeholder { color: var(--ink-3); opacity: .7 }
+@media (prefers-color-scheme: dark) {
+  .field input::placeholder { opacity: .85 }
+  .field input, .field select { background: var(--sunk) }
+}
