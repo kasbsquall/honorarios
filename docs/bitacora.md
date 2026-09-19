@@ -38,3 +38,7 @@ Por qué: la suma de los 8% por cobro coincide exactamente con la obligación cu
 Fuentes: R.S. 000390-2025/SUNAT (umbral S/ 4,010 y S/ 48,125 para suspensión), D.S. 301-2025-EF (UIT 2026 S/ 5,500). Declaración y pago en Formulario Virtual 616 con Clave SOL, solo en soles. Suspensión con Formulario 1609 (número pendiente de verificar en fuente primaria).
 
 Pendiente de verificar: fechas del cronograma por último dígito del RUC (se enlaza a sunat.gob.pe sin fijar fechas), tratamiento de cobros en cripto (sin criterio SUNAT publicado).
+
+## 2026-09-19 · Video demo v1
+
+Video de 2:07 (límite de las bases: 3 minutos, stellar.mintedinpe.com/odyssey). Voz ElevenLabs "Jorge" (acento peruano), música ElevenLabs, sonidos CC0 de Kenney. Demo grabada en testnet con Playwright (`web/e2e/film.mjs`): wallet con passkey CB2D…KIUY, cobro de 500 USDC tx 139b4f3c…9925 (el cliente compró USDC con XLM vía path payment), retiro de 40 USDC tx fa9e5215…. El tipo de cambio 3.75 que aparece en el panel es de ejemplo. Fuentes en `video/`.

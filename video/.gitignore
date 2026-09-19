@@ -1,0 +1,11 @@
+remotion/node_modules/
+remotion/out/
+remotion/public/
+rec/
+audio_out/
+*.mp4
+*.wav
+artifact/*.mp4
+qa/
+music_*.mp3
+audio_v2/

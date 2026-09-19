@@ -1,0 +1,89 @@
+{
+  "vo": 128.942,
+  "scenes": [
+    {
+      "id": "cold",
+      "start": 1.6,
+      "end": 9.588,
+      "dur": 7.988,
+      "words": 17
+    },
+    {
+      "id": "brand",
+      "start": 10.668,
+      "end": 13.872,
+      "dur": 3.204,
+      "words": 5
+    },
+    {
+      "id": "problem",
+      "start": 14.152,
+      "end": 27.295,
+      "dur": 13.142,
+      "words": 46
+    },
+    {
+      "id": "solution",
+      "start": 27.575,
+      "end": 38.674,
+      "dur": 11.099,
+      "words": 33
+    },
+    {
+      "id": "passkey",
+      "start": 38.954,
+      "end": 45.316,
+      "dur": 6.362,
+      "words": 19
+    },
+    {
+      "id": "pay",
+      "start": 50.096,
+      "end": 59.105,
+      "dur": 9.009,
+      "words": 28
+    },
+    {
+      "id": "chain",
+      "start": 67.385,
+      "end": 76.395,
+      "dur": 9.009,
+      "words": 17
+    },
+    {
+      "id": "code",
+      "start": 79.175,
+      "end": 83.401,
+      "dur": 4.226,
+      "words": 15
+    },
+    {
+      "id": "panel",
+      "start": 85.181,
+      "end": 98.555,
+      "dur": 13.375,
+      "words": 47
+    },
+    {
+      "id": "withdraw",
+      "start": 102.835,
+      "end": 106.504,
+      "dur": 3.669,
+      "words": 9
+    },
+    {
+      "id": "stack",
+      "start": 111.284,
+      "end": 119.922,
+      "dur": 8.638,
+      "words": 19
+    },
+    {
+      "id": "close",
+      "start": 121.202,
+      "end": 123.942,
+      "dur": 2.74,
+      "words": 5
+    }
+  ]
+}
