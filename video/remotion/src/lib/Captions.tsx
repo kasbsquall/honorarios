@@ -8,20 +8,30 @@ type Word = {t: number; e: number; w: string};
 const caps = capsRaw as Word[];
 
 // Group words into readable lines (~46 chars, break on sentence end).
+// La línea se corta también en el cambio de escena: agrupadas por longitud, la última
+// palabra de una escena arrastraba a las primeras de la siguiente y el subtítulo las
+// pintaba segundo y medio antes de que se oyeran, sobre la imagen de la escena anterior.
+const sceneOf = (t: number) => {
+  let id = SCENES[0].id;
+  for (const s of SCENES) if (t >= s.start - 0.05) id = s.id;
+  return id;
+};
 type Line = {start: number; end: number; words: Word[]};
 const LINES: Line[] = (() => {
   const lines: Line[] = [];
   let cur: Word[] = [];
+  const flush = () => {
+    if (cur.length) lines.push({start: cur[0].t, end: cur[cur.length - 1].e, words: cur});
+    cur = [];
+  };
   for (const c of caps) {
+    if (cur.length && sceneOf(c.t) !== sceneOf(cur[0].t)) flush();
     cur.push(c);
     const txt = cur.map((x) => x.w).join(' ');
     const endsSent = /[.?!]$/.test(c.w);
-    if (txt.length >= 46 || (endsSent && cur.length >= 3)) {
-      lines.push({start: cur[0].t, end: cur[cur.length - 1].e, words: cur});
-      cur = [];
-    }
+    if (txt.length >= 46 || (endsSent && cur.length >= 3)) flush();
   }
-  if (cur.length) lines.push({start: cur[0].t, end: cur[cur.length - 1].e, words: cur});
+  flush();
   return lines;
 })();
 
@@ -50,7 +60,9 @@ export const Captions: React.FC = () => {
           maxWidth: 1360,
           padding: '15px 34px',
           borderRadius: 2,
-          background: 'rgba(20,20,18,0.86)',
+          // Opaca: al 86% el texto de la aplicación se transparentaba por debajo y se leían
+          // dos capas a la vez, ninguna bien.
+          background: '#111110',
           border: '1px solid rgba(236,233,226,0.14)',
           boxShadow: '0 18px 50px rgba(0,0,0,0.35)',
           textAlign: 'center',

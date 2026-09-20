@@ -53,7 +53,7 @@ export const Cold: React.FC = () => {
             </div>
             <div style={{opacity: ramp(f, aTx, 12), fontFamily: MONO, fontSize: 24, color: C.ink3, display: 'flex', justifyContent: 'space-between'}}>
               <span>Una sola transacción · Stellar testnet</span>
-              <span>tx 1dc6e5f2…3ebf</span>
+              <span>tx 4668b6f3…c8f9</span>
             </div>
           </div>
           <div style={{borderLeft: `2px dashed ${C.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.surface, transform: `translate(${tear * 36}px, ${tear * 14}px) rotate(${tear * 4}deg)`, boxShadow: tear ? '0 30px 60px -30px rgba(0,0,0,0.9)' : undefined}}>
@@ -99,7 +99,9 @@ export const Brand: React.FC = () => {
  *  Va sobre su chip blanco porque el archivo es a color y su manual pide fondo claro. */
 export const SelloSunat: React.FC<{texto: string; alto?: number}> = ({texto, alto = 34}) => (
   <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
-    <div style={{background: '#ffffff', padding: '9px 13px', display: 'flex'}}>
+    {/* El chip va en el crema de la pieza y no en blanco puro: era el único #ffffff de todo
+        el vídeo y sobre los grises cálidos se leía como un recorte pegado encima. */}
+    <div style={{background: C.ink, padding: '9px 13px', display: 'flex', border: `1px solid ${C.ruleStrong}`}}>
       <Img src={staticFile('img/sunat.png')} style={{height: alto, width: 'auto', display: 'block'}} />
     </div>
     <span style={{fontFamily: MONO, fontSize: 21, letterSpacing: '0.06em', color: C.ink3}}>{texto}</span>
@@ -115,7 +117,7 @@ export const Problem: React.FC = () => {
   const a8 = cue('problem', 'ocho');
   const aG = cue('problem', 'adelantar');
   const fillTo = ramp(f, aU - 6, 40);
-  const drain = ramp(f, aG - 8, 26);
+  const reveal = ramp(f, aG - 8, 26);
   const chips = [
     {at: aF, icon: <MapPin size={40} weight="light" />, t: 'Freelancer en Perú'},
     {at: aX, icon: <Globe size={40} weight="light" />, t: 'Cliente en el exterior'},
@@ -124,33 +126,50 @@ export const Problem: React.FC = () => {
   const shift = ramp(f, aU - 10, 18);
   return (
     <SceneOut>
-      <AbsoluteFill style={{padding: '170px 140px 200px', flexDirection: 'column', gap: 60}}>
-        <div style={{display: 'flex', gap: 22, transform: `translateY(${-shift * 20}px)`, opacity: 1 - shift * 0.45}}>
+      {/* Durante los seis primeros segundos la voz aún no ha dicho la cifra y lo único que
+          había en pantalla eran los tres distintivos: el 85% del cuadro vacío. La frase que
+          se está oyendo ocupa ese hueco y se repliega cuando llega el umbral. */}
+      <AbsoluteFill style={{padding: '120px 140px 180px', flexDirection: 'column', gap: 54, justifyContent: 'center'}}>
+        <div style={{height: (1 - shift) * 236, overflow: 'hidden', opacity: 1 - shift}}>
+          <div style={{...H, fontSize: 88, maxWidth: 1240, opacity: ramp(f, aF + 6, 16)}}>
+            Cobras completo.<br />La cuenta llega después.
+          </div>
+        </div>
+        {/* Al 0.55 los distintivos se leían como render a medias en vez de como un elemento
+            que cede el protagonismo. Bajan solo hasta 0.7. */}
+        <div style={{display: 'flex', gap: 22, opacity: 1 - shift * 0.3}}>
           {chips.map((c, i) => (
             <Rise key={i} at={c.at}><Tag icon={c.icon}>{c.t}</Tag></Rise>
           ))}
         </div>
-        <div style={{display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: 90, alignItems: 'end', opacity: ramp(f, aU - 8, 12)}}>
+        {/* El bloque de datos reservaba su altura aunque estuviera invisible, y eso dejaba el
+            tercio inferior en negro durante toda la primera mitad. Se repliega con él. */}
+        <div style={{maxHeight: shift * 620, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: 90, alignItems: 'end', opacity: ramp(f, aU - 8, 12)}}>
           <div>
             <Label>Umbral mensual 2026</Label>
             <div style={{display: 'flex', alignItems: 'baseline', gap: 20, marginTop: 14}}>
               <span style={{fontFamily: MONO, fontSize: 120, color: C.ink2, letterSpacing: '-0.04em'}}>S/</span>
               <Roll value="4,010" at={aU - 4} size={220} />
             </div>
+            {/* La barra se vaciaba al final y el marcador del umbral se quedaba solo sobre
+                una pista en cero: afirmaba un dato falso. Ahora se llena y se queda. */}
             <div style={{position: 'relative', height: 26, background: C.sunk, marginTop: 34}}>
-              <i style={{position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${C.ink2}, ${C.ink})`, transformOrigin: 'left', transform: `scaleX(${fillTo * 0.86 * (1 - drain)})`}} />
-              <i style={{position: 'absolute', inset: 0, background: C.accent, transformOrigin: 'left', transform: `scaleX(${Math.max(0, ramp(f, a8 - 4, 16) * (1 - drain))})`, left: '86%', width: '14%'}} />
-              <div style={{position: 'absolute', left: '86%', top: -18, bottom: -18, width: 3, background: C.ink}} />
+              <i style={{position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${C.ink2}, ${C.ink})`, transformOrigin: 'left', transform: `scaleX(${fillTo * 0.86})`}} />
+              <i style={{position: 'absolute', inset: 0, background: C.accent, transformOrigin: 'left', transform: `scaleX(${ramp(f, a8 - 4, 16)})`, left: '86%', width: '14%'}} />
+              <div style={{position: 'absolute', left: '86%', top: -18, bottom: -18, width: 3, background: C.ink, opacity: ramp(f, aU - 6, 20)}} />
             </div>
             <div style={{marginTop: 22}}><SelloSunat texto="R.S. 000390-2025 · artículo 3" /></div>
           </div>
           <div style={{position: 'relative'}}>
             <Halo x={180} y={140} size={560} o={0.26 * ramp(f, a8, 12)} />
+            {/* En IBM Plex Mono el signo de porcentaje se dibuja apilado en dos alturas y a
+                260px se lee como una cifra impresa dos veces. La cifra protagonista va en
+                Archivo, que lo dibuja en una sola línea. */}
             <div style={{opacity: ramp(f, a8, 10), transform: `scale(${1.25 - 0.25 * ramp(f, a8, 14)})`, transformOrigin: 'left bottom'}}>
-              <div style={{...H, fontSize: 260, color: C.accent, fontFamily: MONO, letterSpacing: '-0.06em'}}>8%</div>
+              <div style={{...H, fontSize: 250, color: C.accent, letterSpacing: '-0.05em'}}>8%</div>
               <div style={{fontFamily: FONT.display, fontSize: 44, color: C.ink, marginTop: 10}}>pago a cuenta del mes</div>
             </div>
-            <div style={{opacity: drain, fontFamily: FONT.display, fontSize: 40, color: C.ink2, marginTop: 30, transform: `translateY(${(1 - drain) * 10}px)`}}>
+            <div style={{opacity: reveal, fontFamily: FONT.display, fontSize: 40, color: C.ink2, marginTop: 24, paddingTop: 24, borderTop: `1px solid ${C.rule}`, transform: `translateY(${(1 - reveal) * 10}px)`}}>
               y el dinero llegó mezclado con todo lo demás
             </div>
           </div>
@@ -368,32 +387,37 @@ export const Honesto: React.FC = () => {
 export const Precio: React.FC = () => {
   const f = useCurrentFrame();
   const aQ = cue('precio', 'Quien');
-  const aT = cue('precio', 'comisión');
   const aZ = cue('precio', 'cero');
   return (
     <SceneOut>
       <Halo x={520} y={520} size={640} o={0.18} />
       <AbsoluteFill style={{padding: '165px 130px 205px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center'}}>
         <div>
-          <Label>Cómo se sostiene</Label>
+          {/* La cifra grande y "desplegado en cero" se leían como dos comisiones distintas en
+              el mismo cuadro. Una dice que es el plan y la otra lo que cobra hoy: etiquetadas
+              así, no se contradicen. El separador decimal es el punto, como en toda la app. */}
+          <Label>El plan de precio</Label>
           <div style={{display: 'flex', alignItems: 'baseline', gap: 18, marginTop: 16}}>
-            <Roll value="0,5" at={2} size={210} />
+            <Roll value="0.5" at={2} size={210} />
             <div style={{...H, fontSize: 96, color: C.accent}}>%</div>
           </div>
           <div style={{fontFamily: FONT.display, fontSize: 46, color: C.ink2, marginTop: 8}}>de lo que cobras, solo cuando cobras</div>
-          <div style={{fontFamily: MONO, fontSize: 26, color: C.ink3, marginTop: 34, opacity: ramp(f, aZ - 4, 12)}}>Hoy desplegado en cero</div>
+          <div style={{fontFamily: MONO, fontSize: 26, color: C.ink3, marginTop: 34, opacity: ramp(f, aZ - 4, 12)}}>Hoy el contrato está desplegado en 0%</div>
         </div>
+        {/* El ejemplo y la nota del despliegue entraban con la palabra que los nombra, a los
+            5 y a los 14 segundos, y hasta entonces la mitad derecha del cuadro estaba vacía.
+            Entran antes: el jurado los lee y la voz llega a ellos, en vez de al revés. */}
         <div style={{display: 'grid', gap: 28}}>
-          <div style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 34px', opacity: ramp(f, aQ - 6, 14), transform: `translateY(${(1 - ramp(f, aQ - 6, 14)) * 14}px)`}}>
+          <div style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 34px', opacity: ramp(f, 16, 14), transform: `translateY(${(1 - ramp(f, 16, 14)) * 14}px)`}}>
             <Label size={20}>Ejemplo</Label>
             <div style={{fontFamily: FONT.display, fontSize: 44, color: C.ink, marginTop: 14, lineHeight: 1.25}}>
               Facturas <b>US$ 2,000</b> al mes
             </div>
             <div style={{fontFamily: FONT.display, fontSize: 44, color: C.accent, marginTop: 6}}>
-              Pagas <b>US$ 120</b> al año
+              Pagarías <b>US$ 120</b> al año
             </div>
           </div>
-          <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aT - 4, 14), borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
+          <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aQ - 6, 14), borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
             <div style={{color: C.accent}}><FileCode size={46} weight="light" /></div>
             <div>
               <div style={{fontFamily: FONT.display, fontSize: 42, fontWeight: 600, color: C.ink}}>Se fija al desplegar</div>
@@ -403,8 +427,8 @@ export const Precio: React.FC = () => {
         </div>
       </AbsoluteFill>
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
+      <Sfx src="tick.wav" at={16} vol={0.12} />
       <Sfx src="tick.wav" at={aQ - 6} vol={0.12} />
-      <Sfx src="tick.wav" at={aT - 4} vol={0.12} />
     </SceneOut>
   );
 };
@@ -428,63 +452,64 @@ const Bandera: React.FC<{franjas: string[]; pesos?: number[]; horizontal?: boole
 export const Region: React.FC = () => {
   const f = useCurrentFrame();
   const paises = [
-    {w: 'México', t: 'México', franjas: ['#006847', '#ffffff', '#ce1126'], horizontal: false},
-    {w: 'Colombia', t: 'Colombia', franjas: ['#fcd116', '#003893', '#ce1126'], pesos: [2, 1, 1], horizontal: true},
-    {w: 'Argentina', t: 'Argentina', franjas: ['#74acdf', '#ffffff', '#74acdf'], horizontal: true},
+    {t: 'México', franjas: ['#006847', '#ffffff', '#ce1126'], horizontal: false},
+    {t: 'Colombia', franjas: ['#fcd116', '#003893', '#ce1126'], pesos: [2, 1, 1], horizontal: true},
+    {t: 'Argentina', franjas: ['#74acdf', '#ffffff', '#74acdf'], horizontal: true},
   ];
   // Las dos cifras del INEI que la voz cita y que antes no aparecian en ninguna parte.
   const aI = cue('region', 'millones');
-  const aR = cue('region', 'RUC');
-  const aP = cue('region', 'Perú');
+  // La fila de datos entra entera al principio de la escena y la voz la recorre despues.
+  // Antes cada cifra esperaba a su palabra: el 13% llegaba despues de haberse oido, y con
+  // el rango en dolares al otro extremo la fila se quedaba con un hueco en medio.
+  const a13 = cue('region', 'trece');
+  // Las tarjetas entraban con la palabra que las nombra, a los ocho segundos, y hasta
+  // entonces dos tercios del cuadro estaban vacios. Entran con la segunda cifra.
+  const aC = a13 + 4;
+  const dato = (at: number, n: string, t: string, s: string, ancho?: number) => {
+    const o = ramp(f, at - 8, 14);
+    return (
+      <div style={{opacity: o, transform: `translateY(${(1 - o) * 12}px)`, maxWidth: ancho}}>
+        <div style={{fontFamily: MONO, fontSize: 58, lineHeight: 1, color: C.ink, letterSpacing: '-0.03em'}}>{n}</div>
+        <div style={{fontFamily: FONT.display, fontSize: 26, color: C.ink2, marginTop: 12}}>{t}</div>
+        <div style={{fontFamily: MONO, fontSize: 21, letterSpacing: '0.07em', textTransform: 'uppercase', color: C.ink3, marginTop: 6}}>{s}</div>
+      </div>
+    );
+  };
   return (
     <SceneOut>
-      <AbsoluteFill style={{padding: '120px 130px 175px', display: 'grid', gridTemplateRows: 'auto auto 1fr', gap: 34}}>
+      {/* Las filas se alinean por la primera linea de texto, no por el borde inferior: con
+          alignItems end las tres cifras quedaban a alturas distintas y se leian torcidas. */}
+      <AbsoluteFill style={{padding: '120px 130px 190px', display: 'grid', gridTemplateRows: 'auto auto auto', gap: 46, alignContent: 'center'}}>
         <div>
           <div style={{display: 'flex', alignItems: 'center', gap: 18}}>
             <Bandera franjas={['#d91023', '#ffffff', '#d91023']} />
-            <Label>Por qué Perú primero</Label>
+            <Label>Perú · contrato 1</Label>
           </div>
           <div style={{...H, fontSize: 76, marginTop: 14}}>Entramos por la norma más difícil</div>
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: 'auto auto 1fr', gap: 54, alignItems: 'end'}}>
-          {[
-            {at: aI, n: '2.5 M', t: 'independientes menores de 41', s: 'INEI'},
-            {at: aR, n: '13 %', t: 'de ellos tiene RUC', s: 'INEI'},
-          ].map((d) => {
-            const o = ramp(f, d.at - 8, 14);
-            return (
-              <div key={d.t} style={{opacity: o, transform: `translateY(${(1 - o) * 12}px)`}}>
-                <div style={{fontFamily: MONO, fontSize: 62, lineHeight: 1, color: C.ink, letterSpacing: '-0.03em'}}>{d.n}</div>
-                <div style={{fontFamily: FONT.display, fontSize: 25, color: C.ink2, marginTop: 10}}>{d.t}</div>
-                <div style={{fontFamily: MONO, fontSize: 17, letterSpacing: '0.08em', color: C.ink3, marginTop: 4}}>{d.s}</div>
-              </div>
-            );
-          })}
-          {/* El rango se leia como el techo del mercado. Es lo que este producto ingresaria. */}
-          <div style={{opacity: ramp(f, aP - 6, 14), borderLeft: 'none', paddingLeft: 0, justifySelf: 'end', textAlign: 'right', maxWidth: 640}}>
-            <div style={{fontFamily: MONO, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.ink3}}>
-              Lo que este producto ingresaría en Perú, al 0.5%
-            </div>
-            <div style={{fontFamily: MONO, fontSize: 40, color: C.ink, marginTop: 8, letterSpacing: '-0.02em'}}>
-              US$ 10,500 – 67,000 <span style={{fontSize: 24, color: C.ink3}}>al año</span>
-            </div>
-            <div style={{fontFamily: FONT.display, fontSize: 23, color: C.accent, marginTop: 8}}>
-              Un negocio de una persona, y lo decimos
-            </div>
+        <div style={{display: 'grid', gridTemplateColumns: 'auto auto 1fr', gap: 54, alignItems: 'baseline'}}>
+          {dato(aI, '2.5 M', 'independientes menores de 41', 'INEI')}
+          {dato(aI + 14, '13 %', 'de ellos tiene RUC', 'INEI')}
+          <div style={{justifySelf: 'end', textAlign: 'right', maxWidth: 660}}>
+            {dato(aI + 28, 'US$ 10,500 – 67,000', 'lo que este producto ingresaría en Perú al 0.5%, al año', 'Estimación propia, no un dato de mercado')}
           </div>
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, alignContent: 'center'}}>
+        {/* Se repliega mientras no ha entrado: reservando su altura, dejaba el tercio inferior
+            del cuadro en negro durante los cinco primeros segundos. */}
+        <div style={{maxHeight: ramp(f, aC, 14) * 420, overflow: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32}}>
           {paises.map((pa, idx) => {
-            const at = cue('region', 'México') - 10 + idx * 7;
-            const o = ramp(f, at, 14);
+            const o = ramp(f, aC + idx * 7, 14);
             return (
-              <div key={pa.w} style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '26px 28px 30px', opacity: o, transform: `translateY(${(1 - o) * 16}px)`}}>
+              <div key={pa.t} style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '26px 28px 28px', opacity: o, transform: `translateY(${(1 - o) * 16}px)`}}>
                 <Bandera franjas={pa.franjas} pesos={pa.pesos} horizontal={pa.horizontal} />
-                <div style={{fontFamily: FONT.display, fontSize: 46, fontWeight: 600, color: C.ink, marginTop: 14}}>{pa.t}</div>
-                <div style={{fontFamily: FONT.display, fontSize: 25, color: C.ink3, marginTop: 6}}>un orden de magnitud más grande</div>
-                <div style={{fontFamily: MONO, fontSize: 20, color: C.ink3, marginTop: 16, borderTop: `1px solid ${C.rule}`, paddingTop: 14, opacity: ramp(f, cue('region', 'reescribe') - 4, 14)}}>
+                <div style={{fontFamily: FONT.display, fontSize: 46, fontWeight: 600, color: C.ink, marginTop: 16}}>{pa.t}</div>
+                {/* Aqui decia "un orden de magnitud mas grande", repetido igual en las tres y
+                    sin fuente ni termino de comparacion. Queda lo que si se sostiene. */}
+                {/* Entraba con la palabra "reescribe", diez segundos despues que la tarjeta, y
+                    hasta entonces la tarjeta tenía un hueco de 120px debajo del nombre. */}
+                <div style={{fontFamily: MONO, fontSize: 22, color: C.ink3, marginTop: 18, borderTop: `1px solid ${C.rule}`, paddingTop: 16}}>
                   contrato {idx + 2} · misma red
                 </div>
               </div>
@@ -493,7 +518,7 @@ export const Region: React.FC = () => {
         </div>
       </AbsoluteFill>
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
-      <Sfx src="tick.wav" at={cue('region', 'México') - 10} vol={0.1} />
+      <Sfx src="tick.wav" at={aC} vol={0.1} />
     </SceneOut>
   );
 };
@@ -522,9 +547,13 @@ export const Close: React.FC = () => {
             la app no emite comprobantes
           </div>
         </div>
+        {/* Módulos oscuros sobre fondo claro, como pide la norma. Al revés (los módulos en
+            crema sobre la superficie oscura) la cámara de un móvil suele resolverlo, pero no
+            todas, y en una sala se escanea una vez. La lámina clara además se ve: sobre el
+            fondo del cierre la anterior era invisible y el código flotaba. */}
         <div style={{opacity: ramp(f, 14, 14), textAlign: 'center'}}>
-          <div style={{padding: 24, background: C.surface, width: 'max-content', margin: '0 auto'}}>
-            <Img src={staticFile('img/qr-light.svg')} style={{width: 300, height: 300, display: 'block'}} />
+          <div style={{padding: 26, background: C.ink, width: 'max-content', margin: '0 auto'}}>
+            <Img src={staticFile('img/qr-oscuro.svg')} style={{width: 300, height: 300, display: 'block'}} />
           </div>
           <div style={{fontFamily: MONO, fontSize: 30, color: C.ink, marginTop: 22}}>honorarios-pe.vercel.app</div>
         </div>

@@ -589,3 +589,123 @@ lectura se deriva ahora del módulo y no de argumentos que las relecturas perdí
 Phosphor. No lo están: la CSP de `vercel.json` las permite, y quitarlas habría dejado la app con
 fuentes del sistema y medio centenar de iconos en blanco, porque no están autoalojadas. Queda
 anotado que son una dependencia de CDN en el camino crítico, sin SRI.
+
+## 20 de septiembre · revisión cuadro a cuadro de la pieza, antes del render final
+
+Se rindieron 63 fotogramas del montaje, uno cada 2,5 segundos, y se repartieron en tres lotes
+entre revisores que solo tenían la instrucción de buscar defectos: texto encimado, rótulos sobre
+la banda de subtítulo, elementos congelados a media animación, huecos que se leen como fallo y
+errores de montaje. Lo que encontraron, y lo que se hizo:
+
+**El 8% de la escena del problema salía impreso dos veces.** No era una duplicación del elemento
+ni una estela: en IBM Plex Mono el signo de porcentaje se dibuja apilado en dos alturas, y a 260px
+eso se lee como una cifra con doble exposición. Se comprobó rindiendo el glifo solo. La cifra
+protagonista pasa a Archivo, que lo dibuja en una línea. Fuente: `video/remotion/src/scenes/Story.tsx`.
+
+**El rótulo del tipo de cambio tapaba justo el párrafo del que hablaba.** Colocado sobre el
+contenido, se comía la mitad izquierda de cinco líneas y dejaba sus finales colgando. Lo mismo en
+la escena del retiro, donde partía el chip y lo dejaba leyendo "ALTA CONFIRMAR TUS OTRAS RENTAS".
+La aplicación deja libre una franja estable de unos 360px a la izquierda del cuadro en las tres
+escenas de panel: los rótulos se mudan ahí, estrechos, y no tapan nada.
+
+**El rótulo del umbral de director contradecía la pantalla durante diez segundos.** En la grabación
+la casilla se desmarca a los nueve segundos del clip y la app vuelve a mostrar S/ 4,010, pero la
+tarjeta con el 3,208 seguía en pantalla. Ahora se retira a los 8,4 segundos, antes del desmarcado.
+
+**El empuje de cámara era del 12,5%, no del 0,7% que decía su comentario.** `0.00022` por fotograma
+sobre 570 fotogramas. Por eso la cabecera de la aplicación aparecía rebanada por el borde superior
+en la segunda mitad de cada escena de panel. Corregido a `0.000018`.
+
+**Las tres tarjetas del explorador dejaban asomar el bloque Summary entre una y otra.** Jirones de
+"Ledger" y "Transaction size" a media altura, que no se leen como superposición sino como algo que
+no terminó de ocultarse. Pasan a ser un bloque opaco y continuo. La captura, además, se amplía 1.3
+porque su contenido acababa a media altura y el pie de página se cruzaba con el subtítulo.
+
+**El subtítulo era semitransparente y la mitad derecha del cuadro estaba vacía.** El texto de la
+aplicación se transparentaba por debajo de la banda y se leían dos capas a la vez. La banda pasa a
+ser opaca. El hueco de la derecha, que es estable porque la columna del formulario se queda corta,
+lo ocupa ahora la cita de la resolución, que es lo que la voz está diciendo en ese momento.
+
+**Una línea de subtítulo se pintaba segundo y medio antes de oírse.** Las líneas se agrupaban por
+longitud sin mirar el cambio de escena, así que la última palabra del problema arrastraba a las
+primeras de la wallet. Ahora la línea corta también en el límite de escena.
+
+**El QR estaba invertido**, módulos crema sobre fondo oscuro. La cámara de un móvil suele
+resolverlo, pero no todas. Se generó `qr-oscuro.svg` y va sobre lámina clara. Verificado: el
+fotograma final rendido a 1080p decodifica `https://honorarios-pe.vercel.app`.
+
+**Dos afirmaciones sin fuente salieron de la escena de región.** Las tres tarjetas de países decían
+"un orden de magnitud más grande", idéntico en las tres y sin término de comparación; se quitó. Y
+el rango en dólares ahora dice de dónde sale: estimación propia, no un dato de mercado. La serie
+"contrato 2, 3, 4" empezaba en 2 sin que el 1 apareciera en ninguna parte: la cabecera de Perú lo
+declara.
+
+**Huecos largos rellenados con lo que la voz ya estaba diciendo.** Los seis primeros segundos de la
+escena del problema eran tres distintivos sueltos y el 85% del cuadro en negro; ahora la frase que
+se oye ocupa ese espacio y se repliega cuando llega el umbral. El ejemplo de precio y las tarjetas
+de países entran antes de que la voz los nombre, para que el jurado los lea y la voz llegue a
+ellos, y no al revés.
+
+**Descartado como defecto:** el talón perforado de la apertura, que se separa del cuerpo a
+propósito, y el esqueleto de carga del panel en la escena de la wallet, que es el comportamiento
+real de la aplicación mientras lee la cadena.
+
+**Queda sin resolver y no se toca a cinco días del cierre:** el cuerpo de texto de la aplicación
+ronda el 1,4% de la altura del cuadro y proyectado en sala no se lee. Los datos que importan van
+duplicados a tamaño de titular en los rótulos, que es la mitigación posible sin regrabar el
+recorrido entero a otra escala.
+
+**Segunda pasada, sobre el mp4 ya codificado.** Se extrajeron 28 fotogramas del archivo
+entregable, no del proyecto, y se revisaron con el mismo criterio. Lo que salió y se corrigió:
+
+El subtítulo mide 1360px y va centrado, así que por sus costados asomaban finales de línea de
+la aplicación sin su principio ("o es agente de retención.", suelto), y su borde recto cortaba
+las filas de importes a media altura. Se añadió un velo degradado en los 250px inferiores de
+todo el metraje: la franja de abajo se apaga y el subtítulo se lee como tratamiento y no como
+una caja pegada encima del texto.
+
+En la escena de precio convivían dos cifras para la misma comisión: "0,5 %" en grande y "Hoy
+desplegado en cero" justo debajo. Ahora una está etiquetada "El plan de precio" y la otra dice
+"Hoy el contrato está desplegado en 0%", que es lo que la voz afirma. De paso el separador
+decimal se unificó en punto, como en toda la aplicación y como en la propia escena de región.
+
+Las tarjetas de países tenían un hueco de 120px bajo el nombre durante diez segundos, porque su
+línea de pie esperaba a la palabra "reescribe". Entra con la tarjeta.
+
+El bloque del explorador cortaba por su borde inferior la línea "Valid before" de la página. Se
+midió dónde acaba ese texto (y=506) y el distintivo "Captura real" pasó a ser el pie del propio
+bloque, que así llega hasta y=570 y no deja nada asomando.
+
+**Descartado tras medirlo:** las bandas negras a los lados en las escenas de wallet y de pago.
+El contenido de la aplicación ocupa 1023px de ancho en las cuatro escenas de navegador, medido
+sobre la grabación, porque la página está centrada con ancho máximo. Llenar el cuadro exigiría
+ampliar a 1.88 y eso recortaría un tercio de la altura. Las bandas son la forma real del
+producto en una ventana de 1920, no un encuadre mal hecho.
+
+**Verificado sobre el archivo final:** el QR decodifica `https://honorarios-pe.vercel.app` desde
+el fotograma codificado a 1080p, no solo desde el render. Duración 2:38, bt709, rango limitado.
+
+**Tercera pasada, y último render.** Un revisor ajeno al proyecto, sin saber de quién era, leyó
+otra tanda de fotogramas del mp4 codificado. Lo que encontró y se corrigió:
+
+El fallo que justificaba por sí solo volver a renderizar: la escena del explorador mostraba la
+transacción `973f5dec…`, de una corrida de las 17:07 UTC, mientras el README y la apertura del
+video citan `4668b6f3…c8f9`, de la corrida de las 19:04. Las tres transacciones existen y se
+comprobaron una por una contra Horizon, así que no era un dato inventado, pero un jurado que
+abriera el enlace del README habría encontrado una transacción distinta a la que vio en pantalla.
+Se reemplazó la captura por la de la corrida correcta. Ahora la apertura, la escena de cadena y
+la tabla de evidencias del README nombran la misma transacción, y la llamada `pay` que se ve en
+pantalla usa la wallet `CATN…J5FR` que la misma tabla lista.
+
+La tarjeta del umbral decía "director, síndico, mandatario, albacea y regidor": cinco figuras. El
+literal b) del artículo 3 tiene seis, y la propia app, debajo de la tarjeta, las listaba todas.
+Faltaba "gestor de negocios". Corregido.
+
+"Pagas US$ 120 al año" contradecía a la línea de al lado, que dice que el contrato está
+desplegado en 0%. La voz dice "pagaría", en condicional. El texto ahora dice "Pagarías".
+
+**Comprobado sobre el archivo entregable, no sobre el render:** 4753 fotogramas, los mismos que
+salieron del render, sin ninguno caído ni duplicado. 158.485 s, bt709, rango limitado. El QR
+decodifica `https://honorarios-pe.vercel.app` desde tres fotogramas distintos del cierre. Audio a
+48 kHz, media de -23.2 dBFS y pico de -5.0 dBFS, sin muestras saturadas, y la pista de audio mide
+exactamente lo mismo que la de video, así que no hay desfase.

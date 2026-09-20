@@ -15,6 +15,7 @@ __pycache__/
 
 # Material de trabajo del video: fotogramas de revisión y material del jurado simulado.
 # El montaje se reproduce desde los scripts; estas imágenes son intermedias.
+video/barrido/
 video/qa_final/
 video/qa_mp4/
 video/jurado/

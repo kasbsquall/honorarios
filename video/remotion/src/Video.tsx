@@ -13,7 +13,7 @@ const MAP: Record<string, React.FC> = {
 };
 // Escenas donde la marca ya ocupa el cuadro, o donde la cabecera de la propia app la
 // muestra y se verian dos veces la misma palabra: la marca persistente se oculta.
-const NO_MARK = new Set(['brand', 'close', 'wallet', 'pay', 'panel', 'limites', 'retiro']);
+const NO_MARK = new Set(['brand', 'close', 'wallet', 'pay', 'chain', 'panel', 'limites', 'retiro']);
 
 const FilmMark: React.FC = () => {
   const f = useCurrentFrame();
@@ -35,6 +35,15 @@ export const Video: React.FC = () => (
       })}
     </Series>
     <FilmMark />
+    {/* Velo inferior. El subtítulo mide 1360px y va centrado, así que por sus costados
+        asomaban finales de línea de la aplicación sin su principio, y su borde recto cortaba
+        las filas de datos a media altura. Con el degradado, la franja de abajo se apaga y se
+        lee como tratamiento, no como una caja encima del texto. */}
+    <div style={{
+      position: 'absolute', left: 0, right: 0, bottom: 0, height: 250,
+      background: 'linear-gradient(180deg, rgba(17,17,16,0) 0%, rgba(17,17,16,0.55) 46%, rgba(17,17,16,0.9) 100%)',
+      pointerEvents: 'none',
+    }} />
     <Audio src={staticFile('final_audio.wav')} />
     <Captions />
   </AbsoluteFill>

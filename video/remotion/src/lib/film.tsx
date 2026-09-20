@@ -35,7 +35,7 @@ export const Rise: React.FC<{at: number; children: React.ReactNode; y?: number; 
 };
 
 /** Salida acelerada al final de la escena (sale más allá de lo que el ojo sigue). */
-export const SceneOut: React.FC<{children: React.ReactNode; frames?: number}> = ({children, frames = 9}) => {
+export const SceneOut: React.FC<{children: React.ReactNode; frames?: number}> = ({children, frames = 6}) => {
   const f = useCurrentFrame();
   const {durationInFrames} = useVideoConfig();
   const p = interpolate(f, [durationInFrames - frames, durationInFrames], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EXIT});
@@ -88,6 +88,9 @@ export const Label: React.FC<{children: React.ReactNode; color?: string; size?: 
 );
 
 /** Números que ruedan dígito a dígito hasta su valor. */
+const MASK = (p: number) =>
+  p >= 1 ? 'none' : 'linear-gradient(180deg, transparent 0%, #000 7%, #000 93%, transparent 100%)';
+
 export const Roll: React.FC<{value: string; at: number; size: number; color?: string; dur?: number}> = ({value, at, size, color = C.ink, dur = 22}) => {
   const f = useCurrentFrame();
   return (
@@ -98,7 +101,13 @@ export const Roll: React.FC<{value: string; at: number; size: number; color?: st
         const target = Number(ch) + 10;
         const pos = p * target;
         return (
-          <span key={i} style={{display: 'inline-block', height: size, overflow: 'hidden', opacity: Math.min(1, p * 3)}}>
+          // Mientras gira, la ventana difumina arriba y abajo: cortada a hueso, un fotograma a
+          // mitad de vuelta se lee como una cifra rebanada y no como una cifra en movimiento.
+          // Al pararse se quita, para que la cifra final quede limpia.
+          <span key={i} style={{
+            display: 'inline-block', height: size, overflow: 'hidden', opacity: Math.min(1, p * 3),
+            maskImage: MASK(p), WebkitMaskImage: MASK(p),
+          }}>
             <span style={{display: 'block', transform: `translateY(${-(pos % 10) * size}px)`}}>
               {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d, k) => <span key={k} style={{display: 'block', height: size}}>{d}</span>)}
             </span>
