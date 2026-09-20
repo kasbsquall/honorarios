@@ -76,7 +76,8 @@ function renderIntro(error = "") {
       <li><span class="lbl">02</span><div><b>El contrato reparte en el acto</b><small>El 8% queda reservado a tu nombre dentro del contrato y el resto llega a tu wallet. Una sola transacción, y cualquiera puede verificarla.</small></div></li>
       <li><span class="lbl">03</span><div><b>Retiras cuando toca declarar</b><small>El panel estima tu pago a cuenta del mes, explica cómo pagarlo en soles y te arma el borrador del recibo por honorarios.</small></div></li>
     </ol>
-    <p class="alt"><a href="${EXPLORER}/contract/${CONTRACT_ID}" target="_blank" rel="noopener"><i class="ph-light ph-file-code" aria-hidden="true"></i> El contrato en Stellar Expert</a> · código abierto, 23 pruebas · Stellar testnet</p>
+    <p class="alt"><a href="${EXPLORER}/contract/${CONTRACT_ID}" target="_blank" rel="noopener"><i class="ph-light ph-file-code" aria-hidden="true"></i> El contrato en Stellar Expert</a> · código abierto · Stellar testnet</p>
+    <p class="alt price"><i class="ph-light ph-receipt" aria-hidden="true"></i> <b>Qué costaría usarlo:</b> el plan es cobrar 0.5% por cobro liquidado, sin cuota mensual. El contrato tiene un tope duro de 1% que su constructor rechaza superar, y <b>hoy está desplegado en cero</b>. No tienes que creerlo: la comisión es pública en la cadena y la pantalla de pago la lee de ahí antes de que tu cliente firme.</p>
   </section>`;
 
   app.querySelector("#demo")!.addEventListener("click", () => enter(DEMO_ADDRESS, "demo"));
@@ -172,7 +173,8 @@ function renderPanel() {
   const reserveState =
     loading || loadError || gap === null ? ""
     : est.duePen === 0 ? `<span class="tag ok"><i class="ph-light ph-check" aria-hidden="true"></i>Este mes no hay pago a cuenta que cubrir</span>`
-    : gap > 0.5 ? `<span class="tag warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Faltan ${pen2(gap)} para cubrir el pago de ${pen2(est.duePen!)}</span>`
+    : gap > 0.5 ? `<span class="tag warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Faltan ${pen2(gap)} para cubrir el pago de ${pen2(est.duePen!)}${
+        mode === "demo" ? ", porque en esta cuenta se retiró la reserva antes de cerrar el mes" : ""}</span>`
     : `<span class="tag ok"><i class="ph-light ph-check" aria-hidden="true"></i>Alcanza para el pago de ${pen2(est.duePen!)}</span>`;
 
   app.innerHTML = `

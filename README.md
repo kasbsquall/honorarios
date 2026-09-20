@@ -131,7 +131,13 @@ Todo el repositorio. El historial de commits empieza el 19 de septiembre de 2026
 
 ## Cómo se sostiene
 
-Precio propuesto, tamaño de mercado con sus fuentes, y la lista de lo que **no** sabemos:
+**0.5% por cobro liquidado, sin cuota mensual.** Con los supuestos de abajo, Perú solo da entre
+US$ 10,500 y US$ 67,000 al año: es un negocio de una persona, y lo decimos. El caso grande es que
+el pago a cuenta sin agente de retención es el mismo problema en México, Colombia y Argentina,
+donde hay un orden de magnitud más de freelancers dolarizados. El rail de Stellar no cambia entre
+países; lo que se reescribe es el contrato y la norma que cita. Perú es la cuña.
+
+Precio, tamaño de mercado con sus fuentes, y la lista de lo que **no** sabemos:
 [docs/negocio.md](docs/negocio.md).
 
 En corto: 0.5% por cobro liquidado, sin cuota mensual. El contrato puede cobrar una comisión por cobro liquidado, que sale del bruto junto al neto y la reserva. La página de pago la lee de la cadena con `fee()` y la muestra desglosada antes de que el cliente firme. Está implementada y probada: `fee_bps` se fija al desplegar, tiene un tope duro de 1% que el constructor rechaza superar, el evento `Paid` publica cuánto se cobró, y la función `fee()` deja el valor a la vista de cualquiera antes de usar el contrato. La reserva del 8% nunca se toca con la comisión.

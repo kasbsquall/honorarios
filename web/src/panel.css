@@ -129,3 +129,5 @@ select.inline { background: none; border: 0; color: inherit; font: inherit; padd
 .tag.warn { border-color: var(--warn); color: var(--warn) }
 .tag.ok { border-color: var(--rule-strong) }
 .wd-hint { grid-column: 1 / -1; font-size: var(--t-s); line-height: 1.5 }
+
+.how .price { border-top: 1px solid var(--rule); padding-top: 16px; max-width: 78ch; line-height: 1.6 }
