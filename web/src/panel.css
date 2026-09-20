@@ -88,3 +88,22 @@ dialog.rhe[open] { animation: rise 220ms var(--ease) both }
 .check small { display: block; color: var(--ink-3); margin-top: 3px; line-height: 1.5 }
 .warn-text { color: var(--warn) }
 select.inline { background: none; border: 0; color: inherit; font: inherit; padding: 0; cursor: pointer; border-bottom: 1px solid var(--rule-strong) }
+
+/* El desplegable usaba el triangulo del navegador dentro de una interfaz de un solo set. */
+.howto summary { list-style: none }
+.howto summary::-webkit-details-marker { display: none }
+.howto summary::marker { content: "" }
+/* Un medidor a cero se leia igual que uno lleno: el riel necesita su propio contraste. */
+.meter { border: 1px solid var(--rule-strong) }
+/* El boton de retirar compartia altura y borde con los campos que tiene encima. */
+.withdraw .btn { border-color: var(--ink-3) }
+.th-scale span:last-child { color: var(--ink-2) }
+
+/* Los tres pasos: lo que un recien llegado necesita antes de decidir si crea una wallet. */
+.how { border-top: 1px solid var(--rule-strong); padding: 40px 0 120px; display: grid; gap: 28px }
+.how ol { display: grid; gap: 1px; background: var(--rule-strong); border: 1px solid var(--rule-strong); list-style: none; padding: 0 }
+@media (min-width: 860px) { .how ol { grid-template-columns: repeat(3, 1fr) } }
+.how li { background: var(--surface); padding: 24px 22px; display: grid; gap: 12px; align-content: start }
+.how b { display: block; font-size: var(--t-m); font-weight: 600; margin-bottom: 6px }
+.how small { color: var(--ink-2); line-height: 1.6 }
+.how .alt a { display: inline-flex; gap: 6px; align-items: center }

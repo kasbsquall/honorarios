@@ -294,3 +294,23 @@ que sobrevivió a un redespliegue y ninguna prueba que la ejercitara.
 - La portada decía "el 92% llega a tu wallet" mientras la página de pago leía la comisión de la
   cadena. Dos cifras del mismo contrato no pueden salir de sitios distintos.
 
+## 20 de septiembre de 2026, noche · Auditoría de interfaz
+
+El juez de diseño de la segunda ronda revisó la app en vivo a 1440 y a 375 px. Lo que se
+arregló, con su motivo:
+
+- **La pantalla de firmar pintaba el reparto antes de leerlo.** `pay.ts` renderizaba con
+  `feeBps ?? 0n` mientras el texto al lado decía que el desglose venía del contrato. En ese
+  instante no era verdad. Ahora hay skeleton hasta que `fee()` responde, y si la lectura falla
+  lo dice en vez de mostrar números por defecto con una afirmación que no los respalda. Es la
+  única pantalla donde alguien firma dinero: es donde menos se puede afirmar de más.
+- **Freighter es una extensión de escritorio** y la página ofrecía "Connect Freighter" a
+  cualquiera. En móvil ahora avisa de que hay que abrir el link en la computadora.
+- **La portada no explicaba nada.** Un jurado que aterriza veía un formulario para crear una
+  wallet y nada más. Tres pasos y el enlace al contrato con su número de pruebas.
+- Etiqueta y marcador del campo de retiro decían cosas contrarias (destino contra origen). El
+  8 y su símbolo de porcentaje separados a lo ancho de la fila. La escala del medidor en un
+  formato distinto al resto de cifras. El triángulo nativo del navegador dentro de una interfaz
+  con un solo set de iconos. Un medidor a cero que se leía igual que uno lleno. El botón de
+  retirar con el mismo borde y altura que los campos de encima.
+

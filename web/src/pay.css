@@ -19,3 +19,6 @@
 .note { font-size: var(--t-s); color: var(--ink-2) }
 .empty { padding: 96px 0; display: grid; gap: 16px; max-width: 52ch }
 .empty h1 { font-size: var(--t-xl) }
+
+.desktop-only-note { display: flex; gap: 8px; align-items: flex-start; color: var(--ink-3) }
+@media (min-width: 900px) { .desktop-only-note { display: none } }

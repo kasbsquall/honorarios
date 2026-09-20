@@ -28,6 +28,7 @@ let payer = "";
 // Lo que el contrato va a cobrar de verdad, leido de la cadena. Si la pantalla lo calculara
 // por su cuenta, el cliente firmaria un desglose que el contrato no tiene por que respetar.
 let feeBps: bigint | null = null;
+let feeState: "loading" | "ready" | "failed" = "loading";
 
 if (!validTo || gross <= 0n) {
   app.innerHTML = `<section class="empty rise"><p class="lbl">Invalid link</p><h1>This payment link is incomplete.</h1>
@@ -35,8 +36,8 @@ if (!validTo || gross <= 0n) {
 } else {
   render("connect");
   serviceFee()
-    .then((f) => { feeBps = f.bps; render("connect"); })
-    .catch(() => { feeBps = null; render("connect"); });
+    .then((f) => { feeBps = f.bps; feeState = "ready"; render("connect"); })
+    .catch(() => { feeState = "failed"; render("connect"); });
 }
 
 function stepState(step: Step, current: Step) {
@@ -76,19 +77,26 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
     </ol>
   </section>
   <section class="side rise" style="--i:1">
-    <div class="${done ? "torn-wrap" : ""}">${receiptCard({
-      gross, title: concept, ref, badge, text: RECEIPT_EN, feeBps: feeBps ?? 0n,
-      footLeft: payer ? `from ${short(payer)}` : "",
-      txHash: opts.txHash,
-    })}</div>
+    <div class="${done ? "torn-wrap" : ""}">${
+      // Mientras no sepamos lo que cobra el contrato, no se pinta ningun reparto:
+      // un desglose por defecto seria una afirmacion que la cadena no ha hecho.
+      feeState === "loading"
+        ? `<article class="receipt sk" style="height:300px"></article>`
+        : receiptCard({
+            gross, title: concept, ref, badge, text: RECEIPT_EN, feeBps: feeBps ?? 0n,
+            footLeft: payer ? `from ${short(payer)}` : "",
+            txHash: opts.txHash,
+          })}</div>
     <p class="note">You pay the full amount. The contract keeps 8% in a reserve that only the freelancer can withdraw for their Peruvian tax prepayment.${
-      feeBps === null ? " The split shown above is read from the contract itself."
+      feeState === "loading" ? " Reading the split from the contract…"
+      : feeState === "failed" ? " We could not read the service fee from the contract, so the split above is the default one. Check the contract before you sign."
       : feeBps === 0n ? " This contract charges no service fee: the split above is read from the contract itself."
       : ` This contract charges a ${(Number(feeBps) / 100).toString()}% service fee, read from the contract itself.`}</p>
     ${done
       ? `<a class="btn wide" href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right"></i>View on Stellar Expert</a>`
       : `<button class="btn wide" id="go" ${opts.busy ? "disabled" : ""}>${opts.busy ? `<span class="spin"></span>Waiting for wallet` : action}</button>`}
     ${opts.error ? `<p class="error" role="alert">${esc(opts.error)}</p>` : ""}
+    ${done ? "" : `<p class="note desktop-only-note"><i class="ph-light ph-desktop"></i> Freighter is a desktop browser extension. If you are on a phone, open this link on your computer.</p>`}
   </section>`;
 
   if (done) requestAnimationFrame(() => app.querySelector(".receipt")?.classList.add("torn"));

@@ -3,7 +3,7 @@ import "./panel.css";
 import { StrKey } from "@stellar/stellar-sdk";
 import { connectPasskey, createPasskeyWallet, restorePasskey, withdrawWithPasskey } from "./passkey";
 import {
-  EXPLORER, FREIGHTER_INSTALL, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, serviceFee, short, taxReserve, toUnits, withdrawWithWallet,
+  CONTRACT_ID, EXPLORER, FREIGHTER_INSTALL, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, serviceFee, short, taxReserve, toUnits, withdrawWithWallet,
 } from "./stellar";
 import { openRheDraft } from "./rhe";
 import { SUSPENSION_CAP_PEN, THRESHOLD_PEN, estimate } from "./tax";
@@ -69,6 +69,14 @@ function renderIntro(error = "") {
       error.includes("extensión Freighter")
         ? ` <a href="${FREIGHTER_INSTALL}" target="_blank" rel="noopener">Instalar Freighter <i class="ph-light ph-arrow-up-right"></i></a>`
         : ""}</p>` : ""}
+  </section>
+  <section class="how rise" style="--i:1">
+    <ol>
+      <li><span class="lbl">01</span><div><b>Mandas un link de cobro</b><small>Monto, N° de recibo y concepto. Tu cliente paga con Freighter; si solo tiene XLM, Stellar los cambia en el camino.</small></div></li>
+      <li><span class="lbl">02</span><div><b>El contrato reparte en el acto</b><small>El 8% queda reservado a tu nombre dentro del contrato y el resto llega a tu wallet. Una sola transacción, y cualquiera puede verificarla.</small></div></li>
+      <li><span class="lbl">03</span><div><b>Retiras cuando toca declarar</b><small>El panel estima tu pago a cuenta del mes, explica cómo pagarlo en soles y te arma el borrador del recibo por honorarios.</small></div></li>
+    </ol>
+    <p class="alt"><a href="${EXPLORER}/contract/${CONTRACT_ID}" target="_blank" rel="noopener"><i class="ph-light ph-file-code"></i> El contrato en Stellar Expert</a> · código abierto, 23 pruebas · Stellar testnet</p>
   </section>`;
 
   app.querySelector("#demo")!.addEventListener("click", () => enter(DEMO_ADDRESS, "demo"));
@@ -164,7 +172,7 @@ function renderPanel() {
       <p class="kpi num ${loading ? "sk" : ""}">${val(() => fromUnits(reserve!))}<small>USDC</small></p>
       <p class="kpi-note">${mode === "demo" && reserve === 0n ? "Esta cuenta ya retiró su reserva durante la demo, por eso está en cero. " : ""}Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera S/ 4,010; si no, sigue siendo tuya.</p>
       <form id="withdraw" class="withdraw">
-        <label class="field"><span class="lbl">Enviar reserva a (cuenta G… o C…)</span><input class="num" name="to" required placeholder="Cuenta desde la que pagarás a SUNAT"></label>
+        <label class="field"><span class="lbl">Enviar reserva a</span><input class="num" name="to" required placeholder="Cuenta Stellar (G… o C…)"></label>
         <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "").replace(/\.?0+$/, "") : ""}"></label>
         <button class="btn ghost" type="submit" ${!reserve ? "disabled" : ""}><i class="ph-light ph-arrow-square-out"></i>Retirar reserva</button>
         <p class="wd-out" role="status">${!reserve && !loading ? `<span class="u">${loadError ? "No pudimos leer tu reserva, así que no se puede retirar todavía." : "No hay reserva que retirar: aparece aquí en cuanto recibas un cobro."}</span>` : ""}</p>
@@ -173,7 +181,7 @@ function renderPanel() {
     <dl class="stats">
       <div><dt><i class="ph-light ph-wallet"></i> Neto recibido</dt><dd class="num ${loading ? "sk" : ""}">${val(() => fromUnits(net))} <small>USDC</small></dd></div>
       <div><dt><i class="ph-light ph-rows"></i> Cobros</dt><dd class="num ${loading ? "sk" : ""}">${val(() => String(list.length))}</dd></div>
-      <div><dt><i class="ph-light ph-percent"></i> Tasa de reserva</dt><dd class="num">8 <small>%</small></dd></div>
+      <div><dt><i class="ph-light ph-percent"></i> Tasa de reserva</dt><dd class="num">8<small>%</small></dd></div>
     </dl>
   </section>
   <section class="grid2">
@@ -295,7 +303,7 @@ function renderThreshold(gross: bigint | null) {
     <p class="th-num num">${due === null ? "S/ —" : soles(due)}</p>
     <p class="th-cap">${due === null ? "esta app no puede estimarlo" : "estimado, no es tu declaración"}</p>
     <div class="meter" title="${soles(THRESHOLD_PEN)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
-    <p class="th-scale"><span>S/ 0</span><span>umbral ${soles(THRESHOLD_PEN)}</span></p>
+    <p class="th-scale"><span>${soles(0)}</span><span>umbral ${soles(THRESHOLD_PEN)}</span></p>
     <dl class="th-rows">
       <div><dt>Cobrado por esta app</dt><dd class="num">${aqui === null ? "—" : soles(aqui)}</dd></div>
       <div><dt>Otras rentas de cuarta del mes</dt><dd class="num">${soles(otras)}</dd></div>
