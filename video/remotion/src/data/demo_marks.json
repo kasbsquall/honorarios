@@ -1,0 +1,89 @@
+[
+  {
+    "name": "intro",
+    "t": 5.332
+  },
+  {
+    "name": "ejemplo",
+    "t": 12.31
+  },
+  {
+    "name": "ejemplo_umbral",
+    "t": 18.252
+  },
+  {
+    "name": "create_click",
+    "t": 27.01
+  },
+  {
+    "name": "wallet_ready",
+    "t": 38.027,
+    "who": " PASSKEY · CDST…DBNE"
+  },
+  {
+    "name": "link_form",
+    "t": 44.467
+  },
+  {
+    "name": "link_ready",
+    "t": 49.278,
+    "link": "http://localhost:5196/pay.html?to=CDSTD34UFP5ZFIINR5WE4GTIOW6KLPHPJR5CM7QEAR4NXEIYEC7PDBNE&amount=500&ref=E001-7&concept=Dise%C3%B1o+de+identidad+visual"
+  },
+  {
+    "name": "pay_page",
+    "t": 53.819
+  },
+  {
+    "name": "connect",
+    "t": 59.33
+  },
+  {
+    "name": "prepare",
+    "t": 61.993
+  },
+  {
+    "name": "sign",
+    "t": 71.515
+  },
+  {
+    "name": "paid",
+    "t": 81.549,
+    "tx": "https://stellar.expert/explorer/testnet/tx/9d1e18fee29197e04db8cbe0a2841e7156697b7b2903fdaee1167042e75d37bd"
+  },
+  {
+    "name": "panel",
+    "t": 89.438,
+    "reserve": "40.00USDC"
+  },
+  {
+    "name": "umbral",
+    "t": 96.363
+  },
+  {
+    "name": "quinta",
+    "t": 103.588
+  },
+  {
+    "name": "howto",
+    "t": 112.638
+  },
+  {
+    "name": "rhe",
+    "t": 125.228
+  },
+  {
+    "name": "withdraw_start",
+    "t": 141.183
+  },
+  {
+    "name": "withdrawn",
+    "t": 157.177,
+    "out": "Retiraste 40.00 USDC. Ver transacción",
+    "href": "https://stellar.expert/explorer/testnet/tx/c13bc6bfa99a1ef8245718a8ed9bad14cfab0bcf0fb772bdd8273162b1582b9d"
+  },
+  {
+    "name": "end",
+    "t": 164.847,
+    "video": "C:\\Users\\User\\Downloads\\proyectos2026\\stellar\\honorarios\\video\\rec_demo\\page@7f8f4c54210e425ab475cb626d388354.webm"
+  }
+]

@@ -4,7 +4,7 @@
 
 Cobra a clientes del exterior en USDC sobre Stellar y separa automáticamente la reserva para tu pago a cuenta de cuarta categoría (SUNAT, Perú).
 
-**App:** https://honorarios-pe.vercel.app · **Video demo:** https://www.youtube.com/watch?v=sALrFKb56xk · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
+**App:** https://honorarios-pe.vercel.app · **Pitch (2:17):** https://www.youtube.com/watch?v=sALrFKb56xk · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
 
 Proyecto para la hackathon Stellar Odyssey Perú (19 al 26 de septiembre de 2026). Todo el código se escribió durante el evento.
 
@@ -35,16 +35,18 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 
 ## Evidencia on-chain (testnet)
 
-Es la misma corrida que se ve en el [video demo](https://www.youtube.com/watch?v=sALrFKb56xk), de principio a fin.
+Es la misma corrida que se ve en el [video pitch](https://www.youtube.com/watch?v=sALrFKb56xk), de principio a fin.
 
 | Qué | Enlace |
 |---|---|
 | Contrato | [`CDGZLOQD…5YETA`](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA) |
 | Despliegue del contrato | [`9a23da89…429a`](https://stellar.expert/explorer/testnet/tx/9a23da8911334ea067299fcbe32b69741d0382c9a2d0aeff9fa6a0c8a172429a) |
-| Smart wallet creada con passkey en la demo | [`CD6E…7GXD`](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
+| Smart wallet creada con passkey | [`CD6E…7GXD`](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
 | El cliente compró con XLM los 460 USDC que le faltaban: 437.22 XLM por path payment | [`787ff6d5…6563`](https://stellar.expert/explorer/testnet/tx/787ff6d5681d7ba78fbefdbc1b5926c560d272a1ee4a59fbee63139467136563) |
 | Cobro de 500 USDC: 460 al freelancer, 40 a la reserva | [`1c41c40d…3e13`](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
 | Retiro de la reserva firmado con passkey | [`76aca849…86b9`](https://stellar.expert/explorer/testnet/tx/76aca84969e050b397aafae6cce7372d6bfd59bc32dc1f14a63b0d0ffd5d86b9) |
+
+El video demo es una segunda corrida completa contra el mismo contrato, grabada sin cortes: wallet [`CDST…DBNE`](https://stellar.expert/explorer/testnet/contract/CDSTD34UFP5ZFIINR5WE4GTIOW6KLPHPJR5CM7QEAR4NXEIYEC7PDBNE), cobro [`9d1e18fe…37bd`](https://stellar.expert/explorer/testnet/tx/9d1e18fee29197e04db8cbe0a2841e7156697b7b2903fdaee1167042e75d37bd) y retiro [`c13bc6bf…2b9d`](https://stellar.expert/explorer/testnet/tx/c13bc6bfa99a1ef8245718a8ed9bad14cfab0bcf0fb772bdd8273162b1582b9d). El flujo se puede repetir y cada corrida queda registrada.
 
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
 
@@ -96,6 +98,7 @@ Pruebas E2E en testnet. Usan un firmante de desarrollo que solo existe con `npm 
 ```sh
 node web/e2e/record.mjs    # cobro con Freighter
 node web/e2e/passkey.mjs   # passkey con autenticador WebAuthn virtual
+node web/e2e/demo.mjs      # recorrido completo, grabado sin cortes para el video
 ```
 
 ## Trabajo hecho durante el evento
