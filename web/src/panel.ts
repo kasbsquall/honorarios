@@ -10,9 +10,16 @@ import { SUSPENSION_CAP_PEN, THRESHOLD_PEN, estimate } from "./tax";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
 
 const FX_KEY = "honorarios.fx";
-const OTHER_KEY = "honorarios.otras4";
-const FIFTH_KEY = "honorarios.quinta";
-const HELD_KEY = "honorarios.retenido";
+// Las rentas que el usuario teclea son de un mes. Sin el periodo en la clave, lo escrito
+// en setiembre seguiria ahi en octubre y nadie lo volveria a revisar.
+const periodKey = (base: string) => {
+  const l = new Date(Date.now() - 5 * 3_600_000);
+  return `${base}.${l.getUTCFullYear()}-${String(l.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+const OTHER_KEY = periodKey("honorarios.otras4");
+const FIFTH_KEY = periodKey("honorarios.quinta");
+const HELD_KEY = periodKey("honorarios.retenido");
+const CONFIRM_KEY = periodKey("honorarios.confirm");
 const ROLE_KEY = "honorarios.dir4";
 const PUBLIC_BASE = (import.meta.env.VITE_PUBLIC_BASE as string | undefined)?.replace(/\/$/, "") || location.origin;
 
@@ -20,8 +27,10 @@ const app = document.getElementById("app")!;
 document.getElementById("brand")!.insertAdjacentHTML("afterbegin", MARK);
 
 type Mode = "passkey" | "freighter" | "demo";
-// Wallet creada con passkey durante la demo grabada: sus cobros y su retiro estan en testnet.
-const DEMO_ADDRESS = "CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD";
+// Wallet creada con passkey durante la demo grabada, contra el contrato vigente.
+// Si se redespliega el contrato hay que traer aqui una wallet que haya cobrado en el nuevo:
+// `npm run check:demo` avisa cuando esta constante apunta a un despliegue muerto.
+const DEMO_ADDRESS = "CCOEUIDDOVYNHO4XMS2UOUVFD2S456DB3JTTY7YOJB2QVPV35FDXPB4S";
 let me = "";
 let mode: Mode = "passkey";
 let events: Paid[] | null = null;
@@ -48,7 +57,7 @@ function renderIntro(error = "") {
   <section class="intro rise">
     <p class="lbl">Para freelancers en Perú que cobran al exterior</p>
     <h1>Cobra en USDC y deja apartado tu pago a cuenta desde el primer dólar.</h1>
-    <p>Cada cobro pasa por un contrato en Stellar: el 92% llega a tu wallet y el 8% queda reservado a tu nombre. Si el mes supera S/ 4,010, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
+    <p>Cada cobro pasa por un contrato en Stellar: el 8% queda reservado a tu nombre y el resto llega a tu wallet. Si el mes supera S/ 4,010, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
     <label class="field name"><span class="lbl">Tu nombre</span><input id="name" maxlength="40" placeholder="Como quieres que aparezca en tu passkey"></label>
     <div class="actions">
       <button class="btn" id="create"><i class="ph-light ph-fingerprint"></i>Crear wallet con passkey</button>
@@ -148,7 +157,7 @@ function renderPanel() {
 
   app.innerHTML = `
   ${loadError ? `<p class="error" role="alert"><i class="ph-light ph-warning"></i> No pudimos leer tus cobros de la red. Lo que ves no es tu saldo: recarga en un momento. <button class="linkbtn" id="retry">Reintentar</button></p>` : ""}
-  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye"></i> Panel de ejemplo con la cuenta de la demo grabada en testnet: los cobros y la reserva se leen de la cadena en vivo. Puedes crear un link de prueba; retirar necesita la passkey de esa cuenta, y su reserva ya se retiró en la demo. <a href="${EXPLORER}/contract/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right"></i></a></p>` : ""}
+  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye"></i> Panel de ejemplo con la cuenta de la demo, en testnet: los cobros, la reserva y el acumulado del mes se leen de la cadena en vivo. Este mes cruza el umbral, así que el bloque de abajo muestra un pago a cuenta real. La reserva se queda corta frente a él a propósito: en esta cuenta se retiraron 40 USDC antes del cierre del mes, que es justo lo que la app advierte que no conviene hacer. Puedes crear un link de prueba; retirar necesita la passkey de esa cuenta. <a href="${EXPLORER}/contract/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right"></i></a></p>` : ""}
   <section class="hero rise" style="--i:0">
     <div>
       <p class="lbl"><i class="ph-light ph-vault"></i> Reserva preventiva · 8% de cada cobro</p>
@@ -196,6 +205,8 @@ function renderPanel() {
               footLeft: p.at.toLocaleDateString("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
               txHash: p.txHash,
             })}<button class="btn ghost rhe-open" data-i="${i}"><i class="ph-light ph-file-text"></i>Borrador de recibo por honorarios</button></div>`).join("")
+          : (monthly !== null && monthly > 0n) || (reserve !== null && reserve > 0n)
+          ? `<div class="emptybox"><i class="ph-light ph-clock-counter-clockwise"></i><p>El contrato tiene cobros tuyos este mes, pero el nodo ya no guarda sus eventos: testnet conserva alrededor de una semana. Las cifras de arriba vienen del contrato y son exactas; lo que falta aquí es el detalle de cada cobro.</p></div>`
           : `<div class="emptybox"><i class="ph-light ph-receipt"></i><p>Todavía no tienes cobros. Crea un link y envíalo a tu cliente.</p></div>`
     }</div>
   </section>`;
@@ -259,8 +270,10 @@ function renderThreshold(gross: bigint | null) {
   const usdc = gross === null ? null : Number(fromUnits(gross, 2).replace(/,/g, ""));
   const aqui = usdc !== null && fx ? usdc * fx : null;
   const director = readFlag(ROLE_KEY);
+  const confirmado = readFlag(CONFIRM_KEY);
   const est = estimate({
-    appGrossPen: aqui, otherFourthPen: otras, fifthPen: quinta, withheldPen: retenido, isDirectorIncome: director,
+    appGrossPen: aqui, otherFourthPen: otras, fifthPen: quinta, withheldPen: retenido,
+    isDirectorIncome: director, confirmedComplete: confirmado,
   });
   const cuarta = est.fourthBasePen;
   const pen = est.monthTotalPen;
@@ -274,6 +287,7 @@ function renderThreshold(gross: bigint | null) {
     !est.supported ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Fuera de lo que calcula esta app</span>`
     : pen === null ? `<span class="badge"><i class="ph-light ph-question"></i>Falta tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Supera el umbral</span>`
+    : est.provisional ? `<span class="badge"><i class="ph-light ph-dots-three-circle"></i>Falta confirmar tus otras rentas</span>`
     : `<span class="badge ok"><i class="ph-light ph-check"></i>Bajo el umbral</span>`;
 
   box.innerHTML = `
@@ -306,7 +320,9 @@ function renderThreshold(gross: bigint | null) {
                 ? `Tu reserva equivale a ${soles(enReserva)} con este tipo de cambio: faltan ${soles(falta)} para cubrir el pago. La reserva está en USDC y la deuda en soles, así que el tipo de cambio del día en que pagues mueve el resultado.`
                 : `Tu reserva equivale a ${soles(enReserva)} con este tipo de cambio y alcanza para el pago. Como está en USDC y la deuda es en soles, el tipo de cambio del día en que pagues mueve el resultado.`;
             })()
-          : "Con lo declarado aquí no habría pago a cuenta. Espera al cierre del mes antes de retirar la reserva: un cobro más puede cruzar el umbral y el 8% se aplica al total del mes."
+          : est.provisional
+            ? "Con lo cobrado por esta app no se cruza el umbral, pero el umbral se mide sobre todo lo que ganaste este mes. Completa arriba tus otras rentas y confírmalo: hasta entonces esto no es un “no debes nada”."
+            : "Con lo declarado aquí no habría pago a cuenta. Espera al cierre del mes antes de retirar la reserva: un cobro más puede cruzar el umbral y el 8% se aplica al total del mes."
     }</p>
     <p class="th-help"><i class="ph-light ph-warning-circle"></i> Esto es un estimado con lo que esta app puede saber. El umbral se mide sobre todos tus ingresos del mes, incluidas las rentas de cuarta cobradas fuera de aquí y las de quinta si estás en planilla. Y el 8% es pago a cuenta: en la declaración anual el impuesto se recalcula sobre la renta neta, así que puede quedar saldo por pagar o a favor.</p>
     <div class="row2">
@@ -314,6 +330,7 @@ function renderThreshold(gross: bigint | null) {
       <label class="field"><span class="lbl">Rentas de quinta del mes (S/)</span><input class="num other-in" data-k="${FIFTH_KEY}" inputmode="decimal" placeholder="0.00" value="${quinta || ""}"></label>
     </div>
     <label class="field"><span class="lbl">Retenciones que ya te hicieron este mes (S/)</span><input class="num other-in" data-k="${HELD_KEY}" inputmode="decimal" placeholder="0.00" value="${retenido || ""}"></label>
+    <label class="check"><input type="checkbox" id="done4" ${confirmado ? "checked" : ""}><span>Ya revisé: esto es todo lo que gané este mes<small>Los importes de arriba son de ${month}. Mientras no lo confirmes, la app no afirma que no tienes pago a cuenta.</small></span></label>
     <label class="check"><input type="checkbox" id="dir4" ${director ? "checked" : ""}><span>Mis rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea<small>Ese grupo tiene un umbral mensual distinto. Márcalo y la app deja de estimar en vez de darte un número que no le corresponde.</small></span></label>
     <details class="howto">
       <summary><i class="ph-light ph-list-numbers"></i> Cómo se paga a SUNAT</summary>
@@ -342,10 +359,13 @@ function renderThreshold(gross: bigint | null) {
   box.querySelector<HTMLInputElement>("#fx")!.addEventListener("change", (e) => save(FX_KEY, (e.target as HTMLInputElement).value));
   box.querySelectorAll<HTMLInputElement>(".other-in").forEach((i) =>
     i.addEventListener("change", () => save(i.dataset.k!, i.value)));
-  box.querySelector<HTMLInputElement>("#dir4")!.addEventListener("change", (e) => {
-    try { localStorage.setItem(ROLE_KEY, (e.target as HTMLInputElement).checked ? "1" : ""); } catch { /* sin storage */ }
-    renderThreshold(gross);
-  });
+  const flag = (id: string, key: string) =>
+    box.querySelector<HTMLInputElement>(id)!.addEventListener("change", (e) => {
+      try { localStorage.setItem(key, (e.target as HTMLInputElement).checked ? "1" : ""); } catch { /* sin storage */ }
+      renderThreshold(gross);
+    });
+  flag("#dir4", ROLE_KEY);
+  flag("#done4", CONFIRM_KEY);
 }
 
 // Ancla SEP-24 que liquida en soles. Se consulta en vivo: si deja de ofrecer PEN, se nota.

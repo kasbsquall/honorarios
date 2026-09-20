@@ -30,6 +30,9 @@ export type TaxInput = {
   /** Rentas del inciso b) del articulo 33: director, mandatario, regidor, sindico, albacea.
    *  Ese grupo tiene un umbral mensual propio, menor, que esta app no conoce. */
   isDirectorIncome: boolean;
+  /** El usuario confirmo que los campos manuales del mes estan completos.
+   *  Sin esa confirmacion, "no llegas al umbral" se estaria afirmando sobre la nada. */
+  confirmedComplete?: boolean;
 };
 
 export type TaxEstimate = {
@@ -42,12 +45,24 @@ export type TaxEstimate = {
   duePen: number | null;
   /** false cuando el caso del usuario queda fuera de lo que esta app sabe calcular. */
   supported: boolean;
+  /** true cuando el resultado es "no hay pago a cuenta" pero el usuario no ha confirmado
+   *  que declaro todas sus rentas del mes. La interfaz no debe dar por buena esa calma. */
+  provisional: boolean;
   /** Por que no hay cifra, cuando duePen es null. */
   reason: "missing-fx" | "unsupported-role" | null;
 };
 
+/** Un importe que el usuario teclea: negativo, NaN o infinito valen cero.
+ *  Un negativo colado en otras rentas reduciria la base y produciria una declaracion corta. */
+const amount = (n: number): number => (Number.isFinite(n) && n > 0 ? n : 0);
+
 export function estimate(input: TaxInput): TaxEstimate {
-  const { appGrossPen, otherFourthPen, fifthPen, withheldPen, isDirectorIncome } = input;
+  const { appGrossPen: rawGross, isDirectorIncome } = input;
+  const otherFourthPen = amount(input.otherFourthPen);
+  const fifthPen = amount(input.fifthPen);
+  const withheldPen = amount(input.withheldPen);
+  // Un tipo de cambio en blanco llega como 0 y no sirve para convertir nada.
+  const appGrossPen = rawGross === null || !Number.isFinite(rawGross) || rawGross < 0 ? null : rawGross;
 
   // Las rentas del inciso b) tienen su propio umbral, menor que el general. No lo tenemos
   // verificado, y aplicar el general daria un "bajo el umbral" tranquilizador y falso.
@@ -59,19 +74,25 @@ export function estimate(input: TaxInput): TaxEstimate {
       overThreshold: false,
       duePen: null,
       supported: false,
+      provisional: false,
       reason: "unsupported-role",
     };
   }
 
   if (appGrossPen === null) {
-    return { fourthBasePen: null, monthTotalPen: null, overThreshold: false, duePen: null, supported: true, reason: "missing-fx" };
+    return { fourthBasePen: null, monthTotalPen: null, overThreshold: false, duePen: null, supported: true, provisional: false, reason: "missing-fx" };
   }
 
   const fourthBasePen = appGrossPen + otherFourthPen;
   const monthTotalPen = fourthBasePen + fifthPen;
   // La norma exonera cuando el total "no exceda" el umbral, asi que igualarlo no obliga.
   const overThreshold = monthTotalPen > THRESHOLD_PEN;
-  const duePen = overThreshold ? Math.max(fourthBasePen * PAYMENT_RATE - withheldPen, 0) : 0;
+  // A centimos, que es como se declara y como lo muestra la pantalla.
+  const duePen = overThreshold ? Math.round(Math.max(fourthBasePen * PAYMENT_RATE - withheldPen, 0) * 100) / 100 : 0;
 
-  return { fourthBasePen, monthTotalPen, overThreshold, duePen, supported: true, reason: null };
+  return {
+    fourthBasePen, monthTotalPen, overThreshold, duePen, supported: true,
+    provisional: !overThreshold && input.confirmedComplete !== true,
+    reason: null,
+  };
 }

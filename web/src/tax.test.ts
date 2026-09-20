@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PAYMENT_RATE, THRESHOLD_PEN, estimate } from "./tax";
 
-const base = { appGrossPen: 0, otherFourthPen: 0, fifthPen: 0, withheldPen: 0, isDirectorIncome: false };
+const base = { appGrossPen: 0, otherFourthPen: 0, fifthPen: 0, withheldPen: 0, isDirectorIncome: false, confirmedComplete: true };
 
 describe("pago a cuenta de cuarta categoria", () => {
   test("bajo el umbral no hay pago a cuenta", () => {
@@ -19,7 +19,7 @@ describe("pago a cuenta de cuarta categoria", () => {
   test("un centimo por encima del umbral ya obliga", () => {
     const r = estimate({ ...base, appGrossPen: THRESHOLD_PEN + 0.01 });
     expect(r.overThreshold).toBe(true);
-    expect(r.duePen).toBeCloseTo((THRESHOLD_PEN + 0.01) * PAYMENT_RATE, 6);
+    expect(r.duePen).toBe(Math.round((THRESHOLD_PEN + 0.01) * PAYMENT_RATE * 100) / 100);
   });
 
   test("las rentas de quinta cuentan para el umbral pero no para la base del 8%", () => {
@@ -58,6 +58,33 @@ describe("pago a cuenta de cuarta categoria", () => {
     expect(r.overThreshold).toBe(true);
     expect(r.fourthBasePen).toBe(0);
     expect(r.duePen).toBe(0);
+  });
+
+  test("un importe negativo no puede reducir la base y producir una declaracion corta", () => {
+    const r = estimate({ ...base, appGrossPen: 5000, otherFourthPen: -3000 });
+    expect(r.fourthBasePen).toBe(5000);
+    expect(r.duePen).toBe(400);
+  });
+
+  test("un campo mal escrito llega como NaN y vale cero, no rompe el calculo", () => {
+    const r = estimate({ ...base, appGrossPen: 5000, fifthPen: Number.NaN, withheldPen: Number.NaN });
+    expect(r.duePen).toBe(400);
+  });
+
+  test("el monto a declarar se redondea a centimos", () => {
+    const r = estimate({ ...base, appGrossPen: 4444.44 });
+    expect(r.duePen).toBe(355.56); // 355.5552 redondeado
+  });
+
+  test("sin confirmar que no hay otras rentas, el resultado bajo el umbral es provisional", () => {
+    const r = estimate({ ...base, appGrossPen: 1875, confirmedComplete: false });
+    expect(r.overThreshold).toBe(false);
+    expect(r.provisional).toBe(true);
+  });
+
+  test("superar el umbral no es provisional: ahi ya hay obligacion", () => {
+    const r = estimate({ ...base, appGrossPen: 9000, confirmedComplete: false });
+    expect(r.provisional).toBe(false);
   });
 
   test("rentas de director quedan fuera: la app no conoce su umbral y no inventa uno", () => {

@@ -86,3 +86,5 @@ dialog.rhe[open] { animation: rise 220ms var(--ease) both }
 .check { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: var(--t-s); color: var(--ink-2); cursor: pointer }
 .check input { margin-top: 3px; accent-color: var(--accent) }
 .check small { display: block; color: var(--ink-3); margin-top: 3px; line-height: 1.5 }
+.warn-text { color: var(--warn) }
+select.inline { background: none; border: 0; color: inherit; font: inherit; padding: 0; cursor: pointer; border-bottom: 1px solid var(--rule-strong) }

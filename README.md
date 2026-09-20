@@ -47,6 +47,16 @@ La tabla es la corrida que graba el video demo, de principio a fin y sin cortes.
 
 El flujo se puede repetir y cada corrida queda registrada en la cadena.
 
+El panel de ejemplo de la app (botón "Ver un panel de ejemplo", sin instalar nada) lee esa misma
+wallet en vivo. Para que enseñe el caso que justifica el producto, y no un mes por debajo del
+umbral, se le añadieron dos cobros más contra el mismo contrato:
+[`8956c26e…a47e`](https://stellar.expert/explorer/testnet/tx/8956c26e0a41c2e90bb77c36d26e8993f31ff10181645baeaa9ae611d2c6a47e) (620 USDC) y
+[`dbc8f82c…abd5`](https://stellar.expert/explorer/testnet/tx/dbc8f82ca53471a8775384f634bb10389a58a6f2280b662e62143296204dabd5) (300 USDC).
+Con los 500 del video son 1,420 USDC en el mes: S/ 5,325 y un pago a cuenta de S/ 426. La
+reserva se queda corta frente a ese pago porque en la demo se retiraron 40 USDC antes del cierre
+del mes, que es justo lo que la app advierte que no conviene hacer. El script que los generó es
+`web/scripts/seed-demo.mjs`.
+
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
 
 ## Arquitectura
@@ -56,7 +66,7 @@ Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/a
 ```
 contracts/split/   contrato Soroban (Rust) y sus 23 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
-web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con 11 tests
+web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con 16 tests
 web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
 docs/              arquitectura y bitácora de decisiones
@@ -92,7 +102,7 @@ Frontend:
 
 ```sh
 cd web && npm install && npm run dev
-npm test     # 11 tests de la estimación del pago a cuenta
+npm test     # 16 tests de la estimación del pago a cuenta
 ```
 
 El link de cobro apunta al dominio de `VITE_PUBLIC_BASE` (ver `.env`), no a la máquina desde la que se genera: lo recibe un cliente en el extranjero.
@@ -104,6 +114,16 @@ node web/e2e/record.mjs    # cobro con Freighter
 node web/e2e/passkey.mjs   # passkey con autenticador WebAuthn virtual
 node web/e2e/demo.mjs      # recorrido completo, grabado sin cortes para el video
 ```
+
+Dos utilidades más, desde `web/`:
+
+```sh
+node scripts/check-demo.mjs   # ¿la wallet del panel de ejemplo cobró en el contrato vigente?
+node scripts/seed-demo.mjs    # cobros reales para que el panel de ejemplo cruce el umbral
+```
+
+`check-demo` existe porque un redespliegue del contrato dejó esa constante apuntando a un
+despliegue muerto y el panel de ejemplo mostró ceros hasta que alguien lo abrió.
 
 ## Trabajo hecho durante el evento
 
@@ -127,7 +147,7 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 - La cifra del umbral y el tope de suspensión vienen de una fuente secundaria y no los hemos contrastado contra el texto publicado en El Peruano. La interfaz lo dice donde aparecen.
 - `month_gross` cuenta lo que entra por el contrato y cualquiera puede pagar a nombre de un tercero, así que un extraño podría inflar ese acumulado regalando dinero. Es caro de hacer y no toca la reserva, pero el número no es resistente a manipulación.
 - Las comisiones son gratis mientras el relayer público de SDF en testnet lo sea. No hay modelo de patrocinio en la red principal.
-- La lógica tributaria está aislada en `web/src/tax.ts` con 11 tests (`npm test`). El resto del frontend no tiene pruebas automatizadas: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
+- La lógica tributaria está aislada en `web/src/tax.ts` con 16 tests (`npm test`). El resto del frontend no tiene pruebas automatizadas: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
 - Las rentas de cuarta por función de director, mandatario, regidor, síndico o albacea tienen un umbral mensual propio, más bajo, que no hemos verificado. El panel pregunta por ese caso y, si lo marcas, deja de estimar en vez de mostrar un "bajo el umbral" que no le corresponde.
 - No encontramos una norma de SUNAT específica para honorarios cobrados en cripto. El tipo de cambio para medir el umbral lo ingresa el freelancer y la app no lo fija.
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.
@@ -135,6 +155,8 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 - La reserva del 8% es preventiva: si el mes no supera S/ 4,010 no hay pago a cuenta y el freelancer puede retirarla al cierre del mes. Con clientes peruanos que retienen, la retención se descuenta del pago del mes.
 - La comisión del servicio se fija al desplegar y no se puede cambiar después. Un cambio de precio obliga a desplegar otro contrato, lo que es honesto con el usuario pero incómodo de operar.
 - La cuenta que recibiría la comisión es, en este despliegue, la misma cuenta de pruebas que desplegó el contrato. Con la comisión en cero nunca recibe nada.
+- El detalle de cada cobro se reconstruye desde los eventos del RPC, que en testnet guarda alrededor de una semana. Pasado ese plazo el panel lo dice de forma explícita y sigue mostrando las cifras del mes y la reserva, que viven en el contrato y no caducan, pero el borrador del recibo de un cobro antiguo deja de poder generarse.
+- El borrador del recibo pregunta si el cliente está domiciliado en Perú, porque de eso depende que haya retención. No trae el monto mínimo a partir del cual el agente retiene: no lo tenemos contrastado y hay que verificarlo.
 - La reserva es una ayuda de organización y no reemplaza la asesoría de un contador.
 
 ## Licencia

@@ -255,3 +255,42 @@ donde los videos se rehacen de todos modos.
 Compliant Rails y el rail de salida a soles no está cerrado. Dos jueces lo pusieron como el
 motivo principal de no darle el primer puesto.
 
+## 20 de septiembre de 2026, tarde · El panel de ejemplo estaba vacío
+
+**Hallazgo, y es el peor de toda la revisión.** Dos jueces de la segunda ronda abrieron la app,
+pulsaron "Ver un panel de ejemplo" (lo que el propio video demo invita a hacer en el segundo 16)
+y vieron ceros en todas las casillas. El escaparate contradecía al video.
+
+**Causa.** `DEMO_ADDRESS` apuntaba a `CD6EERWS…7GXD`, la wallet de la corrida del video pitch
+original, que cobró contra el contrato **anterior**. Al redesplegar por la comisión, esa wallet
+quedó con `month_gross` y `tax_reserve` en cero contra el contrato nuevo, y sus eventos `Paid`
+llevan otro `contractId`, así que el filtro de `paidEvents` nunca los iba a ver. Una constante
+que sobrevivió a un redespliegue y ninguna prueba que la ejercitara.
+
+**Arreglos:**
+- `DEMO_ADDRESS` apunta a `CCOE…PB4S`, la wallet que cobró contra el contrato vigente.
+- `web/scripts/check-demo.mjs` falla si esa wallet no tiene nada en el contrato actual. El fallo
+  era de una clase que va a repetirse en cada redespliegue.
+- El panel distingue "el nodo ya no guarda esos eventos" de "no tienes cobros". Antes los dos
+  casos pintaban el mismo vacío, con una reserva distinta de cero al lado desmintiéndolo.
+- `web/scripts/seed-demo.mjs` añadió dos cobros reales (620 y 300 USDC) para que el mes del panel
+  de ejemplo cruce el umbral: S/ 5,325 y S/ 426 de pago a cuenta. El caso aburrido era
+  precisamente el mes en que el producto no hace falta.
+
+**Otros arreglos de la misma ronda, del contador y del ingeniero:**
+- Las rentas manuales se guardan por periodo tributario: lo tecleado en setiembre ya no aparece
+  en octubre como si fuera del mes en curso.
+- "Bajo el umbral" con los campos vacíos era una afirmación de cumplimiento construida sobre la
+  ausencia de datos. Ahora hay un estado "falta confirmar tus otras rentas" hasta que el usuario
+  confirme que eso es todo lo que ganó.
+- El borrador del recibo afirmaba que no hubo retención sin saber dónde está el cliente. Ahora
+  lo pregunta, y si el cliente es domiciliado avisa de que puede haber retención sin inventar el
+  monto mínimo, que no tenemos contrastado.
+- `estimate` sanea lo que teclea el usuario: un negativo en otras rentas reducía la base y
+  producía una declaración corta. Y el monto a declarar se redondea a céntimos, que es como se
+  declara. Cinco tests nuevos, 16 en total.
+- La pantalla de éxito del pago podía enlazar a una transacción vacía si la red no devolvía el
+  hash.
+- La portada decía "el 92% llega a tu wallet" mientras la página de pago leía la comisión de la
+  cadena. Dos cifras del mismo contrato no pueden salir de sitios distintos.
+

@@ -36,6 +36,15 @@ function saveProfile(p: Profile) {
   try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch { /* sin storage */ }
 }
 
+/** Un cliente no domiciliado no es agente de retencion. Uno domiciliado si puede serlo,
+ *  y entonces retiene sobre los recibos que pasan el minimo que fija SUNAT. No ponemos ese
+ *  minimo porque no lo tenemos contrastado: el usuario tiene que verificarlo. */
+function retencionLinea(abroad: boolean) {
+  return abroad
+    ? "No aplica. Un cliente no domiciliado en Perú no es agente de retención."
+    : "Puede aplicar. Si tu cliente es domiciliado y agente de retención, debe retenerte el 8% cuando el recibo pasa el monto mínimo que fija SUNAT; verifica ese mínimo y descuenta lo retenido en el panel.";
+}
+
 function draftText(p: Paid, f: Record<string, string>) {
   return [
     "BORRADOR · Recibo por honorarios electrónico",
@@ -46,7 +55,7 @@ function draftText(p: Paid, f: Record<string, string>) {
     `Moneda: Dólares americanos (US$)`,
     `Monto total de honorarios: US$ ${usd(p)} (cobrado como ${fromUnits(p.gross)} USDC, 1 USDC = 1 US$)`,
     `Equivalente para tu pago a cuenta: ${f.pen ? `S/ ${f.pen} (TC ${f.fx})` : "(ingresa el tipo de cambio en el panel)"}`,
-    "Retención de cuarta categoría: No (el cliente es del exterior y no es agente de retención)",
+    `Retención de cuarta categoría: ${retencionLinea(f.abroad !== "no")}`,
     `Referencia interna: ${p.ref} · tx ${p.txHash}`,
   ].join("\n");
 }
@@ -65,7 +74,8 @@ export function openRheDraft(p: Paid) {
       <div><dt>Fecha del cobro</dt><dd class="num">${fmtDate(p.at)}</dd></div>
       <div><dt>Monto del recibo</dt><dd class="num">US$ ${usd(p)}</dd></div>
       <div><dt>En soles</dt><dd class="num">${pen(p, readFx()) ? `S/ ${pen(p, readFx())}` : "Falta tipo de cambio"}</dd></div>
-      <div><dt>Retención 4ta</dt><dd>No aplica · cliente del exterior</dd></div>
+      <div><dt>Retención 4ta</dt><dd id="rhe-ret">No aplica · cliente del exterior</dd></div>
+      <div><dt>Cliente</dt><dd><select name="abroad" class="inline"><option value="si">Fuera de Perú</option><option value="no">Domiciliado en Perú</option></select></dd></div>
       <div><dt>Evidencia</dt><dd><a class="num" href="${EXPLORER}/tx/${p.txHash}" target="_blank" rel="noopener">${p.txHash.slice(0, 10)}… <i class="ph-light ph-arrow-up-right"></i></a></dd></div>
     </dl>
     <div class="row2">
@@ -95,6 +105,11 @@ export function openRheDraft(p: Paid) {
     const f = fields();
     const fx = readFx();
     const extra = { pen: pen(p, fx) ?? "", fx: fx ? String(fx) : "" };
+    const abroad = f.abroad !== "no";
+    dlg.querySelector("#rhe-ret")!.textContent = abroad
+      ? "No aplica · cliente del exterior"
+      : "Puede aplicar · cliente domiciliado";
+    dlg.querySelector("#rhe-ret")!.className = abroad ? "" : "warn-text";
     pre.textContent = draftText(p, { ...f, ...extra });
     saveProfile({ name: f.name, ruc: f.ruc });
   };

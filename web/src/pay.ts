@@ -106,6 +106,7 @@ async function advance(current: Step) {
       render("sign");
     } else if (current === "sign") {
       const hash = await payInvoice(payer, to, gross, ref);
+      if (!hash) throw new Error("El pago se envió pero la red no devolvió su hash. Revisa tu wallet antes de volver a pagar.");
       render("done", { txHash: hash });
     }
   } catch (e) {
