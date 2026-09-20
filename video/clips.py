@@ -18,10 +18,10 @@ W, H, FPS = 1920, 1080, 30
 
 # nombre -> (segundo de inicio en la grabacion, factor de velocidad, duracion del clip)
 CLIPS = {
-    "passkey": (4.5, 1.10, 17.766),
-    "pay": (22.0, 1.25, 22.000),
-    "panel": (50.0, 0.82, 24.833),
-    "withdraw": (66.5, 1.55, 12.433),
+    "passkey": (2.9, 1.10, 17.766),
+    "pay": (19.3, 1.25, 22.000),
+    "panel": (46.1, 0.82, 24.833),
+    "withdraw": (62.6, 1.55, 12.433),
 }
 
 

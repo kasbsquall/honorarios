@@ -53,7 +53,7 @@ export const Cold: React.FC = () => {
             </div>
             <div style={{opacity: ramp(f, aTx, 12), fontFamily: MONO, fontSize: 24, color: C.ink3, display: 'flex', justifyContent: 'space-between'}}>
               <span>Una sola transacción · Stellar testnet</span>
-              <span>tx 1c41c40d…3e13</span>
+              <span>tx 1dc6e5f2…3ebf</span>
             </div>
           </div>
           <div style={{borderLeft: `2px dashed ${C.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.surface, transform: `translate(${tear * 36}px, ${tear * 14}px) rotate(${tear * 4}deg)`, boxShadow: tear ? '0 30px 60px -30px rgba(0,0,0,0.9)' : undefined}}>
@@ -207,7 +207,7 @@ const CODE = [
   '    }',
 ];
 const TESTS = [
-  'running 19 tests',
+  'running 23 tests',
   'test test::withdraw_requires_the_freelancer_signature - should panic ... ok',
   'test test::a_third_party_cannot_withdraw_someone_elses_reserve - should panic ... ok',
   'test test::pay_requires_the_payer_signature - should panic ... ok',
@@ -217,13 +217,16 @@ const TESTS = [
   'test test::rejects_amounts_that_would_overflow_the_tax ... ok',
   'test test::month_gross_accumulates_and_separates_periods ... ok',
   'test test::freelancer_withdraws_reserve ... ok',
+  'test test::the_service_fee_comes_out_of_the_gross ... ok',
+  'test test::the_tax_reserve_is_never_touched_by_the_fee ... ok',
+  'test test::rejects_a_fee_above_the_cap - should panic ... ok',
   '',
-  'test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s',
+  'test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s',
 ];
 export const Code: React.FC = () => {
   const f = useCurrentFrame();
   const aS = cue('code', 'firma');
-  const aN = cue('code', 'diecinueve');
+  const aN = cue('code', 'veintitr');
   const hl = ramp(f, aS - 6, 12);
   return (
     <SceneOut>
@@ -319,7 +322,8 @@ export const Stack: React.FC = () => {
 export const Negocio: React.FC = () => {
   const f = useCurrentFrame();
   const aC = cue('negocio', 'comisión');
-  const aA = cue('negocio', 'abierto');
+  const aA = cue('negocio', 'tope');
+  const aZ = cue('negocio', 'cero');
   const row = (at: number, icon: React.ReactNode, t: string, sub: string) => (
     <div style={{display: 'flex', gap: 26, alignItems: 'center', opacity: ramp(f, at, 14), transform: `translateY(${(1 - ramp(f, at, 14)) * 14}px)`, borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
       <div style={{color: C.accent}}>{icon}</div>
@@ -336,11 +340,11 @@ export const Negocio: React.FC = () => {
         <div>
           <Label>Cómo se sostiene</Label>
           <div style={{...H, fontSize: 96, marginTop: 20}}>Una comisión<br />por cobro liquidado</div>
-          <div style={{fontFamily: MONO, fontSize: 24, color: C.ink3, marginTop: 26, opacity: ramp(f, aC + 10, 12)}}>Es el plan, todavía sin precio validado</div>
+          <div style={{fontFamily: MONO, fontSize: 24, color: C.ink3, marginTop: 26, opacity: ramp(f, aZ, 12)}}>Desplegado en cero durante la hackathon</div>
         </div>
         <div style={{display: 'grid', gap: 26}}>
-          {row(aC, <CurrencyCircleDollar size={46} weight="light" />, 'Paga el freelancer', 'solo cuando cobra')}
-          {row(aA + 4, <FileCode size={46} weight="light" />, 'Contrato abierto', 'código MIT, auditable por cualquiera')}
+          {row(aC, <CurrencyCircleDollar size={46} weight="light" />, 'Sale del bruto', 'la reserva del 8% no se toca')}
+          {row(aA + 4, <FileCode size={46} weight="light" />, 'Tope de 1% en el código', 'el constructor rechaza pasarse')}
         </div>
       </AbsoluteFill>
       <Sfx src="whoosh.wav" at={1} vol={0.08} />

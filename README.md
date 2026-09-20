@@ -35,7 +35,7 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 
 ## Evidencia on-chain (testnet)
 
-La corrida del [video pitch](https://www.youtube.com/watch?v=sALrFKb56xk) se hizo contra una versión anterior del contrato ([`CDGZLOQD…5YETA`](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA)), antes de añadir la comisión del servicio. La tabla apunta al contrato vigente y a la corrida del video demo.
+La tabla es la corrida que graba el video demo, de principio a fin y sin cortes. El video pitch usa su propia corrida contra el mismo contrato: wallet [`CD3P…FFOO`](https://stellar.expert/explorer/testnet/contract/CD3PIXX6S5MNQ6YXBB4XRERWGIWS56JB5CGA4YCJ4SUDZMGWEHLEFFOO), cobro [`1dc6e5f2…3ebf`](https://stellar.expert/explorer/testnet/tx/1dc6e5f29558665ed4bd51719b42c057176052bc696a3694853c01ea20e23ebf) y retiro [`7b947744…36e4`](https://stellar.expert/explorer/testnet/tx/7b947744797068ef3b9ffad33098e31f81ec34d55a774ede1fde09dd03f436e4).
 
 | Qué | Enlace |
 |---|---|
@@ -45,7 +45,7 @@ La corrida del [video pitch](https://www.youtube.com/watch?v=sALrFKb56xk) se hiz
 | Cobro de 500 USDC: 460 al freelancer, 40 a la reserva, 0 de comisión | [`e89d764f…4923`](https://stellar.expert/explorer/testnet/tx/e89d764f0c60633546896a55cfdc113a52045bbca95b5bf578343375051c4923) |
 | Retiro de la reserva firmado con passkey | [`da16e5ae…cc10`](https://stellar.expert/explorer/testnet/tx/da16e5ae79fd33b2a23642eb4b3a28f2dca06868d3d9cce21b7990b8f4dccc10) |
 
-Esa es la corrida que graba el video demo, sin cortes y de principio a fin. El flujo se puede repetir y cada corrida queda registrada.
+El flujo se puede repetir y cada corrida queda registrada en la cadena.
 
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
 

@@ -36,11 +36,11 @@ SCENES = [
     ("passkey", "Empiezas con tu huella. Se crea una smart wallet sin frase semilla, y las comisiones las cubre un relayer."),
     ("pay", "Creas un link de cobro y se lo mandas a tu cliente. Él paga con Freighter. Si no tiene USDC, Stellar lo compra con XLM en el camino."),
     ("chain", "El contrato recibe quinientos y entrega cuatrocientos sesenta al freelancer, en una sola llamada. Cualquiera puede verificarlo."),
-    ("code", "La reserva solo se mueve con tu firma. Y diecinueve pruebas del contrato lo respaldan."),
+    ("code", "La reserva solo se mueve con tu firma. Y veintitrés pruebas del contrato lo respaldan."),
     ("panel", "Tu panel lee los cobros desde la red y estima tu pago a cuenta: ocho por ciento del mes si pasas el umbral, cero si no. Te explica cómo pagarlo en soles, con el Formulario seiscientos dieciséis, y te arma el borrador del recibo en dólares."),
     ("withdraw", "Cuando toca pagar, retiras la reserva con tu huella."),
     ("stack", "Todo esto se construyó esta semana, en testnet: Soroban, USDC de Circle, path payments y smart accounts con passkeys."),
-    ("negocio", "El plan para sostenerlo es una comisión pequeña por cada cobro liquidado. El contrato queda abierto para que cualquiera lo audite."),
+    ("negocio", "Para sostenerlo, el contrato puede cobrar una comisión por cobro, con un tope de uno por ciento escrito en el código. Hoy está desplegado en cero."),
     ("close", "Honorarios. Cobra afuera, declara tranquilo."),
 ]
 

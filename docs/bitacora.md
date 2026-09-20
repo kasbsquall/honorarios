@@ -177,3 +177,34 @@ el video pitch; el README lo dice.
 ninguna cifra. Y la comisión no se puede cambiar sin redesplegar, que es una decisión de diseño
 a favor de la transparencia y en contra de la comodidad de operación.
 
+## 19 de septiembre de 2026, 23:25 · Pitch regrabado contra el contrato con comisión
+
+**Decisión:** regrabar también el video pitch, no solo el demo, para que los dos muestren el
+contrato vigente.
+
+**Por qué:** el pitch enseña la transacción en Stellar Expert con el contrato invocado a la
+vista. Dejarlo apuntando al contrato anterior obligaba a explicar en el README por qué hay dos
+contratos, y un jurado que abre el enlace encuentra algo distinto de lo que dice el código.
+
+**Qué cambió además de la grabación:**
+- Narración de la escena `code`: diecinueve pruebas pasa a veintitrés, y la lista en pantalla
+  incluye los tres tests de la comisión.
+- Narración de la escena `negocio`: antes decía que la comisión era el plan; ahora dice que el
+  contrato puede cobrarla con un tope de uno por ciento escrito en el código y que hoy está
+  desplegado en cero. En pantalla: "sale del bruto, la reserva del 8% no se toca" y "tope de 1%
+  en el código".
+- Captura del explorador recapturada con la transacción nueva. Los recuadros que resaltan
+  `5000000000` y `4600000000` siguen cayendo sobre los valores correctos.
+- Offsets de `clips.py` reajustados a las marcas de la grabación nueva, que corre unos segundos
+  por delante de la anterior.
+- La música se quedaba corta: se alargó `music_src_pad2.mp3` con un crossfade interno para que
+  el cierre no entre en silencio.
+
+**Corrida del pitch:** wallet `CD3PIXX6S5MNQ6YXBB4XRERWGIWS56JB5CGA4YCJ4SUDZMGWEHLEFFOO`,
+cobro `1dc6e5f29558665ed4bd51719b42c057176052bc696a3694853c01ea20e23ebf`, retiro
+`7b947744797068ef3b9ffad33098e31f81ec34d55a774ede1fde09dd03f436e4`. 2:17.
+
+**Queda abierto:** el video de YouTube enlazado en el README es la versión anterior. Hay que
+reemplazarlo por este corte antes de enviar el formulario, o el enlace y el repositorio dirán
+cosas distintas.
+

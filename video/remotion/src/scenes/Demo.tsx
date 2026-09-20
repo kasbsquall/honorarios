@@ -114,7 +114,7 @@ export const Chain: React.FC = () => {
         </div>
       </Callout>
       <Callout x={1240} y={880} from={aV}>
-        <Tag icon={<ArrowSquareOut size={36} weight="light" />}>stellar.expert · tx 1c41c40d…</Tag>
+        <Tag icon={<ArrowSquareOut size={36} weight="light" />}>stellar.expert · tx 1dc6e5f2…</Tag>
       </Callout>
       <Rec text="Captura real · Stellar Expert" />
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
@@ -183,7 +183,7 @@ export const Withdraw: React.FC = () => {
         <Tag icon={<Fingerprint size={40} weight="light" color={C.accent} />}>Confirmas con tu passkey</Tag>
       </Callout>
       <Callout x={140} y={760} from={done + 4}>
-        <Tag accent>Retiraste 40.00 USDC · tx 76aca849…</Tag>
+        <Tag accent>Retiraste 40.00 USDC · tx 7b947744…</Tag>
       </Callout>
       <Halo x={700} y={420} size={600} o={0.16 * ramp(f, done, 12)} />
       <Rec />
