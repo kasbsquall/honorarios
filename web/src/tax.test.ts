@@ -1,7 +1,24 @@
 import { describe, expect, test } from "vitest";
-import { PAYMENT_RATE, THRESHOLD_PEN, estimate } from "./tax";
+import { PAYMENT_RATE, SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
 
 const base = { appGrossPen: 0, otherFourthPen: 0, fifthPen: 0, withheldPen: 0, isDirectorIncome: false, confirmedComplete: true };
+
+describe("las cifras salen de la UIT, no de una constante suelta", () => {
+  test("el tope anual de suspension es 8.75 UIT", () => {
+    expect(SUSPENSION_CAP_PEN).toBe(48_125);
+    expect(SUSPENSION_CAP_PEN).toBe(8.75 * UIT_PEN);
+  });
+
+  test("el umbral mensual es la doceava parte del tope anual, truncada", () => {
+    expect(THRESHOLD_PEN).toBe(4010); // 48 125 / 12 = 4 010.41...
+  });
+
+  test("la misma regla reproduce los montos de 2025, con la UIT en S/ 5,350", () => {
+    const cap2025 = 8.75 * 5350;
+    expect(cap2025).toBe(46_812.5);
+    expect(Math.floor(cap2025 / 12)).toBe(3901);
+  });
+});
 
 describe("pago a cuenta de cuarta categoria", () => {
   test("bajo el umbral no hay pago a cuenta", () => {

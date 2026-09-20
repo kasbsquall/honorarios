@@ -49,8 +49,8 @@ function stepState(step: Step, current: Step) {
 function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: string } = {}) {
   const done = current === "done";
   const badge = done
-    ? `<span class="badge ok"><i class="ph-light ph-check"></i>Paid</span>`
-    : `<span class="badge"><i class="ph-light ph-hourglass-simple"></i>Due</span>`;
+    ? `<span class="badge ok"><i class="ph-light ph-check" aria-hidden="true"></i>Paid</span>`
+    : `<span class="badge"><i class="ph-light ph-hourglass-simple" aria-hidden="true"></i>Due</span>`;
   const action =
     current === "connect" ? "Connect Freighter"
     : current === "fund" ? "Prepare USDC"
@@ -60,7 +60,8 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
   app.innerHTML = `
   <section class="summary rise" style="--i:0">
     <p class="lbl">Invoice from a freelancer in Peru</p>
-    <h1>${esc(name || short(to))}</h1>
+    <h1>${esc(name || "A freelancer in Peru")}</h1>
+    <p class="to-addr num">${short(to)}</p>
     <p class="due num">${fromUnits(gross)}<small>USDC</small></p>
     <dl class="lines">
       <div><dt>Service</dt><dd>${esc(concept)}</dd></div>
@@ -71,7 +72,7 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
     <ol class="steps">
       ${STEPS.map((s, i) => `
         <li class="step ${stepState(s.id, current)}">
-          <span class="dot num">${stepState(s.id, current) === "done" ? `<i class="ph-light ph-check"></i>` : String(i + 1).padStart(2, "0")}</span>
+          <span class="dot num">${stepState(s.id, current) === "done" ? `<i class="ph-light ph-check" aria-hidden="true"></i>` : String(i + 1).padStart(2, "0")}</span>
           <div><p><i class="ph-light ${s.icon}"></i> ${s.title}</p><small>${s.hint}</small></div>
         </li>`).join("")}
     </ol>
@@ -93,10 +94,10 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
       : feeBps === 0n ? " This contract charges no service fee: the split above is read from the contract itself."
       : ` This contract charges a ${(Number(feeBps) / 100).toString()}% service fee, read from the contract itself.`}</p>
     ${done
-      ? `<a class="btn wide" href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right"></i>View on Stellar Expert</a>`
-      : `<button class="btn wide" id="go" ${opts.busy ? "disabled" : ""}>${opts.busy ? `<span class="spin"></span>Waiting for wallet` : action}</button>`}
+      ? `<a class="btn wide" href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right" aria-hidden="true"></i>View on Stellar Expert</a>`
+      : `<p class="note desktop-only-note"><i class="ph-light ph-desktop" aria-hidden="true"></i> Freighter is a desktop browser extension. Open this link on your computer to pay.</p>
+         <button class="btn wide" id="go" ${opts.busy ? "disabled" : ""}>${opts.busy ? `<span class="spin"></span>Waiting for wallet` : action}</button>`}
     ${opts.error ? `<p class="error" role="alert">${esc(opts.error)}</p>` : ""}
-    ${done ? "" : `<p class="note desktop-only-note"><i class="ph-light ph-desktop"></i> Freighter is a desktop browser extension. If you are on a phone, open this link on your computer.</p>`}
   </section>`;
 
   if (done) requestAnimationFrame(() => app.querySelector(".receipt")?.classList.add("torn"));
@@ -114,7 +115,6 @@ async function advance(current: Step) {
       render("sign");
     } else if (current === "sign") {
       const hash = await payInvoice(payer, to, gross, ref);
-      if (!hash) throw new Error("El pago se envió pero la red no devolvió su hash. Revisa tu wallet antes de volver a pagar.");
       render("done", { txHash: hash });
     }
   } catch (e) {
@@ -125,6 +125,8 @@ async function advance(current: Step) {
 function friendly(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
   if (/Freighter|Testnet|firma|conexión/.test(msg)) return translate(msg);
+  if (/rechazó la transacción/.test(msg)) return "The network rejected the transaction. No funds were moved. You can try again.";
+  if (/no devolvió el hash|negativo/.test(msg)) return "The network did not confirm the transaction. Check your wallet before paying again.";
   if (/op_underfunded|insufficient|balance/i.test(msg)) return "Not enough XLM to cover this payment.";
   if (/No hay ruta/.test(msg)) return "No XLM to USDC route is available right now. Try again in a minute.";
   return "Something went wrong sending the payment. Try again.";

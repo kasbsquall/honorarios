@@ -1,0 +1,53 @@
+name: CI
+
+# El panel de ejemplo estuvo mostrando ceros un dia entero porque una constante quedo
+# apuntando a un contrato muerto tras un redespliegue, y nadie lo abrio. Por eso el
+# check-demo corre aqui y no solo a mano.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  contrato:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup target add wasm32v1-none
+      - run: cargo test
+        working-directory: contracts/split
+      - run: cargo build --target wasm32v1-none --release
+        working-directory: contracts/split
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
+
+  panel-de-ejemplo:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      # Falla si la cuenta del panel de ejemplo no tiene nada en el contrato desplegado.
+      - run: npm run check:demo

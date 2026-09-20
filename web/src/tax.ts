@@ -4,15 +4,23 @@
  * equivocacion se traduce en que alguien declare de menos, asi que no tiene DOM ni red.
  */
 
-/** Umbral mensual 2026 de rentas de cuarta por debajo del cual no hay pago a cuenta.
- *  Citado como R.S. 000390-2025/SUNAT, leido de fuente secundaria y sin contrastar
- *  contra el texto publicado en El Peruano. La interfaz lo dice donde aparece. */
-export const THRESHOLD_PEN = 4010;
+/** UIT 2026: S/ 5,500, fijada por el D.S. 301-2025-EF y publicada en El Peruano.
+ *  Es el unico dato de esta lista que viene de fuente primaria. */
+export const UIT_PEN = 5500;
 
 /** Tope anual proyectado para pedir la suspension de pagos a cuenta (Formulario 1609).
- *  Misma resolucion y misma advertencia. No es 12 veces el umbral mensual: los dos montos
- *  salen de porcentajes distintos de la UIT, asi que no se pueden derivar uno del otro. */
-export const SUSPENSION_CAP_PEN = 48125;
+ *  8.75 UIT. La regla se verifica contra 2025: con la UIT en S/ 5,350 da S/ 46,812.50,
+ *  que es el tope que SUNAT publico ese ano. */
+export const SUSPENSION_CAP_PEN = 8.75 * UIT_PEN; // 48 125
+
+/** Umbral mensual por debajo del cual no hay pago a cuenta de cuarta: la doceava parte
+ *  del tope anual, truncada a soles. Con la UIT de 2025 da 3,901, que tambien coincide con
+ *  el monto publicado ese ano. Por eso el tope anual no es doce veces el umbral mensual:
+ *  el mensual pierde los centimos al truncarse.
+ *
+ *  La derivacion cuadra dos anos seguidos, pero no hemos leido el texto de la resolucion
+ *  anual de SUNAT que la fija. La interfaz lo dice donde aparecen las cifras. */
+export const THRESHOLD_PEN = Math.floor(SUSPENSION_CAP_PEN / 12); // 4 010
 
 /** Pago a cuenta de cuarta categoria: 8% de la renta bruta percibida en el mes.
  *  Articulo 86 del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF). */

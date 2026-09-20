@@ -22,3 +22,5 @@
 
 .desktop-only-note { display: flex; gap: 8px; align-items: flex-start; color: var(--ink-3) }
 @media (min-width: 900px) { .desktop-only-note { display: none } }
+
+.to-addr { font-size: var(--t-s); color: var(--ink-3); letter-spacing: .04em }

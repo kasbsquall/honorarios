@@ -66,7 +66,7 @@ Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/a
 ```
 contracts/split/   contrato Soroban (Rust) y sus 23 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
-web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con 16 tests
+web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con sus tests
 web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
 docs/              arquitectura y bitácora de decisiones
@@ -102,7 +102,7 @@ Frontend:
 
 ```sh
 cd web && npm install && npm run dev
-npm test     # 16 tests de la estimación del pago a cuenta
+npm test     # 26 tests: estimación del pago a cuenta y reparto del cobro
 ```
 
 El link de cobro apunta al dominio de `VITE_PUBLIC_BASE` (ver `.env`), no a la máquina desde la que se genera: lo recibe un cliente en el extranjero.
@@ -131,7 +131,10 @@ Todo el repositorio. El historial de commits empieza el 19 de septiembre de 2026
 
 ## Cómo se sostiene
 
-El contrato puede cobrar una comisión por cobro liquidado, que sale del bruto junto al neto y la reserva. La página de pago la lee de la cadena con `fee()` y la muestra desglosada antes de que el cliente firme. Está implementada y probada: `fee_bps` se fija al desplegar, tiene un tope duro de 1% que el constructor rechaza superar, el evento `Paid` publica cuánto se cobró, y la función `fee()` deja el valor a la vista de cualquiera antes de usar el contrato. La reserva del 8% nunca se toca con la comisión.
+Precio propuesto, tamaño de mercado con sus fuentes, y la lista de lo que **no** sabemos:
+[docs/negocio.md](docs/negocio.md).
+
+En corto: 0.5% por cobro liquidado, sin cuota mensual. El contrato puede cobrar una comisión por cobro liquidado, que sale del bruto junto al neto y la reserva. La página de pago la lee de la cadena con `fee()` y la muestra desglosada antes de que el cliente firme. Está implementada y probada: `fee_bps` se fija al desplegar, tiene un tope duro de 1% que el constructor rechaza superar, el evento `Paid` publica cuánto se cobró, y la función `fee()` deja el valor a la vista de cualquiera antes de usar el contrato. La reserva del 8% nunca se toca con la comisión.
 
 **Este contrato está desplegado con la comisión en cero**, porque durante la hackathon no se cobra nada. No hay precio validado con usuarios y por eso no hay una cifra propuesta aquí: lo que existe es el mecanismo, auditable y con su límite escrito en el código. El contrato es MIT.
 
@@ -144,10 +147,10 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 - Solo testnet. `smart-account-kit` y el relayer no tienen auditoría independiente, según su propio README.
 - **El umbral se mide sobre todos tus ingresos del mes, no solo sobre lo que pasa por aquí.** El contrato solo puede sumar sus propios cobros, así que el panel pide a mano las otras rentas de cuarta, las de quinta y las retenciones ya practicadas. Con esos campos vacíos, el número que muestra se queda corto.
 - El 8% es pago a cuenta, no impuesto final: en la declaración anual se recalcula sobre la renta neta y puede quedar saldo por pagar o a favor. La app no hace ese cálculo.
-- La cifra del umbral y el tope de suspensión vienen de una fuente secundaria y no los hemos contrastado contra el texto publicado en El Peruano. La interfaz lo dice donde aparecen.
+- El tope anual de suspensión son 8.75 UIT y el umbral mensual su doceava parte truncada; la UIT de 2026 (S/ 5,500) sí es fuente primaria, el [D.S. 301-2025-EF](https://busquedas.elperuano.pe/dispositivo/NL/2469116-1). La regla reproduce los montos de 2025 con la UIT de ese año, pero no hemos leído el texto de la resolución anual de SUNAT que los fija. La interfaz lo dice donde aparecen.
 - `month_gross` cuenta lo que entra por el contrato y cualquiera puede pagar a nombre de un tercero, así que un extraño podría inflar ese acumulado regalando dinero. Es caro de hacer y no toca la reserva, pero el número no es resistente a manipulación.
 - Las comisiones son gratis mientras el relayer público de SDF en testnet lo sea. No hay modelo de patrocinio en la red principal.
-- La lógica tributaria está aislada en `web/src/tax.ts` con 16 tests (`npm test`). El resto del frontend no tiene pruebas automatizadas: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
+- La lógica tributaria está aislada en `web/src/tax.ts` y el reparto que se muestra antes de firmar en `web/src/split.test.ts`: 26 tests en total (`npm test`), más los 23 del contrato, todos en CI. El resto del frontend no tiene pruebas automatizadas: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
 - Las rentas de cuarta por función de director, mandatario, regidor, síndico o albacea tienen un umbral mensual propio, más bajo, que no hemos verificado. El panel pregunta por ese caso y, si lo marcas, deja de estimar en vez de mostrar un "bajo el umbral" que no le corresponde.
 - No encontramos una norma de SUNAT específica para honorarios cobrados en cripto. El tipo de cambio para medir el umbral lo ingresa el freelancer y la app no lo fija.
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.

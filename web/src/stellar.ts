@@ -32,7 +32,9 @@ const horizon = new Horizon.Server(HORIZON_URL);
 const server = new rpc.Server(RPC_URL);
 
 export function toUnits(amount: string): bigint {
-  const [whole, frac = ""] = amount.trim().split(".");
+  const raw = amount.trim();
+  if (raw.startsWith("-")) throw new Error("El monto no puede ser negativo.");
+  const [whole, frac = ""] = raw.split(".");
   return BigInt(whole || "0") * 10n ** BigInt(DECIMALS) + BigInt(frac.padEnd(DECIMALS, "0").slice(0, DECIMALS));
 }
 
@@ -164,18 +166,29 @@ function honorarios(publicKey?: string) {
   });
 }
 
+/** El SDK solo lanza si el envio no queda en PENDING o si expira el plazo: una transaccion
+ *  incluida y FALLIDA vuelve por el camino normal. Sin esta comprobacion la pantalla
+ *  enseñaria "Pagado" y un enlace al explorador de una transaccion que fallo. */
+function hashOf(sent: any): string {
+  const st = sent?.getTransactionResponse?.status;
+  if (st && st !== "SUCCESS") {
+    throw new Error(`La red rechazó la transacción (${st}). No se movió ningún fondo.`);
+  }
+  const hash = sent?.sendTransactionResponse?.hash;
+  if (!hash) throw new Error("La red no devolvió el hash de la transacción. Revisa tu wallet antes de reintentar.");
+  return hash;
+}
+
 export async function payInvoice(payer: string, freelancer: string, gross: bigint, ref: string): Promise<string> {
   const client = (await honorarios(payer)) as any;
   const tx = await client.pay({ payer, freelancer, gross, receipt_ref: ref });
-  const sent = await tx.signAndSend();
-  return sent.sendTransactionResponse?.hash ?? "";
+  return hashOf(await tx.signAndSend());
 }
 
 export async function withdrawWithWallet(freelancer: string, to: string, amount: bigint): Promise<string> {
   const client = (await honorarios(freelancer)) as any;
   const tx = await client.withdraw_tax({ freelancer, to, amount });
-  const sent = await tx.signAndSend();
-  return sent.sendTransactionResponse?.hash ?? "";
+  return hashOf(await tx.signAndSend());
 }
 
 export async function taxReserve(freelancer: string): Promise<bigint> {

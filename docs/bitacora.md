@@ -314,3 +314,49 @@ arregló, con su motivo:
   con un solo set de iconos. Un medidor a cero que se leía igual que uno lleno. El botón de
   retirar con el mismo borde y altura que los campos de encima.
 
+## 20 de septiembre de 2026, cierre · Tercera ronda
+
+Puntuaciones: 87 el ingeniero (subió de ~71), 84 el diseñador, 82 el jurado principal (subió de
+74-76). Los tres lo ponen segundo. Lo hecho después de esa ronda:
+
+**El umbral deja de ser una cifra suelta.** `tax.ts` ahora deriva el tope anual como 8.75 UIT y
+el umbral mensual como su doceava parte truncada, partiendo de la UIT 2026 de S/ 5,500 fijada
+por el D.S. 301-2025-EF, que sí está publicado en El Peruano y se enlaza desde la app. La regla
+reproduce los montos de 2025 con la UIT de ese año, y eso explica la discrepancia que el contador
+marcó como sospechosa: doce veces el umbral mensual no da el tope anual porque el mensual pierde
+los céntimos al truncarse. Tres tests nuevos lo fijan. Sigue sin leerse el texto de la resolución
+de SUNAT, y la interfaz lo sigue diciendo.
+
+**Una transacción fallida se presentaba como pagada.** `signAndSend` del SDK solo lanza si el
+envío no queda en PENDING o si expira el plazo: una transacción incluida y FAILED volvía por el
+camino normal y la pantalla enseñaba "Pagado" con enlace al explorador. Es el único defecto que
+podía hacer creer a alguien que cobró sin haber cobrado.
+
+**Un fallo del RPC borraba datos que sí se habían leído.** El `Promise.all` del panel tiraba
+reserva y acumulado cuando fallaba el escaneo de eventos, que es la llamada frágil. Ahora cada
+lectura va por su cuenta y solo hay error cuando no se pudo leer nada del contrato.
+
+**Negocio con fuentes.** `docs/negocio.md`: precio de 0.5%, los datos publicados que encontramos
+(exportación de servicios de Mincetur, independientes con RUC del INEI, UIT del MEF) y, en tabla
+aparte, nuestros supuestos con su rango. El dato que falta, qué parte de la exportación de
+servicios la factura una persona natural, se declara como faltante en vez de rellenarse.
+
+**CI.** `.github/workflows/ci.yml` corre los tests del contrato, los del frontend, el build y
+`check-demo`. Este último existe porque el panel de ejemplo estuvo un día en ceros sin que nadie
+lo notara.
+
+**Interfaz.** El veredicto de la reserva ("faltan S/ 150 para cubrir el pago de S/ 426") pasa a
+estar junto a la cifra y no en una nota a mil píxeles de scroll. El bloque fiscal se reparte en
+dos columnas a partir de 1180 px y el formulario de link acompaña el scroll, que era el hueco
+más visible del panel. Las cifras dejan de partirse a mitad en pantallas estrechas. El eje del
+medidor decía "S/ 0.00" bajo una barra llena y se leía como el importe actual; ahora dice el
+acumulado y cuántas veces supera el umbral. La página de pago titula con el nombre del
+freelancer en vez de una dirección truncada, y el aviso de que Freighter no existe en móvil va
+antes del botón, no después. Iconos con `aria-hidden`, mensajes de error traducidos, CSP
+completa (verificada en el navegador: la primera versión bloqueaba las fuentes).
+
+**Lo que se decidió NO hacer:** redesplegar el contrato. El jurado principal lo puso en negativo,
+entre +1 y −5, porque invalidaría las transacciones enlazadas, el panel de ejemplo y la evidencia
+de los dos videos, a cuatro días del cierre. Queda anotado lo que pediría: que `pay` exija
+consentimiento del freelancer, para que el acumulado del mes no lo pueda inflar un tercero.
+

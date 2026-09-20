@@ -51,15 +51,15 @@ export function receiptCard(opts: {
       <div class="bar" role="img" aria-label="${fromUnits(net)} / ${fromUnits(tax)}"><i class="n" style="flex:${Number(net)}"></i>${
         fee > 0n ? `<i class="f" style="flex:${Number(fee)}"></i>` : ""}<i class="s" style="flex:${Number(tax)}"></i></div>
       <dl class="legend">
-        <dt><span class="sq" style="background:var(--ink)"></span><i class="ph-light ph-wallet"></i>${t.net}${pct(net)}</dt><dd>${fromUnits(net)}</dd>
-        <dt><span class="sq" style="background:var(--accent)"></span><i class="ph-light ph-vault"></i>${t.tax}</dt><dd>${fromUnits(tax)}</dd>
-        ${fee > 0n ? `<dt><span class="sq" style="background:var(--ink-3)"></span><i class="ph-light ph-receipt"></i>${t.fee}${pct(fee)}</dt><dd>${fromUnits(fee)}</dd>` : ""}
+        <dt><span class="sq" style="background:var(--ink)"></span><i class="ph-light ph-wallet" aria-hidden="true"></i>${t.net}${pct(net)}</dt><dd>${fromUnits(net)}</dd>
+        <dt><span class="sq" style="background:var(--accent)"></span><i class="ph-light ph-vault" aria-hidden="true"></i>${t.tax}</dt><dd>${fromUnits(tax)}</dd>
+        ${fee > 0n ? `<dt><span class="sq" style="background:var(--ink-3)"></span><i class="ph-light ph-receipt" aria-hidden="true"></i>${t.fee}${pct(fee)}</dt><dd>${fromUnits(fee)}</dd>` : ""}
       </dl>
       ${
         opts.footLeft || opts.txHash
           ? `<div class="rc-foot"><span>${opts.footLeft ?? ""}</span>${
               opts.txHash
-                ? `<a href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener">tx ${opts.txHash.slice(0, 8)}… <i class="ph-light ph-arrow-up-right"></i></a>`
+                ? `<a href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener">tx ${opts.txHash.slice(0, 8)}… <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a>`
                 : ""
             }</div>`
           : ""
