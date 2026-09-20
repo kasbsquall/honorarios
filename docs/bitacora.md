@@ -534,3 +534,45 @@ sin usuarios todavía". El video queda en 2:38.
 
 **Banderas** dibujadas con sus franjas y sin escudos, para Perú, México, Colombia y
 Argentina. No se usan logotipos de instituciones más allá del de SUNAT.
+
+## 2026-09-20 · Jurado agnóstico sobre la entrega completa
+
+Tres revisores independientes puntuaron el proyecto con la rúbrica oficial (funcionalidad 30,
+Stellar 25, originalidad 20, viabilidad 15, documentación 10): **81, 80.5 y 75 sobre 100**, con
+puestos 1, 2 y 4 de diez finalistas. Dos dan podio y uno no. Los tres puntúan funcionalidad y uso
+de Stellar casi igual, entre 23 y 25; la diferencia está en documentación y viabilidad.
+
+**Lo más caro, y no era el código.** La app desplegada no era HEAD. Dos revisores descargaron el
+bundle de producción y encontraron que seguía diciendo que ante rentas de director la app "deja de
+estimar", cuando `web/src/tax.ts` ya aplica el umbral de S/ 3,208. Un jurado que no clone el repo
+solo ve eso.
+
+**Contradicciones corregidas en el README:** decía 26 tests donde el comando de al lado imprime 31;
+llamaba "pruebas E2E" a unos guiones que el propio README describe doce líneas después como "sin
+aserciones"; proponía el 0.5% dos veces en negrita y luego afirmaba que no había cifra propuesta; y
+el comando de despliegue omitía los dos argumentos que el constructor exige desde que existe la
+comisión, así que no arrancaba.
+
+**Una afirmación falsa.** El README decía que un pago de un extraño a nombre de otro "no toca la
+reserva". `contracts/split/src/lib.rs:162` escribe en `TaxReserve` en todo pago con impuesto mayor
+que cero. El efecto real es un acumulado inflado con dinero del atacante bajo la llave del
+freelancer, no un robo, pero la frase tranquilizadora era falsa y está corregida.
+
+**La evidencia on-chain apuntaba a otra corrida.** Al regrabar el recorrido dos veces, los hashes
+del README quedaron desfasados respecto a lo que se ve en el video. La tabla ahora cita la corrida
+del video: cobro `4668b6f3…c8f9` y retiro `b47aa15e…d913`, ambos verificados contra Horizon.
+
+**Lo que se añadió porque callarlo era peor:** una sección de comparables (Found, Lili, Qapital
+hacen esto mismo en Estados Unidos, y el reparto en el momento del cobro lleva años en EVM), y otra
+de lo no resuelto, con la consecuencia de la comisión inmutable escrita por fin: encender el precio
+obliga a desplegar otro contrato y eso parte en dos el estado de cada usuario, incluido el
+acumulado del mes en curso que se compara contra el umbral.
+
+**Queda abierto:** el off-ramp a soles, las entrevistas de precio, `extend_reserve` sin conectar, y
+el fallo silencioso de trustline para quien entra con Freighter. Los cuatro están en el README.
+
+**Anula la entrada del 19 de septiembre sobre la evidencia del video.** Aquella citaba la wallet
+`CCOE…PB4S` y las transacciones `e89d764f…4923` y `da16e5ae…cc10` como la corrida que se ve en el
+video. Dejó de ser cierto al regrabar el recorrido: la corrida vigente es la de la tabla del README
+(`4668b6f3…c8f9` y `b47aa15e…d913`). `CCOE…PB4S` sigue siendo la wallet del panel de ejemplo, que
+es otra cosa. `docs/arquitectura.md` ya apunta a la corrida vigente.

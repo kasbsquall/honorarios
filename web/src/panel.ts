@@ -305,6 +305,11 @@ function bindWithdraw() {
 
 function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const box = app.querySelector("#threshold")!;
+  // Mientras la cadena no responde, el estimado no es "imposible de calcular": todavia no
+  // se sabe. Sin distinguir los dos casos, el panel acusaba de faltar el tipo de cambio
+  // uno que estaba puesto. Se deriva del estado del modulo para que las relecturas que
+  // disparan los campos de abajo no lo pierdan.
+  const loading = events === null && !loadError;
   const fx = readFx();
   // De donde sale el TC importa tanto como el numero: toda la cifra en soles cuelga de el.
   const fxIsSample = fx !== null && readStoredFx() === null;
@@ -330,7 +335,8 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   const month = new Date(Date.now() - PERU_OFFSET_MS).toLocaleDateString("es-PE", { month: "long", year: "numeric", timeZone: "UTC" });
   const state =
-    grossUnavailable ? `<span class="badge warn"><i class="ph-light ph-cloud-slash" aria-hidden="true"></i>No pudimos leer lo cobrado este mes</span>`
+    loading ? `<span class="badge"><i class="ph-light ph-circle-dashed" aria-hidden="true"></i>Leyendo la cadena</span>`
+    : grossUnavailable ? `<span class="badge warn"><i class="ph-light ph-cloud-slash" aria-hidden="true"></i>No pudimos leer lo cobrado este mes</span>`
     : pen === null ? `<span class="badge"><i class="ph-light ph-question" aria-hidden="true"></i>Falta tipo de cambio</span>`
     : !over && fxRaroT ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Revisa el tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Supera el umbral</span>`
@@ -339,8 +345,10 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
 
   box.innerHTML = `
     <div class="rc-top"><p class="lbl"><i class="ph-light ph-calendar-blank" aria-hidden="true"></i> Pago a cuenta · ${month}</p>${state}</div>
-    <p class="th-num num">${due === null ? "S/ —" : soles(due)}</p>
-    <p class="th-cap">${due === null ? "esta app no puede estimarlo"
+    <p class="th-num num ${loading ? "sk" : ""}">${loading ? "Leyendo…" : due === null ? "S/ —" : soles(due)}</p>
+    <p class="th-cap">${
+      loading ? "leyendo tus cobros del mes en la cadena"
+      : due === null ? "esta app no puede estimarlo"
       : `estimado, no es tu declaración · en soles al TC ${fx}${fxIsSample ? " de ejemplo" : " que ingresaste"}`}</p>
     <div class="meter" title="${soles(umbral)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
     <p class="th-scale"><span>${pen === null ? "acumulado del mes" : `acumulado ${soles(pen)}`}</span><span>umbral ${soles(umbral)}${
@@ -356,7 +364,9 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
       <div><dt>Retenciones de cuarta ya practicadas</dt><dd class="num">− ${soles(retenido)}</dd></div>
     </dl>
     <p class="th-help">${
-      grossUnavailable
+      loading
+        ? "Estamos leyendo de la cadena lo que llevas cobrado este mes. En cuanto responda aparece aquí el estimado."
+      : grossUnavailable
         ? "El contrato no respondió cuánto llevas cobrado este mes, así que no estimamos nada. No usamos la lista de cobros de abajo para reemplazarlo: el nodo solo guarda los últimos días y la suma saldría corta, que en un cálculo de impuestos es el peor error posible. Recarga en un momento."
       : pen === null
         ? "Ingresa el tipo de cambio para estimar tu pago a cuenta de este mes."

@@ -24,7 +24,7 @@ const encuadre = (k: string, max = 1.45) => {
   // La pagina no ocupa el cuadro: deja una franja muerta a la izquierda y otra abajo.
   // "lleno" se centra en el contenido real y amplia lo justo para llenarlo. "plano" es
   // para las pantallas cuyo texto llega al borde derecho, donde ampliar ya recorta la cita.
-  if (k === 'lleno') return {cx: 1080, cy: 470, s: 1.15};
+  if (k === 'lleno') return {cx: 960, cy: 470, s: 1.15};
   if (k === 'plano') return {cx: 960, cy: 540, s: 1};
   const b = BOXES[k];
   if (!b || b.w < 80) return {cx: 960, cy: 540, s: 1.08};
@@ -77,7 +77,7 @@ const Nota: React.FC<{at: number; children: React.ReactNode; icon?: React.ReactN
   const o = ramp(f, at, 14);
   return (
     <div style={{
-      position: 'absolute', left: 52, bottom: 150, maxWidth: 820,
+      position: 'absolute', left: 52, bottom: 330, maxWidth: 620,
       display: 'flex', gap: 16, alignItems: 'flex-start',
       padding: '18px 24px', background: 'rgba(20,20,18,0.94)', border: `1px solid ${C.ruleStrong}`,
       opacity: o, transform: `translateY(${(1 - o) * 10}px)`,
@@ -116,12 +116,36 @@ export const Panel: React.FC = () => (
   </SceneOut>
 );
 
+/** El dato que separa esta app de una calculadora del 8%: el umbral del literal b).
+ *  Vive dentro del texto de la pagina, en cuerpo pequeño, y proyectado no se lee. Aqui va
+ *  a tamaño de titular, en la franja libre de la izquierda. */
+const Cifra: React.FC<{at: number}> = ({at}) => {
+  const f = useCurrentFrame();
+  const o = ramp(f, at, 14);
+  return (
+    <div style={{
+      position: 'absolute', left: 44, bottom: 150, width: 300, padding: '22px 24px 24px',
+      background: C.paper, border: `1px solid ${C.ruleStrong}`,
+      boxShadow: '0 28px 70px -28px rgba(0,0,0,0.9)',
+      opacity: o, transform: `translateY(${(1 - o) * 10}px)`,
+    }}>
+      <div style={{fontFamily: MONO, fontSize: 19, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.ink3}}>
+        Umbral · literal b)
+      </div>
+      <div style={{fontFamily: MONO, fontSize: 72, lineHeight: 1, color: C.accent, marginTop: 12, letterSpacing: '-0.04em'}}>
+        3,208
+      </div>
+      <div style={{fontFamily: FONT.display, fontSize: 23, lineHeight: 1.35, color: C.ink2, marginTop: 14}}>
+        soles al mes, en vez de 4,010, para director, síndico, mandatario, regidor y albacea
+      </div>
+    </div>
+  );
+};
+
 export const Limites: React.FC = () => (
   <SceneOut>
     <Clip src="vid/limites.mp4" foco="lleno">
-      <Nota at={cue('limites', 'estima')} icon={<ArrowDown size={34} weight="light" />}>
-        Estima, no declara.
-      </Nota>
+      <Cifra at={cue('limites', 'doscientos')} />
     </Clip>
     <Sfx src="whoosh.wav" at={1} vol={0.08} />
   </SceneOut>

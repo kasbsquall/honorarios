@@ -7,3 +7,15 @@ target
 
 .playwright-mcp
 web/.env
+
+# Dependencias y cachés
+node_modules/
+__pycache__/
+*.pyc
+
+# Material de trabajo del video: fotogramas de revisión y material del jurado simulado.
+# El montaje se reproduce desde los scripts; estas imágenes son intermedias.
+video/qa_final/
+video/qa_mp4/
+video/jurado/
+video/rec_demo/*.webm

@@ -1,58 +1,60 @@
-# Agent instructions
+# Instrucciones para agentes
 
-This is a Stellar smart-contract workspace (Soroban). Each contract is a workspace member under `contracts/<name>/`.
+Honorarios: un contrato Soroban que parte cada cobro en USDC de un freelancer peruano en neto y
+reserva para el pago a cuenta de cuarta categoría, y una app Vite que lee ese estado de la cadena.
 
-## Layout
+Este archivo era la plantilla de ejemplo de Soroban y describía un contrato `hello_world` que
+nunca existió aquí. Lo que sigue es el proyecto real.
 
-- `Cargo.toml` — workspace root; contract crates inherit `soroban-sdk` from here
-- `contracts/<name>/src/lib.rs` — contract implementation (`#![no_std]`)
-- `contracts/<name>/src/test.rs` — host-side unit tests
+## Estructura
 
-## Build
+- `contracts/split/src/lib.rs` — el contrato, `#![no_std]`
+- `contracts/split/src/test.rs` — tests de host
+- `web/src/` — la app: `stellar.ts` (red), `panel.ts` (panel del freelancer), `pay.ts` (página
+  que abre el cliente), `tax.ts` (cálculo del pago a cuenta), `rhe.ts` (borrador del recibo)
+- `docs/` — arquitectura, negocio y bitácora de decisiones
+- `video/` — guion, síntesis de voz y montaje en Remotion
 
-From the workspace root:
-
-```sh
-stellar contract build
-```
-
-That compiles every `cdylib` member to WASM. Artifacts land in `target/wasm32v1-none/release/*.wasm`. Build one crate with `stellar contract build --package <name>`.
-
-Do not substitute this with `cargo build --target wasm32v1-none`. `stellar contract build` applies the flags and metadata the network expects.
-
-The `wasm32v1-none` Rust target must be installed (`rustup target add wasm32v1-none`). Rust 1.84 or newer is required for that target. Rust 1.82 and 1.83 cannot build contracts.
-
-## Test
-
-Host tests run with the normal Cargo test harness (not on-chain):
+## Contrato
 
 ```sh
-cargo test
+cargo test                    # desde contracts/split
+stellar contract build        # artefacto de despliegue, en target/wasm32v1-none/release/
 ```
 
-A single crate: `cargo test -p <name>`.
+El artefacto que se despliega se genera con `stellar contract build`, que aplica los metadatos que
+la red espera. El CI usa `cargo build --target wasm32v1-none` porque ahí solo interesa saber si
+compila, y así no hace falta instalar el CLI de Stellar en el runner. Para desplegar, `cargo build`
+no sirve.
 
-## Deploy and invoke
+El constructor recibe tres argumentos: el SAC del USDC, la comisión en puntos básicos y la wallet
+que la recibe. La comisión queda fija en el despliegue y tiene un tope duro de 1% que el propio
+constructor rechaza superar.
 
-On testnet, after a successful build:
+## Frontend
 
 ```sh
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/<name>.wasm \
-  --source-account <identity> \
-  --network testnet \
-  --alias <alias>
-
-stellar contract invoke \
-  --id <alias> \
-  --network testnet \
-  --source-account <identity> \
-  -- hello --to world
+cd web && npm install && npm run dev
+npm test                      # 31 tests: cálculo tributario y reparto
+npx tsc --noEmit
 ```
 
-The sample `hello_world` contract exposes `hello(to: String) -> Vec<String>`. Replace that with your own functions; `stellar contract invoke --id <id> -- -h` prints the generated CLI for the deployed contract.
+Las llaves de desarrollo viven en `web/.env.development.local`, fuera del repositorio, y el
+firmante de desarrollo solo existe con `npm run dev`.
 
-## Further reading
+## Reglas de este repositorio
+
+- **Ningún dato tributario sin fuente.** Los umbrales y la tasa se copian de la resolución citada,
+  con el PDF en `evidencias/`. Si algo no se puede citar, va a la lista de límites conocidos del
+  README y no se afirma en la interfaz.
+- **La app estima, no declara.** Nada en la interfaz puede dar a entender que presenta o paga algo
+  ante SUNAT.
+- **Nunca pintar un valor por defecto mientras se carga.** Un cero o un guion durante el fetch
+  afirma algo falso sobre el dato; se usa un esqueleto.
+- **Cada decisión que no sea obvia se escribe en `docs/bitacora.md`**, con su fuente y su fecha.
+  La bitácora no se reescribe: si algo cambia, se añade una entrada que anula la anterior.
+- Sin emojis en el código, la interfaz ni los mensajes de commit.
+
+## Referencias
 
 - https://developers.stellar.org/docs/build/smart-contracts/overview
-- https://github.com/stellar/soroban-examples

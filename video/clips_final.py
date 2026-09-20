@@ -25,7 +25,10 @@ TRAMOS = {
     "wallet": [("create_click", 0), ("wallet_ready", 3.0)],
     "pay": [("pay_page", 0), ("paid", 1.5)],
     "panel": [("panel", 0), ("quinta", 6.0)],
-    "limites": [("quinta", 0), ("howto", 0)],
+    # Arranca justo antes del clic en el checkbox de director: la voz nombra ese caso en
+    # el segundo 1.5 de la escena y con el tramo anterior la pantalla tardaba diez en
+    # llegar, asi que se oia el umbral del literal b) mientras se veia el general.
+    "limites": [("director", -3.0), ("director", 16.0)],
     "retiro": [[("rhe", 0), ("rhe", 8.0)], [("withdraw_start", 0), ("withdrawn", 3.5)]],
 }
 
