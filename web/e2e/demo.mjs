@@ -23,6 +23,14 @@ const context = await browser.newContext({
   viewport: { width: 1920, height: 1080 }, colorScheme: "dark",
   recordVideo: { dir: OUT, size: { width: 1920, height: 1080 } },
 });
+// El tipo de cambio lo pone el freelancer y gobierna todo el bloque tributario:
+// sin el, el panel muestra guiones y la narracion hablaria de numeros que no estan.
+await context.addInitScript(() => {
+  try {
+    localStorage.setItem("honorarios.fx", "3.75");
+    ["honorarios.otras4", "honorarios.quinta", "honorarios.retenido"].forEach((k) => localStorage.removeItem(k));
+  } catch { /* sin storage */ }
+});
 const page = await context.newPage();
 const pause = (ms) => page.waitForTimeout(ms);
 // Scroll suave: el salto seco de scrollIntoView se lee mal a velocidad real.
@@ -41,7 +49,7 @@ await cdp.send("WebAuthn.addVirtualAuthenticator", {
 await page.goto(BASE);
 await page.getByRole("button", { name: "Crear wallet con passkey" }).waitFor();
 mark("intro");
-await pause(5000);
+await pause(7500);
 
 // --- 2. Panel de ejemplo: se puede mirar el producto sin instalar nada
 await page.getByRole("button", { name: "Ver un panel de ejemplo" }).click();

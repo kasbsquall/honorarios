@@ -17,14 +17,14 @@ import { getNetworkDetails, isConnected, requestAccess, signTransaction } from "
 export const NETWORK = Networks.TESTNET;
 export const RPC_URL = "https://soroban-testnet.stellar.org";
 export const HORIZON_URL = "https://horizon-testnet.stellar.org";
-export const CONTRACT_ID = "CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA";
+export const CONTRACT_ID = "CCTU5SUST4I6O5JIO6UHRGI2NW6FHWFNHVRGWPTKCGKCY7Z4X3CMX3EU";
 export const USDC = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 export const TAX_BPS = 800n;
 export const EXPLORER = "https://stellar.expert/explorer/testnet";
 const DECIMALS = 7;
 const PATH_SLIPPAGE = 1.05;
 // Ledger del despliegue del contrato: no hay eventos antes de esto.
-const DEPLOY_LEDGER = 4_766_344;
+const DEPLOY_LEDGER = 4_770_618;
 // El RPC de testnet recorre como maximo ~10k ledgers por consulta.
 const EVENT_SCAN_STEP = 9_000;
 

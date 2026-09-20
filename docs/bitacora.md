@@ -142,3 +142,38 @@ del frontend.
 Video demo v7 (2:17) en https://www.youtube.com/watch?v=sALrFKb56xk. Corresponde a la corrida del
 contrato `CDGZLOQD…5YETA` que cita el README. Fuentes en `video/`: `clips.py` corta la grabación,
 `audio_gen.py` genera la narración y `remotion/` compone.
+
+## 19 de septiembre de 2026, 23:10 · Comisión del servicio en el contrato
+
+**Decisión:** el contrato cobra una comisión configurable al desplegar, con tope duro de 1%,
+y se despliega en cero para la hackathon.
+
+**Por qué:** los tres jueces de la última pasada agnóstica coincidieron en que el modelo de
+negocio estaba escrito en el README pero no existía en el código. Dejarlo solo en prosa es una
+promesa; ponerlo en el contrato con su límite y su getter público lo vuelve verificable.
+
+**Dónde vive:** `contracts/split/src/lib.rs` — `MAX_FEE_BPS = 100`, `DataKey::Fee`,
+`Error::FeeTooHigh = 5`, `__constructor(env, token, fee_bps, fee_to)` que rechaza pasarse del
+tope, getter `fee()` y el cálculo `net = gross - tax - fee` dentro de `pay`. El evento `Paid`
+publica el campo `fee`.
+
+**Cómo se reparte:** la reserva del 8% se calcula primero y redondea hacia arriba; la comisión
+se calcula sobre el bruto y trunca hacia abajo; el neto es lo que queda. La reserva nunca se
+toca con la comisión, y hay un test (`the_tax_reserve_is_never_touched_by_the_fee`) que lo fija.
+
+**Pruebas:** 23 en verde, cuatro nuevas. La del tope usa `#[should_panic(expected = "Error(Contract, #5)")]`
+porque el crate es `no_std` y `catch_unwind` no existe ahí.
+
+**Redespliegue:** contrato `CCTU5SUST4I6O5JIO6UHRGI2NW6FHWFNHVRGWPTKCGKCY7Z4X3CMX3EU`,
+tx `2f2b281cbff0b063067e00b6f751fc1f504e7875f880456d29bb7a665d2f58f9`, ledger 4770618, con
+`fee_bps = 0`. El contrato anterior (`CDGZLOQD…5YETA`) queda en la cadena y es el que se ve en
+el video pitch; el README lo dice.
+
+**Video demo regrabado** contra el contrato nuevo: wallet `CCOE…PB4S`, cobro
+`e89d764f0c60633546896a55cfdc113a52045bbca95b5bf578343375051c4923`, retiro
+`da16e5ae79fd33b2a23642eb4b3a28f2dca06868d3d9cce21b7990b8f4dccc10`. 2:57, sin cortes.
+
+**Queda abierto:** el precio real. No hay usuarios con quienes validarlo, así que no se propone
+ninguna cifra. Y la comisión no se puede cambiar sin redesplegar, que es una decisión de diseño
+a favor de la transparencia y en contra de la comodidad de operación.
+

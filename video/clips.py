@@ -36,47 +36,73 @@ def cut(src: Path, name: str, start: float, rate: float, dur: float) -> Path:
     return raw
 
 
-def patch_outliers(raw: Path, dst: Path, threshold: float = 2.0) -> int:
-    """Reemplaza por el cuadro anterior todo cuadro cuyo brillo se sale de la mediana local."""
+def _luma(src: Path) -> "np.ndarray":
+    """Brillo medio por cuadro, medido sobre una copia diminuta en escala de grises."""
+    w, h = 320, 180
+    proc = subprocess.Popen(
+        ["ffmpeg", "-v", "error", "-i", str(src), "-vf", f"scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+        stdout=subprocess.PIPE,
+    )
+    out = []
+    while True:
+        buf = proc.stdout.read(w * h)
+        if len(buf) < w * h:
+            break
+        out.append(float(np.frombuffer(buf, dtype=np.uint8).mean()))
+    proc.wait()
+    return np.array(out)
+
+
+def patch_outliers(raw: Path, dst: Path, threshold: float = 0.8) -> int:
+    """Sustituye por el ultimo cuadro bueno los que se salen del brillo local.
+
+    Va en streaming: primero mide el brillo sobre una copia reducida y despues
+    reescribe el video cuadro a cuadro. Cargar el video entero en memoria costaba
+    6 MB por cuadro, que en una grabacion de tres minutos son decenas de gigas.
+    """
+    lum = _luma(raw)
+    n = len(lum)
+    bad = np.zeros(n, dtype=bool)
+    for i in range(n):
+        lo, hi = max(0, i - 6), min(n, i + 7)
+        med = np.median(np.delete(lum[lo:hi], i - lo))
+        bad[i] = abs(lum[i] - med) > threshold
+    if bad.all():
+        raise SystemExit(f"{raw.name}: ningun cuadro utilizable")
+
     size = W * H * 3
     reader = subprocess.Popen(
         ["ffmpeg", "-v", "error", "-i", str(raw), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
         stdout=subprocess.PIPE,
     )
-    frames = []
-    while True:
-        buf = reader.stdout.read(size)
-        if len(buf) < size:
-            break
-        frames.append(np.frombuffer(buf, dtype=np.uint8))
-    reader.wait()
-
-    lum = np.array([f[::301].mean() for f in frames])
-    # Primero se marcan los cuadros malos y despues se rellenan, para que un blanco
-    # al principio del clip se pueda tapar con el primer cuadro bueno que venga.
-    bad = np.zeros(len(frames), dtype=bool)
-    for i in range(len(frames)):
-        lo, hi = max(0, i - 6), min(len(frames), i + 7)
-        med = np.median(np.delete(lum[lo:hi], i - lo))
-        bad[i] = abs(lum[i] - med) > threshold
-
-    good = [i for i in range(len(frames)) if not bad[i]]
-    if not good:
-        raise SystemExit(f"{raw.name}: ningun cuadro utilizable")
-    fixed = 0
-    for i in np.flatnonzero(bad):
-        prev = [g for g in good if g < i]
-        src = prev[-1] if prev else good[0]
-        frames[i] = frames[src]
-        fixed += 1
-
     writer = subprocess.Popen([
         "ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24",
         "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
         "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-pix_fmt", "yuv420p", str(dst),
     ], stdin=subprocess.PIPE)
-    for f in frames:
-        writer.stdin.write(f.tobytes())
+
+    last_good, pendientes, fixed, i = None, 0, 0, 0
+    while True:
+        buf = reader.stdout.read(size)
+        if len(buf) < size:
+            break
+        malo = i < n and bad[i]
+        if malo:
+            fixed += 1
+            if last_good is None:
+                # Aun no hubo ninguno bueno: se guarda la cuenta y se rellena despues.
+                pendientes += 1
+            else:
+                writer.stdin.write(last_good)
+        else:
+            last_good = buf
+            while pendientes:
+                writer.stdin.write(buf)
+                pendientes -= 1
+            writer.stdin.write(buf)
+        i += 1
+    reader.stdout.close()
+    reader.wait()
     writer.stdin.close()
     writer.wait()
     return fixed

@@ -35,18 +35,17 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 
 ## Evidencia on-chain (testnet)
 
-Es la misma corrida que se ve en el [video pitch](https://www.youtube.com/watch?v=sALrFKb56xk), de principio a fin.
+La corrida del [video pitch](https://www.youtube.com/watch?v=sALrFKb56xk) se hizo contra una versión anterior del contrato ([`CDGZLOQD…5YETA`](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA)), antes de añadir la comisión del servicio. La tabla apunta al contrato vigente y a la corrida del video demo.
 
 | Qué | Enlace |
 |---|---|
-| Contrato | [`CDGZLOQD…5YETA`](https://stellar.expert/explorer/testnet/contract/CDGZLOQDUVBC4SCX5HCNRCJ3OF56Y5SNBY2RP22CI7PSCR7CX245YETA) |
-| Despliegue del contrato | [`9a23da89…429a`](https://stellar.expert/explorer/testnet/tx/9a23da8911334ea067299fcbe32b69741d0382c9a2d0aeff9fa6a0c8a172429a) |
-| Smart wallet creada con passkey | [`CD6E…7GXD`](https://stellar.expert/explorer/testnet/contract/CD6EERWSWJMP4AIKW2E6ZIGO7FWLMX45IWZFJKGBZ4X6VOCYGV5K7GXD) |
-| El cliente compró con XLM los 460 USDC que le faltaban: 437.22 XLM por path payment | [`787ff6d5…6563`](https://stellar.expert/explorer/testnet/tx/787ff6d5681d7ba78fbefdbc1b5926c560d272a1ee4a59fbee63139467136563) |
-| Cobro de 500 USDC: 460 al freelancer, 40 a la reserva | [`1c41c40d…3e13`](https://stellar.expert/explorer/testnet/tx/1c41c40d51f335f4a4c39b3b246748e675ca4cccfb38f4c243a7194aa6143e13) |
-| Retiro de la reserva firmado con passkey | [`76aca849…86b9`](https://stellar.expert/explorer/testnet/tx/76aca84969e050b397aafae6cce7372d6bfd59bc32dc1f14a63b0d0ffd5d86b9) |
+| Contrato | [`CCTU5SUS…X3EU`](https://stellar.expert/explorer/testnet/contract/CCTU5SUST4I6O5JIO6UHRGI2NW6FHWFNHVRGWPTKCGKCY7Z4X3CMX3EU) |
+| Despliegue del contrato | [`2f2b281c…58f9`](https://stellar.expert/explorer/testnet/tx/2f2b281cbff0b063067e00b6f751fc1f504e7875f880456d29bb7a665d2f58f9) |
+| Smart wallet creada con passkey | [`CCOE…PB4S`](https://stellar.expert/explorer/testnet/contract/CCOEUIDDOVYNHO4XMS2UOUVFD2S456DB3JTTY7YOJB2QVPV35FDXPB4S) |
+| Cobro de 500 USDC: 460 al freelancer, 40 a la reserva, 0 de comisión | [`e89d764f…4923`](https://stellar.expert/explorer/testnet/tx/e89d764f0c60633546896a55cfdc113a52045bbca95b5bf578343375051c4923) |
+| Retiro de la reserva firmado con passkey | [`da16e5ae…cc10`](https://stellar.expert/explorer/testnet/tx/da16e5ae79fd33b2a23642eb4b3a28f2dca06868d3d9cce21b7990b8f4dccc10) |
 
-El video demo es una segunda corrida completa contra el mismo contrato, grabada sin cortes: wallet [`CDST…DBNE`](https://stellar.expert/explorer/testnet/contract/CDSTD34UFP5ZFIINR5WE4GTIOW6KLPHPJR5CM7QEAR4NXEIYEC7PDBNE), cobro [`9d1e18fe…37bd`](https://stellar.expert/explorer/testnet/tx/9d1e18fee29197e04db8cbe0a2841e7156697b7b2903fdaee1167042e75d37bd) y retiro [`c13bc6bf…2b9d`](https://stellar.expert/explorer/testnet/tx/c13bc6bfa99a1ef8245718a8ed9bad14cfab0bcf0fb772bdd8273162b1582b9d). El flujo se puede repetir y cada corrida queda registrada.
+Esa es la corrida que graba el video demo, sin cortes y de principio a fin. El flujo se puede repetir y cada corrida queda registrada.
 
 USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`.
 
@@ -55,7 +54,7 @@ USDC testnet (Circle): `USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZL
 Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/arquitectura.md).
 
 ```
-contracts/split/   contrato Soroban (Rust) y sus 19 tests
+contracts/split/   contrato Soroban (Rust) y sus 23 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
 web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
@@ -66,7 +65,8 @@ docs/              arquitectura y bitácora de decisiones
 
 | Función | Autoriza | Qué hace |
 |---|---|---|
-| `pay(payer, freelancer, gross, receipt_ref)` | `payer` | Neto al freelancer, 8% al contrato, evento `Paid` |
+| `pay(payer, freelancer, gross, receipt_ref)` | `payer` | 8% del bruto a la reserva, la comisión del servicio si la hay, el resto al freelancer, evento `Paid` |
+| `fee()` | lectura | Comisión del servicio con la que se desplegó el contrato, y a dónde va |
 | `tax_reserve(freelancer)` | lectura | Saldo reservado |
 | `month_gross(freelancer, period)` | lectura | Bruto cobrado en un mes, para comparar con el umbral |
 | `current_period()` | lectura | Periodo tributario del ledger actual |
@@ -107,7 +107,9 @@ Todo el repositorio. El historial de commits empieza el 19 de septiembre de 2026
 
 ## Cómo se sostiene
 
-El plan es cobrar una comisión pequeña por cada cobro liquidado, que paga el freelancer solo cuando cobra. Todavía no hay precio validado con usuarios y por eso no aparece ninguna cifra aquí. El contrato es MIT y cualquiera puede auditarlo.
+El contrato puede cobrar una comisión por cobro liquidado, que sale del bruto junto al neto y la reserva. Está implementada y probada: `fee_bps` se fija al desplegar, tiene un tope duro de 1% que el constructor rechaza superar, el evento `Paid` publica cuánto se cobró, y la función `fee()` deja el valor a la vista de cualquiera antes de usar el contrato. La reserva del 8% nunca se toca con la comisión.
+
+**Este contrato está desplegado con la comisión en cero**, porque durante la hackathon no se cobra nada. No hay precio validado con usuarios y por eso no hay una cifra propuesta aquí: lo que existe es el mecanismo, auditable y con su límite escrito en el código. El contrato es MIT.
 
 ## De la reserva a SUNAT
 
@@ -126,6 +128,8 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.
 - El ancla de soles vive en la red principal. Desde testnet solo se consulta su información, no se hace el retiro.
 - La reserva del 8% es preventiva: si el mes no supera S/ 4,010 no hay pago a cuenta y el freelancer puede retirarla al cierre del mes. Con clientes peruanos que retienen, la retención se descuenta del pago del mes.
+- La comisión del servicio se fija al desplegar y no se puede cambiar después. Un cambio de precio obliga a desplegar otro contrato, lo que es honesto con el usuario pero incómodo de operar.
+- La cuenta que recibiría la comisión es, en este despliegue, la misma cuenta de pruebas que desplegó el contrato. Con la comisión en cero nunca recibe nada.
 - La reserva es una ayuda de organización y no reemplaza la asesoría de un contador.
 
 ## Licencia

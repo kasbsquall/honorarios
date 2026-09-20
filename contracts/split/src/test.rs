@@ -4,6 +4,7 @@ use soroban_sdk::{testutils::Address as _, token::StellarAssetClient, Address, E
 
 struct Setup {
     env: Env,
+    fee_to: Address,
     usdc: token::Client<'static>,
     contract: HonorariosClient<'static>,
     payer: Address,
@@ -18,12 +19,34 @@ fn setup() -> Setup {
     let payer = Address::generate(&env);
     StellarAssetClient::new(&env, &sac.address()).mint(&payer, &1_000_0000000);
 
-    let id = env.register(Honorarios, (sac.address(),));
+    let fee_to = Address::generate(&env);
+    let id = env.register(Honorarios, (sac.address(), 0i128, fee_to.clone()));
     Setup {
         usdc: token::Client::new(&env, &sac.address()),
         contract: HonorariosClient::new(&env, &id),
         freelancer: Address::generate(&env),
         payer,
+        fee_to,
+        env,
+    }
+}
+
+/// Mismo montaje, con la comision del servicio activada.
+fn setup_with_fee(fee_bps: i128) -> Setup {
+    let env = Env::default();
+    env.mock_all_auths();
+    let issuer = Address::generate(&env);
+    let sac = env.register_stellar_asset_contract_v2(issuer);
+    let payer = Address::generate(&env);
+    StellarAssetClient::new(&env, &sac.address()).mint(&payer, &1_000_0000000);
+    let fee_to = Address::generate(&env);
+    let id = env.register(Honorarios, (sac.address(), fee_bps, fee_to.clone()));
+    Setup {
+        usdc: token::Client::new(&env, &sac.address()),
+        contract: HonorariosClient::new(&env, &id),
+        freelancer: Address::generate(&env),
+        payer,
+        fee_to,
         env,
     }
 }
@@ -141,12 +164,14 @@ fn setup_enforcing_auth() -> Setup {
     let payer = Address::generate(&env);
     env.mock_all_auths();
     StellarAssetClient::new(&env, &sac.address()).mint(&payer, &1_000_0000000);
-    let id = env.register(Honorarios, (sac.address(),));
+    let fee_to = Address::generate(&env);
+    let id = env.register(Honorarios, (sac.address(), 0i128, fee_to.clone()));
     let s = Setup {
         usdc: token::Client::new(&env, &sac.address()),
         contract: HonorariosClient::new(&env, &id),
         freelancer: Address::generate(&env),
         payer,
+        fee_to,
         env,
     };
     s.contract
@@ -272,4 +297,54 @@ fn extend_reserve_renews_the_ttl_without_moving_funds() {
     });
     assert!(ttl >= TTL_THRESHOLD);
     assert_eq!(s.contract.tax_reserve(&s.freelancer), antes);
+}
+
+#[test]
+fn without_fee_the_whole_gross_stays_with_the_freelancer() {
+    let s = setup();
+    s.contract
+        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-13"));
+
+    // 460 en su wallet y 40 reservados a su nombre: el contrato no se queda nada.
+    assert_eq!(s.usdc.balance(&s.freelancer), 460_0000000);
+    assert_eq!(s.contract.tax_reserve(&s.freelancer), 40_0000000);
+    assert_eq!(s.usdc.balance(&s.fee_to), 0);
+}
+
+#[test]
+fn the_service_fee_comes_out_of_the_gross() {
+    // 50 puntos basicos: 0.5% de 500 USDC son 2.50.
+    let s = setup_with_fee(50);
+    s.contract
+        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-14"));
+
+    assert_eq!(s.usdc.balance(&s.fee_to), 2_5000000);
+    assert_eq!(s.contract.tax_reserve(&s.freelancer), 40_0000000);
+    assert_eq!(s.usdc.balance(&s.freelancer), 457_5000000);
+    // El bruto sigue cuadrando: neto + reserva + comision.
+    assert_eq!(457_5000000i128 + 40_0000000 + 2_5000000, 500_0000000);
+}
+
+#[test]
+fn the_tax_reserve_is_never_touched_by_the_fee() {
+    let s = setup_with_fee(MAX_FEE_BPS);
+    s.contract
+        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-15"));
+
+    // Aun con la comision al tope, la reserva sigue siendo el 8% del bruto.
+    assert_eq!(s.contract.tax_reserve(&s.freelancer), 40_0000000);
+    assert_eq!(s.contract.month_gross(&s.freelancer, &s.contract.current_period()), 500_0000000);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #5)")]
+fn rejects_a_fee_above_the_cap() {
+    // El constructor rechaza una comision mayor al tope, asi que ese contrato no existe.
+    let env = Env::default();
+    env.mock_all_auths();
+    let issuer = Address::generate(&env);
+    let sac = env.register_stellar_asset_contract_v2(issuer);
+    let fee_to = Address::generate(&env);
+
+    env.register(Honorarios, (sac.address(), MAX_FEE_BPS + 1, fee_to));
 }

@@ -9,6 +9,9 @@ use soroban_sdk::{
 /// 8% expresado en puntos basicos. Tasa del pago a cuenta de cuarta categoria.
 pub const TAX_BPS: i128 = 800;
 const BPS_DENOMINATOR: i128 = 10_000;
+/// Tope de la comision del servicio: 1%. El contrato no puede cobrar mas que esto,
+/// y el valor real se fija al desplegar. Durante la hackathon se despliega en 0.
+pub const MAX_FEE_BPS: i128 = 100;
 /// Largo maximo del N de recibo (ej. "E001-12345").
 pub const MAX_REF_LEN: u32 = 32;
 // ~5 s por ledger: la reserva y la instancia se renuevan a ~30 dias cuando les quedan menos de ~7.
@@ -20,6 +23,8 @@ const TTL_EXTEND_TO: u32 = 30 * DAY_LEDGERS;
 #[derive(Clone)]
 enum DataKey {
     Token,
+    /// Comision del servicio en puntos basicos y wallet que la recibe.
+    Fee,
     TaxReserve(Address),
     /// Bruto cobrado por un freelancer en un periodo (mes) determinado.
     MonthGross(Address, u32),
@@ -57,6 +62,8 @@ pub enum Error {
     /// El freelancer no puede ser el pagador ni el propio contrato.
     InvalidParty = 3,
     ReceiptRefTooLong = 4,
+    /// La comision supera MAX_FEE_BPS.
+    FeeTooHigh = 5,
 }
 
 fn keep_alive(env: &Env, key: &DataKey) {
@@ -72,6 +79,8 @@ pub struct Paid {
     pub gross: i128,
     pub net: i128,
     pub tax: i128,
+    /// Comision del servicio cobrada en este pago. Cero mientras no se active.
+    pub fee: i128,
     pub receipt_ref: String,
     /// Periodo tributario del cobro (anio * 12 + mes - 1).
     pub period: u32,
@@ -90,9 +99,21 @@ pub struct Honorarios;
 
 #[contractimpl]
 impl Honorarios {
-    /// `token` es el contrato SAC del USDC con el que se cobra.
-    pub fn __constructor(env: Env, token: Address) {
+    /// `token` es el contrato SAC del USDC con el que se cobra. `fee_bps` es la
+    /// comision del servicio, que se descuenta del bruto y llega a `fee_to`. Queda
+    /// fija en el despliegue: nadie puede subirla despues.
+    pub fn __constructor(env: Env, token: Address, fee_bps: i128, fee_to: Address) -> Result<(), Error> {
+        if fee_bps < 0 || fee_bps > MAX_FEE_BPS {
+            return Err(Error::FeeTooHigh);
+        }
         env.storage().instance().set(&DataKey::Token, &token);
+        env.storage().instance().set(&DataKey::Fee, &(fee_bps, fee_to));
+        Ok(())
+    }
+
+    /// Comision del servicio: puntos basicos y wallet que la recibe.
+    pub fn fee(env: Env) -> (i128, Address) {
+        env.storage().instance().get(&DataKey::Fee).unwrap()
     }
 
     pub fn token(env: Env) -> Address {
@@ -127,10 +148,16 @@ impl Honorarios {
 
         // Redondeo hacia arriba: ante un centavo de duda, que sobre en la reserva.
         let tax = (gross * TAX_BPS + BPS_DENOMINATOR - 1) / BPS_DENOMINATOR;
-        let net = gross - tax;
+        // La comision se trunca hacia abajo: la duda nunca cae del lado del servicio.
+        let (fee_bps, fee_to) = Self::fee(env.clone());
+        let fee = gross * fee_bps / BPS_DENOMINATOR;
+        let net = gross - tax - fee;
         let client = token::Client::new(&env, &Self::token(env.clone()));
 
         client.transfer(&payer, &freelancer, &net);
+        if fee > 0 {
+            client.transfer(&payer, &fee_to, &fee);
+        }
         if tax > 0 {
             client.transfer(&payer, &env.current_contract_address(), &tax);
             let key = DataKey::TaxReserve(freelancer.clone());
@@ -139,7 +166,7 @@ impl Honorarios {
             keep_alive(&env, &key);
         }
 
-        Paid { freelancer, payer, gross, net, tax, receipt_ref, period }.publish(&env);
+        Paid { freelancer, payer, gross, net, tax, fee, receipt_ref, period }.publish(&env);
         Ok(net)
     }
 

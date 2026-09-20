@@ -1,89 +1,89 @@
 [
   {
     "name": "intro",
-    "t": 5.332
+    "t": 4.17
   },
   {
     "name": "ejemplo",
-    "t": 12.31
+    "t": 13.628
   },
   {
     "name": "ejemplo_umbral",
-    "t": 18.252
+    "t": 19.569
   },
   {
     "name": "create_click",
-    "t": 27.01
+    "t": 28.322
   },
   {
     "name": "wallet_ready",
-    "t": 38.027,
-    "who": " PASSKEY · CDST…DBNE"
+    "t": 39.336,
+    "who": " PASSKEY · CCOE…PB4S"
   },
   {
     "name": "link_form",
-    "t": 44.467
+    "t": 45.762
   },
   {
     "name": "link_ready",
-    "t": 49.278,
-    "link": "http://localhost:5196/pay.html?to=CDSTD34UFP5ZFIINR5WE4GTIOW6KLPHPJR5CM7QEAR4NXEIYEC7PDBNE&amount=500&ref=E001-7&concept=Dise%C3%B1o+de+identidad+visual"
+    "t": 50.557,
+    "link": "http://localhost:5197/pay.html?to=CCOEUIDDOVYNHO4XMS2UOUVFD2S456DB3JTTY7YOJB2QVPV35FDXPB4S&amount=500&ref=E001-7&concept=Dise%C3%B1o+de+identidad+visual"
   },
   {
     "name": "pay_page",
-    "t": 53.819
+    "t": 55.095
   },
   {
     "name": "connect",
-    "t": 59.33
+    "t": 60.597
   },
   {
     "name": "prepare",
-    "t": 61.993
+    "t": 63.254
   },
   {
     "name": "sign",
-    "t": 71.515
+    "t": 73.774
   },
   {
     "name": "paid",
-    "t": 81.549,
-    "tx": "https://stellar.expert/explorer/testnet/tx/9d1e18fee29197e04db8cbe0a2841e7156697b7b2903fdaee1167042e75d37bd"
+    "t": 83.797,
+    "tx": "https://stellar.expert/explorer/testnet/tx/e89d764f0c60633546896a55cfdc113a52045bbca95b5bf578343375051c4923"
   },
   {
     "name": "panel",
-    "t": 89.438,
+    "t": 91.733,
     "reserve": "40.00USDC"
   },
   {
     "name": "umbral",
-    "t": 96.363
+    "t": 98.665
   },
   {
     "name": "quinta",
-    "t": 103.588
+    "t": 105.888
   },
   {
     "name": "howto",
-    "t": 112.638
+    "t": 114.952
   },
   {
     "name": "rhe",
-    "t": 125.228
+    "t": 127.599
   },
   {
     "name": "withdraw_start",
-    "t": 141.183
+    "t": 143.626
   },
   {
     "name": "withdrawn",
-    "t": 157.177,
+    "t": 160.614,
     "out": "Retiraste 40.00 USDC. Ver transacción",
-    "href": "https://stellar.expert/explorer/testnet/tx/c13bc6bfa99a1ef8245718a8ed9bad14cfab0bcf0fb772bdd8273162b1582b9d"
+    "href": "https://stellar.expert/explorer/testnet/tx/da16e5ae79fd33b2a23642eb4b3a28f2dca06868d3d9cce21b7990b8f4dccc10"
   },
   {
     "name": "end",
-    "t": 164.847,
-    "video": "C:\\Users\\User\\Downloads\\proyectos2026\\stellar\\honorarios\\video\\rec_demo\\page@7f8f4c54210e425ab475cb626d388354.webm"
+    "t": 168.561,
+    "video": "C:\\Users\\User\\Downloads\\proyectos2026\\stellar\\honorarios\\video\\rec_demo\\page@4dc6496d8089669ba9da9d13760641eb.webm"
   }
 ]
