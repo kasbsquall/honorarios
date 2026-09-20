@@ -576,3 +576,16 @@ el fallo silencioso de trustline para quien entra con Freighter. Los cuatro est�
 video. Dejó de ser cierto al regrabar el recorrido: la corrida vigente es la de la tabla del README
 (`4668b6f3…c8f9` y `b47aa15e…d913`). `CCOE…PB4S` sigue siendo la wallet del panel de ejemplo, que
 es otra cosa. `docs/arquitectura.md` ya apunta a la corrida vigente.
+
+**Producción redesplegada y verificada.** El bundle público coincide con HEAD, ya no hay
+desbordamiento horizontal (antes se salían 43 elementos del ancho a 1440px), Archivo y Phosphor
+cargan, y la consola queda limpia. El estado de carga del panel dice "Leyendo la cadena" con un
+esqueleto en lugar de acusar de faltar un tipo de cambio que sí está puesto. Lo mismo en la ruta
+de fallo: con la red caída el panel dice que no pudo leer lo cobrado, y lo sigue diciendo después
+de que el usuario toque cualquier campo, que antes era cuando volvía a mentir. El estado de la
+lectura se deriva ahora del módulo y no de argumentos que las relecturas perdían.
+
+**Falso positivo descartado.** Un revisor dio por bloqueadas las hojas de estilo de Google Fonts y
+Phosphor. No lo están: la CSP de `vercel.json` las permite, y quitarlas habría dejado la app con
+fuentes del sistema y medio centenar de iconos en blanco, porque no están autoalojadas. Queda
+anotado que son una dependencia de CDN en el camino crítico, sin SRI.

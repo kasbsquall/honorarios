@@ -432,31 +432,59 @@ export const Region: React.FC = () => {
     {w: 'Colombia', t: 'Colombia', franjas: ['#fcd116', '#003893', '#ce1126'], pesos: [2, 1, 1], horizontal: true},
     {w: 'Argentina', t: 'Argentina', franjas: ['#74acdf', '#ffffff', '#74acdf'], horizontal: true},
   ];
+  // Las dos cifras del INEI que la voz cita y que antes no aparecian en ninguna parte.
+  const aI = cue('region', 'millones');
+  const aR = cue('region', 'RUC');
   const aP = cue('region', 'Perú');
-  const aR = cue('region', 'reescribe');
   return (
     <SceneOut>
-      <AbsoluteFill style={{padding: '155px 130px 195px', display: 'grid', gridTemplateRows: 'auto 1fr', gap: 44}}>
+      <AbsoluteFill style={{padding: '120px 130px 175px', display: 'grid', gridTemplateRows: 'auto auto 1fr', gap: 34}}>
         <div>
           <div style={{display: 'flex', alignItems: 'center', gap: 18}}>
             <Bandera franjas={['#d91023', '#ffffff', '#d91023']} />
             <Label>Por qué Perú primero</Label>
           </div>
-          <div style={{...H, fontSize: 84, marginTop: 18}}>Entramos por la norma más difícil</div>
-          <div style={{fontFamily: FONT.display, fontSize: 38, color: C.ink3, marginTop: 20, opacity: ramp(f, aP - 4, 14)}}>
-            Perú solo da entre <b style={{color: C.ink2}}>US$ 10,500 y 67,000</b> al año, con supuestos nuestros que están escritos.
+          <div style={{...H, fontSize: 76, marginTop: 14}}>Entramos por la norma más difícil</div>
+        </div>
+
+        <div style={{display: 'grid', gridTemplateColumns: 'auto auto 1fr', gap: 54, alignItems: 'end'}}>
+          {[
+            {at: aI, n: '2.5 M', t: 'independientes menores de 41', s: 'INEI'},
+            {at: aR, n: '13 %', t: 'de ellos tiene RUC', s: 'INEI'},
+          ].map((d) => {
+            const o = ramp(f, d.at - 8, 14);
+            return (
+              <div key={d.t} style={{opacity: o, transform: `translateY(${(1 - o) * 12}px)`}}>
+                <div style={{fontFamily: MONO, fontSize: 62, lineHeight: 1, color: C.ink, letterSpacing: '-0.03em'}}>{d.n}</div>
+                <div style={{fontFamily: FONT.display, fontSize: 25, color: C.ink2, marginTop: 10}}>{d.t}</div>
+                <div style={{fontFamily: MONO, fontSize: 17, letterSpacing: '0.08em', color: C.ink3, marginTop: 4}}>{d.s}</div>
+              </div>
+            );
+          })}
+          {/* El rango se leia como el techo del mercado. Es lo que este producto ingresaria. */}
+          <div style={{opacity: ramp(f, aP - 6, 14), borderLeft: 'none', paddingLeft: 0, justifySelf: 'end', textAlign: 'right', maxWidth: 640}}>
+            <div style={{fontFamily: MONO, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.ink3}}>
+              Lo que este producto ingresaría en Perú, al 0.5%
+            </div>
+            <div style={{fontFamily: MONO, fontSize: 40, color: C.ink, marginTop: 8, letterSpacing: '-0.02em'}}>
+              US$ 10,500 – 67,000 <span style={{fontSize: 24, color: C.ink3}}>al año</span>
+            </div>
+            <div style={{fontFamily: FONT.display, fontSize: 23, color: C.accent, marginTop: 8}}>
+              Un negocio de una persona, y lo decimos
+            </div>
           </div>
         </div>
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 36, alignContent: 'center'}}>
+
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, alignContent: 'center'}}>
           {paises.map((pa, idx) => {
             const at = cue('region', 'México') - 10 + idx * 7;
             const o = ramp(f, at, 14);
             return (
-              <div key={pa.w} style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 30px 34px', opacity: o, transform: `translateY(${(1 - o) * 16}px)`}}>
+              <div key={pa.w} style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '26px 28px 30px', opacity: o, transform: `translateY(${(1 - o) * 16}px)`}}>
                 <Bandera franjas={pa.franjas} pesos={pa.pesos} horizontal={pa.horizontal} />
-                <div style={{fontFamily: FONT.display, fontSize: 52, fontWeight: 600, color: C.ink, marginTop: 16}}>{pa.t}</div>
-                <div style={{fontFamily: FONT.display, fontSize: 27, color: C.ink3, marginTop: 8}}>mismo adelanto, su propio programa</div>
-                <div style={{fontFamily: MONO, fontSize: 22, color: C.ink3, marginTop: 20, borderTop: `1px solid ${C.rule}`, paddingTop: 16, opacity: ramp(f, aR - 4, 14)}}>
+                <div style={{fontFamily: FONT.display, fontSize: 46, fontWeight: 600, color: C.ink, marginTop: 14}}>{pa.t}</div>
+                <div style={{fontFamily: FONT.display, fontSize: 25, color: C.ink3, marginTop: 6}}>un orden de magnitud más grande</div>
+                <div style={{fontFamily: MONO, fontSize: 20, color: C.ink3, marginTop: 16, borderTop: `1px solid ${C.rule}`, paddingTop: 14, opacity: ramp(f, cue('region', 'reescribe') - 4, 14)}}>
                   contrato {idx + 2} · misma red
                 </div>
               </div>

@@ -253,7 +253,7 @@ function renderPanel() {
 
   // Sin el acumulado del contrato no hay base fiable: los eventos solo cubren la ventana
   // del RPC, y una base corta produce el unico error que este producto no puede cometer.
-  renderThreshold(loading || loadError ? null : monthly, !loading && !loadError && monthly === null);
+  renderThreshold();
   bindLinkForm();
   bindWithdraw();
   app.querySelector("#retry")?.addEventListener("click", () => {
@@ -303,13 +303,17 @@ function bindWithdraw() {
   });
 }
 
-function renderThreshold(gross: bigint | null, grossUnavailable = false) {
+function renderThreshold() {
   const box = app.querySelector("#threshold")!;
   // Mientras la cadena no responde, el estimado no es "imposible de calcular": todavia no
   // se sabe. Sin distinguir los dos casos, el panel acusaba de faltar el tipo de cambio
   // uno que estaba puesto. Se deriva del estado del modulo para que las relecturas que
   // disparan los campos de abajo no lo pierdan.
   const loading = events === null && !loadError;
+  // Si la lectura fallo, el acumulado del mes no se conoce: es el mismo caso que si el
+  // contrato no respondio, y nunca el caso de que falte el tipo de cambio.
+  const grossUnavailable = !loading && (loadError || monthly === null);
+  const gross = loading || loadError ? null : monthly;
   const fx = readFx();
   // De donde sale el TC importa tanto como el numero: toda la cifra en soles cuelga de el.
   const fxIsSample = fx !== null && readStoredFx() === null;
@@ -417,7 +421,7 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const save = (key: string, raw: string) => {
     const v = Number(raw.replace(",", "."));
     try { localStorage.setItem(key, v > 0 ? String(v) : ""); } catch { /* sin storage */ }
-    renderThreshold(gross);
+    renderThreshold();
   };
   box.querySelector<HTMLInputElement>("#fx")!.addEventListener("change", (e) => save(FX_KEY, (e.target as HTMLInputElement).value));
   box.querySelectorAll<HTMLInputElement>(".other-in").forEach((i) =>
@@ -425,7 +429,7 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const flag = (id: string, key: string) =>
     box.querySelector<HTMLInputElement>(id)!.addEventListener("change", (e) => {
       try { localStorage.setItem(key, (e.target as HTMLInputElement).checked ? "1" : ""); } catch { /* sin storage */ }
-      renderThreshold(gross);
+      renderThreshold();
     });
   flag("#dir4", ROLE_KEY);
   flag("#done4", CONFIRM_KEY);
