@@ -360,3 +360,34 @@ entre +1 y −5, porque invalidaría las transacciones enlazadas, el panel de ej
 de los dos videos, a cuatro días del cierre. Queda anotado lo que pediría: que `pay` exija
 consentimiento del freelancer, para que el acumulado del mes no lo pueda inflar un tercero.
 
+## 20 de septiembre de 2026 · Los dos últimos caminos hacia un "no debes nada" falso
+
+La cuarta ronda cerró en 84 y 86, con el jurado principal diciendo que el proyecto está cerrado
+y que lo que quedaba sumaba 2 puntos. El juez técnico-tributario encontró dos excepciones, y
+tenía razón: eran los dos únicos sitios donde el código todavía podía hacer que alguien
+declarara de menos, que es justo el error que este producto no se puede permitir.
+
+**Si fallaba solo la lectura del acumulado del mes, el panel sumaba los eventos del RPC.** Esos
+eventos duran alrededor de una semana en testnet, así que la base salía corta y el badge podía
+decir "bajo el umbral" sobre un dato incompleto, sin ningún aviso. Ahora, sin el acumulado del
+contrato no se estima nada y se explica por qué no se usa la lista de cobros para reemplazarlo.
+
+**En el caso de director seguía pintándose el umbral general.** La cifra desaparecía, pero la
+barra, la comparación "de S/ 4,010" y la regla general seguían ahí. Un director con S/ 3,500 en
+el mes veía su barra por debajo de un corte que no es el suyo, y la lectura natural de eso es
+"no debo nada". Ahora desaparecen la barra y la escala, y la fila de la regla dice explícitamente
+que ese umbral no le corresponde. Un test nuevo lo fija.
+
+**Menores de la misma ronda:** el neto y el contador de cobros del panel sumaban todos los
+eventos disponibles dentro de un marco mensual; ahora cuentan solo el mes. Las fechas del
+borrador del recibo usaban el huso del navegador en vez del de Lima.
+
+**Sobre la derivación del umbral**, el mismo juez la calificó de defendible como derivación y no
+como cita, y señaló un riesgo de redondeo: SUNAT publicó 46,813 donde el cálculo de 2025 daba
+46,812.50, así que si para 2026 redondea el mensual hacia arriba, la app quedaría un sol baja.
+Está advertido en pantalla y en el módulo.
+
+**Techo declarado:** alrededor de 90 sin tocar el contrato desplegado ni los videos. Lo que falta
+para pasar de ahí no es código: una cita literal de la resolución anual de SUNAT, un camino real
+de USDC a soles, y salir de testnet.
+

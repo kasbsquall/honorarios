@@ -16,7 +16,10 @@ const usd = (p: Paid) => fromUnits(p.gross, 2);
 const pen = (p: Paid, fx: number | null) =>
   fx ? (Number(usd(p).replace(/,/g, "")) * fx).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
 
-const fmtDate = (d: Date) => d.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
+// La fecha del cobro se lee en Lima, igual que el mes tributario: un cobro de la ultima
+// noche del mes no puede fecharse al dia siguiente porque el usuario este de viaje.
+const fmtDate = (d: Date) =>
+  new Date(d.getTime() - 5 * 3_600_000).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 
 function readProfile(): Profile {
   try {

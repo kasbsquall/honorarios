@@ -113,6 +113,16 @@ describe("pago a cuenta de cuarta categoria", () => {
     expect(r.overThreshold).toBe(false);
   });
 
+  test("un director por debajo del umbral general tampoco recibe un 'no debes nada'", () => {
+    // Su umbral es menor que el general y no lo conocemos: compararlo contra el general
+    // le diria que esta tranquilo cuando puede estar ya obligado.
+    const r = estimate({ ...base, appGrossPen: 3500, isDirectorIncome: true });
+    expect(r.duePen).toBeNull();
+    expect(r.overThreshold).toBe(false);
+    expect(r.supported).toBe(false);
+    expect(r.provisional).toBe(false);
+  });
+
   test("el caso de director sigue mostrando lo acumulado del mes", () => {
     const r = estimate({ ...base, appGrossPen: 1875, otherFourthPen: 500, fifthPen: 1000, isDirectorIncome: true });
     expect(r.fourthBasePen).toBe(2375);

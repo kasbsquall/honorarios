@@ -156,7 +156,9 @@ function readFx(): number | null {
 function renderPanel() {
   const loading = events === null && !loadError;
   const list = events ?? [];
-  const net = list.reduce((s, p) => s + p.net, 0n);
+  // El marco del panel es el mes: sumar cobros de meses anteriores mezclaria periodos.
+  const thisMonth = list.filter((p) => limaMonth(p.at) === limaMonth(new Date()));
+  const net = thisMonth.reduce((s, p) => s + p.net, 0n);
   // Sin dato no se pinta un numero: un 0 afirma algo que no sabemos.
   const val = (fn: () => string) => (loading ? "" : loadError ? "—" : fn());
 
@@ -195,8 +197,8 @@ function renderPanel() {
       </form>
     </div>
     <dl class="stats">
-      <div><dt><i class="ph-light ph-wallet" aria-hidden="true"></i> Neto recibido</dt><dd class="num ${loading ? "sk" : ""}">${val(() => fromUnits(net))} <small>USDC</small></dd></div>
-      <div><dt><i class="ph-light ph-rows" aria-hidden="true"></i> Cobros</dt><dd class="num ${loading ? "sk" : ""}">${val(() => String(list.length))}</dd></div>
+      <div><dt><i class="ph-light ph-wallet" aria-hidden="true"></i> Neto recibido este mes</dt><dd class="num ${loading ? "sk" : ""}">${val(() => fromUnits(net))} <small>USDC</small></dd></div>
+      <div><dt><i class="ph-light ph-rows" aria-hidden="true"></i> Cobros del mes</dt><dd class="num ${loading ? "sk" : ""}">${val(() => String(thisMonth.length))}</dd></div>
       <div><dt><i class="ph-light ph-percent" aria-hidden="true"></i> Tasa de reserva</dt><dd class="num">8<small>%</small></dd></div>
     </dl>
   </section>
@@ -235,7 +237,9 @@ function renderPanel() {
     }</div>
   </section>`;
 
-  renderThreshold(loading || loadError ? null : (monthly ?? monthGross(list)));
+  // Sin el acumulado del contrato no hay base fiable: los eventos solo cubren la ventana
+  // del RPC, y una base corta produce el unico error que este producto no puede cometer.
+  renderThreshold(loading || loadError ? null : monthly, !loading && !loadError && monthly === null);
   bindLinkForm();
   bindWithdraw();
   app.querySelector("#retry")?.addEventListener("click", () => {
@@ -285,7 +289,7 @@ function bindWithdraw() {
   });
 }
 
-function renderThreshold(gross: bigint | null) {
+function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const box = app.querySelector("#threshold")!;
   const fx = readFx();
   const otras = readNum(OTHER_KEY);
@@ -308,7 +312,8 @@ function renderThreshold(gross: bigint | null) {
   const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   const month = new Date(Date.now() - PERU_OFFSET_MS).toLocaleDateString("es-PE", { month: "long", year: "numeric", timeZone: "UTC" });
   const state =
-    !est.supported ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Fuera de lo que calcula esta app</span>`
+    grossUnavailable ? `<span class="badge warn"><i class="ph-light ph-cloud-slash" aria-hidden="true"></i>No pudimos leer lo cobrado este mes</span>`
+    : !est.supported ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Fuera de lo que calcula esta app</span>`
     : pen === null ? `<span class="badge"><i class="ph-light ph-question" aria-hidden="true"></i>Falta tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Supera el umbral</span>`
     : est.provisional ? `<span class="badge"><i class="ph-light ph-dots-three-circle" aria-hidden="true"></i>Falta confirmar tus otras rentas</span>`
@@ -318,21 +323,26 @@ function renderThreshold(gross: bigint | null) {
     <div class="rc-top"><p class="lbl"><i class="ph-light ph-calendar-blank" aria-hidden="true"></i> Pago a cuenta · ${month}</p>${state}</div>
     <p class="th-num num">${due === null ? "S/ —" : soles(due)}</p>
     <p class="th-cap">${due === null ? "esta app no puede estimarlo" : "estimado, no es tu declaración"}</p>
-    <div class="meter" title="${soles(THRESHOLD_PEN)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
-    <p class="th-scale"><span>${pen === null ? "acumulado del mes" : `acumulado ${soles(pen)}`}</span><span>umbral ${soles(THRESHOLD_PEN)}${
-      over && pen ? ` · lo superas ${(pen / THRESHOLD_PEN).toFixed(1).replace(".0", "")} veces` : ""}</span></p>
+    ${!est.supported ? "" : `<div class="meter" title="${soles(THRESHOLD_PEN)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>`}
+    ${!est.supported ? "" : `<p class="th-scale"><span>${pen === null ? "acumulado del mes" : `acumulado ${soles(pen)}`}</span><span>umbral ${soles(THRESHOLD_PEN)}${
+      over && pen ? ` · lo superas ${(pen / THRESHOLD_PEN).toFixed(1).replace(".0", "")} veces` : ""}</span></p>`}
     <div class="th-body"><div>
     <dl class="th-rows">
       <div><dt>Cobrado por esta app</dt><dd class="num">${aqui === null ? "—" : soles(aqui)}</dd></div>
       <div><dt>Otras rentas de cuarta del mes</dt><dd class="num">${soles(otras)}</dd></div>
       <div><dt><b>Base del pago a cuenta</b> (cuarta)</dt><dd class="num">${cuarta === null ? "—" : soles(cuarta)}</dd></div>
       <div><dt>Rentas de quinta, solo para el umbral</dt><dd class="num">${soles(quinta)}</dd></div>
-      <div><dt>Total del mes frente al umbral</dt><dd class="num">${pen === null ? "—" : soles(pen)} <span class="u">de ${soles(THRESHOLD_PEN)}</span></dd></div>
-      <div class="wide"><dt>Regla</dt><dd>si el total del mes supera el umbral, se paga 8% de la base de cuarta. Si no lo supera, no hay pago a cuenta este mes.</dd></div>
+      <div><dt>Total del mes${est.supported ? " frente al umbral" : ""}</dt><dd class="num">${pen === null ? "—" : soles(pen)}${
+        est.supported ? ` <span class="u">de ${soles(THRESHOLD_PEN)}</span>` : ""}</dd></div>
+      <div class="wide"><dt>Regla</dt><dd>${est.supported
+        ? "si el total del mes supera el umbral, se paga 8% de la base de cuarta. Si no lo supera, no hay pago a cuenta este mes."
+        : `el umbral de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")} es el general y no es el tuyo: las rentas del inciso b) tienen uno propio, más bajo, que esta app no tiene verificado. Por eso no te comparamos contra ninguno.`}</dd></div>
       <div><dt>Retenciones de cuarta ya practicadas</dt><dd class="num">− ${soles(retenido)}</dd></div>
     </dl>
     <p class="th-help">${
-      !est.supported
+      grossUnavailable
+        ? "El contrato no respondió cuánto llevas cobrado este mes, así que no estimamos nada. No usamos la lista de cobros de abajo para reemplazarlo: el nodo solo guarda los últimos días y la suma saldría corta, que en un cálculo de impuestos es el peor error posible. Recarga en un momento."
+      : !est.supported
         ? "Marcaste que tus rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea. Ese grupo tiene un umbral mensual propio, más bajo que el general, y esta app no lo tiene verificado, así que no te muestra una cifra en vez de darte una tranquilidad que no puede sostener. Tu reserva sigue intacta y puedes retirarla. Confirma tu umbral con tu contador o en la resolución anual de SUNAT."
       : pen === null
         ? "Ingresa el tipo de cambio para estimar tu pago a cuenta de este mes."

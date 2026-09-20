@@ -166,6 +166,7 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 - La cuenta que recibiría la comisión es, en este despliegue, la misma cuenta de pruebas que desplegó el contrato. Con la comisión en cero nunca recibe nada.
 - El detalle de cada cobro se reconstruye desde los eventos del RPC, que en testnet guarda alrededor de una semana. Pasado ese plazo el panel lo dice de forma explícita y sigue mostrando las cifras del mes y la reserva, que viven en el contrato y no caducan, pero el borrador del recibo de un cobro antiguo deja de poder generarse.
 - El borrador del recibo pregunta si el cliente está domiciliado en Perú, porque de eso depende que haya retención. No trae el monto mínimo a partir del cual el agente retiene: no lo tenemos contrastado y hay que verificarlo.
+- El campo de retenciones ya practicadas no está acotado: un número mal escrito reduce el pago estimado y la app no lo cuestiona, porque las retenciones pueden venir de pagadores que no pasan por aquí.
 - La reserva es una ayuda de organización y no reemplaza la asesoría de un contador.
 
 ## Licencia
