@@ -482,3 +482,30 @@ funciona porque depende de dónde quedó el scroll en ese instante. Lo que funci
 anota el rectángulo de la zona viva de cada etapa con `boundingBox()`, y el montaje encuadra
 ese rectángulo exacto. El texto se lee y no hay que acertar de memoria.
 
+
+## 2026-09-20 · Pieza única de video, 2:47
+
+**Decisión:** un solo video de 2 minutos 47 sirve a la vez como pitch y como demo, dentro
+del límite de 3 minutos del Stellar Odyssey. El recorrido completo del producto va dentro
+del pitch, no en una pieza aparte. Solo se entrega la versión 1080p.
+
+**Voz:** Cartesia, modelo `sonic-3`, idioma `es`, voz Ramón
+`9b67072c-d46c-465d-87dc-f7a1c6db2bf3`. La anotación anterior de la bitácora que citaba
+ElevenLabs correspondía a un video viejo de 2:07 y era incorrecta: ElevenLabs no se usó en
+ningún momento de este proyecto. `sonic-3` no repite la misma toma con el mismo texto, así
+que las frases que no cambiaban (`brand`, `close`) se reutilizan tal cual desde
+`video/audio_v4/scenes/` en vez de volver a sintetizarlas. Ver `video/audio_gen.py`, `REUSE`.
+
+**Sincronía:** lo que estaba mal no era el audio sino la imagen. El pitch anterior reusaba
+recortes de `rec_v2` cortados con los tiempos de un guion previo y enseñaba el contrato de
+antes del redespliegue. Ahora cada clip dura exactamente lo que dura su escena, calculado
+desde el audio ya sintetizado (`video/clips_final.py`): la velocidad de cada tramo es una
+consecuencia del ajuste, no una elección.
+
+**Legibilidad de la demo:** la grabación anota con `boundingBox()` el rectángulo vivo de
+cada etapa (`web/e2e/demo.mjs`) y el montaje encuadra ese rectángulo. Para las pantallas de
+panel y límites se usa la caja de ancho completo del contenido, no la de la columna central:
+esa mide 511px y recortaba por la derecha la cita de la R.S. 000390-2025/SUNAT, que es
+justo lo que hay que poder leer.
+
+**Pendiente:** subir a YouTube y completar el enlace del README. Rotar la clave de Cartesia.

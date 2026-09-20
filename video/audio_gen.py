@@ -29,24 +29,29 @@ import httpx
 
 # EDIT THIS: one entry per scene, in order. ids must match the keys in Video.tsx.
 SCENES = [
-    ("cold", "Quinientos dólares entran. Cuatrocientos sesenta llegan a tu cuenta y cuarenta se quedan separados para el impuesto que te va a tocar. Una transacción, seis segundos. Todavía con dinero de prueba, y el reparto es el mismo que verás."),
+    ("cold", "Quinientos dólares entran. Cuatrocientos sesenta llegan a tu cuenta y cuarenta se quedan separados para tu impuesto. Una sola transacción, en la red de pruebas de Stellar."),
     ("brand", "Honorarios. Cobra afuera, declara tranquilo."),
-    ("problem", "Si le facturas a un cliente de fuera del país, nadie te descuenta impuestos. Cobras completo y la cuenta llega después. Pasando los cuatro mil diez soles en el mes, SUNAT te pide adelantar el ocho por ciento, y para entonces ya te lo gastaste."),
-    ("pay", "Tu cliente abre un link y paga en minutos, sin bancos de por medio, porque el dinero viaja por Stellar, una red de pagos abierta."),
-    ("chain", "Y queda el comprobante público: quinientos entraron, cuatrocientos sesenta a su cuenta, cuarenta a la parte del impuesto."),
-    ("falta", "Eso ya funciona. Lo que falta, dicho de frente: seguimos en la red de pruebas, nadie ha declarado todavía con esto, y convertir a soles en tu banco es el tramo que no construimos. El siguiente hito es el primer freelancer que declare de verdad."),
-    ("regla", "Quien reparte es un programa que vive en esa red, y nadie puede tocar tu parte del impuesto. Tampoco nosotros."),
-    ("panel", "Tu panel lee lo que llevas cobrado y estima lo que vas a deber. El umbral no lo inventamos: son los cuatro mil diez soles del artículo tres de la resolución que SUNAT publicó en diciembre para este ejercicio. Si eres director el tuyo es más bajo, y la app lo aplica."),
-    ("honesto", "Estima, no declara. El mes se mide sobre todo lo que ganaste, así que si cobraste por fuera tienes que decírselo. Hasta que lo confirmes, no te dice que estás tranquilo."),
-    ("precio", "Cobramos medio por ciento de lo que cobras, y solo cuando cobras. Quien factura dos mil dólares al mes paga ciento veinte al año. El tope de uno por ciento está escrito en el mismo programa, así que para subirlo tendríamos que desplegar otro y convencerte de mudarte. Hoy corre en cero."),
-    ("region", "Perú solo da entre diez y sesenta y siete mil dólares al año, con supuestos nuestros que están escritos. Entramos por aquí porque es la norma más difícil. México, Colombia y Argentina tienen el mismo adelanto y muchos más freelancers en dólares. Por cada país se reescribe el programa y su norma; Stellar no cambia."),
+    ("problem", "Si le facturas a un cliente de fuera, nadie te descuenta impuestos. Cobras completo y la cuenta llega después: pasando los cuatro mil diez soles en el mes, SUNAT te pide adelantar el ocho por ciento."),
+    ("wallet", "El producto, de principio a fin. La cuenta se crea con la huella, sin frase que apuntar, y el freelancer arma un link de cobro."),
+    ("pay", "Su cliente paga desde fuera en minutos, sin bancos de por medio. Si tiene la moneda de la red y no dólares digitales, se los compra en el camino."),
+    ("chain", "Y queda el registro público de ese cobro."),
+    ("panel", "En su panel aparece la reserva y el estimado del mes. El umbral no lo inventamos: son los cuatro mil diez del artículo tres de la resolución de SUNAT, enlazada ahí mismo. El tipo de cambio lo pone él, así que el total en soles es aproximado y la app lo dice."),
+    ("limites", "Si sus rentas son de director, el umbral es otro, tres mil doscientos ocho, y la app lo aplica. Y mientras no confirme sus otras rentas del mes, no le dice que está tranquilo: estima, no declara."),
+    ("retiro", "Arma el borrador del recibo, y la reserva se retira firmando con la huella. Nadie más puede sacar ese dinero, tampoco nosotros."),
+    ("precio", "El plan es cobrar medio por ciento de cada cobro, y solo cuando cobras: quien factura dos mil dólares al mes pagaría ciento veinte al año. Hoy el contrato está desplegado en cero, y la comisión se fija al desplegar. No hay forma de cambiarla después."),
+    ("region", "En Perú hay dos millones y medio de independientes menores de cuarenta y uno, según el INEI, y solo el trece por ciento tiene RUC. El mismo adelanto existe en México, Colombia y Argentina. Por cada país se reescribe el contrato y su norma; Stellar no cambia."),
+    ("falta", "Lo que falta, dicho de frente: seguimos en pruebas y nadie ha declarado todavía con esto. Ese es el siguiente hito."),
     ("close", "Honorarios. Cobra afuera, declara tranquilo."),
 ]
 
+# Tomas ya aprobadas que se reutilizan tal cual, para que la voz no cambie de
+# interpretacion en las frases que no cambian. sonic-3 no repite la misma toma.
+REUSE = {"brand": "audio_v4/scenes/brand.wav", "close": "audio_v4/scenes/close.wav"}
+
 LEAD = 1.6          # seconds of music before the voice enters
 # Silencio extra tras la voz de una escena, para que la demo respire.
-EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "pay": "excited", "chain": "confident", "falta": "sympathetic", "regla": "confident", "panel": "calm", "honesto": "calm", "precio": "confident", "region": "proud", "close": "enthusiastic"}
-POST = {"cold": 0.8, "pay": 7.0, "chain": 3.0, "falta": 1.2, "regla": 1.5, "panel": 4.5, "honesto": 2.5, "precio": 1.2, "region": 1.2, "close": 5.0}
+EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "wallet": "confident", "pay": "excited", "chain": "confident", "panel": "calm", "limites": "calm", "retiro": "content", "precio": "confident", "region": "proud", "falta": "sympathetic", "close": "enthusiastic"}
+POST = {"cold": 1.2, "brand": 0.6, "problem": 1.5, "wallet": 4.0, "pay": 3.5, "chain": 5.5, "panel": 6.0, "limites": 5.0, "retiro": 5.5, "precio": 1.5, "region": 1.5, "falta": 1.2, "close": 5.0}
 GAP = 0.28          # silence inserted between scenes, so beats do not run together
 
 
@@ -160,6 +165,10 @@ def main():
     timing, captions, cursor = [], [], LEAD
     for sid, text in SCENES:
         f = parts / f"{sid}.wav"
+        if not f.exists() and sid in REUSE:
+            # Toma aprobada: se copia normalizada en vez de volver a sintetizarla.
+            run_ff(["ffmpeg", "-y", "-i", str(Path(__file__).parent / REUSE[sid]), "-ar", "44100", "-ac", "1", "-c:a", "pcm_s16le", str(f)], "reuse")
+            print(f"  {sid}: toma reutilizada de {REUSE[sid]}")
         if not f.exists():
             raw = parts / f"{sid}.raw"
             raw.write_bytes(synth(text, EMOTION.get(sid, "neutral")) if provider == "cartesia" else synth(text))

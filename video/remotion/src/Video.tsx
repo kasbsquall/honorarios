@@ -3,12 +3,13 @@ import {SCENES} from './timing';
 import {C} from './theme';
 import {Captions} from './lib/Captions';
 import {Ground, Mark} from './lib/film';
-import {Cold, Brand, Problem, Regla, Falta, Honesto, Precio, Region, Close} from './scenes/Story';
-import {Pay, Chain, Panel} from './scenes/Demo';
+import {Cold, Brand, Problem, Falta, Precio, Region, Close} from './scenes/Story';
+import {Wallet, Pago, Cadena, Panel, Limites, Retiro} from './scenes/Recorrido';
 
 const MAP: Record<string, React.FC> = {
-  cold: Cold, brand: Brand, problem: Problem, pay: Pay, chain: Chain, falta: Falta,
-  regla: Regla, panel: Panel, honesto: Honesto, precio: Precio, region: Region, close: Close,
+  cold: Cold, brand: Brand, problem: Problem, wallet: Wallet, pay: Pago, chain: Cadena,
+  panel: Panel, limites: Limites, retiro: Retiro, precio: Precio, region: Region,
+  falta: Falta, close: Close,
 };
 // Escenas donde la marca ya ocupa el cuadro: la marca persistente se oculta.
 const NO_MARK = new Set(['brand', 'close']);

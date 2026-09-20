@@ -1,88 +1,95 @@
 {
-  "vo": 154.293,
+  "vo": 165.335,
   "scenes": [
     {
       "id": "cold",
       "start": 1.6,
-      "end": 8.131,
-      "dur": 6.531,
-      "words": 39
+      "end": 13.164,
+      "dur": 11.564,
+      "words": 27
     },
     {
       "id": "brand",
-      "start": 9.211,
-      "end": 11.666,
-      "dur": 2.456,
+      "start": 14.644,
+      "end": 17.569,
+      "dur": 2.926,
       "words": 5
     },
     {
       "id": "problem",
-      "start": 11.946,
-      "end": 26.418,
-      "dur": 14.472,
-      "words": 45
+      "start": 18.449,
+      "end": 29.223,
+      "dur": 10.774,
+      "words": 36
     },
     {
-      "id": "pay",
-      "start": 26.698,
-      "end": 34.9,
-      "dur": 8.202,
+      "id": "wallet",
+      "start": 31.003,
+      "end": 38.759,
+      "dur": 7.755,
       "words": 25
     },
     {
+      "id": "pay",
+      "start": 43.039,
+      "end": 50.887,
+      "dur": 7.848,
+      "words": 29
+    },
+    {
       "id": "chain",
-      "start": 42.18,
-      "end": 49.73,
-      "dur": 7.549,
-      "words": 18
-    },
-    {
-      "id": "falta",
-      "start": 53.01,
-      "end": 67.22,
-      "dur": 14.211,
-      "words": 45
-    },
-    {
-      "id": "regla",
-      "start": 68.7,
-      "end": 75.388,
-      "dur": 6.687,
-      "words": 20
+      "start": 54.667,
+      "end": 57.036,
+      "dur": 2.368,
+      "words": 8
     },
     {
       "id": "panel",
-      "start": 77.168,
-      "end": 91.927,
-      "dur": 14.759,
+      "start": 62.816,
+      "end": 77.073,
+      "dur": 14.257,
       "words": 52
     },
     {
-      "id": "honesto",
-      "start": 96.707,
-      "end": 108.038,
-      "dur": 11.331,
-      "words": 31
+      "id": "limites",
+      "start": 83.353,
+      "end": 97.052,
+      "dur": 13.7,
+      "words": 37
+    },
+    {
+      "id": "retiro",
+      "start": 102.332,
+      "end": 109.345,
+      "dur": 7.012,
+      "words": 22
     },
     {
       "id": "precio",
-      "start": 110.818,
-      "end": 125.54,
-      "dur": 14.721,
-      "words": 52
+      "start": 115.125,
+      "end": 131.147,
+      "dur": 16.022,
+      "words": 46
     },
     {
       "id": "region",
-      "start": 127.02,
-      "end": 145.41,
-      "dur": 18.39,
-      "words": 55
+      "start": 132.927,
+      "end": 147.602,
+      "dur": 14.675,
+      "words": 47
+    },
+    {
+      "id": "falta",
+      "start": 149.382,
+      "end": 156.208,
+      "dur": 6.827,
+      "words": 21
     },
     {
       "id": "close",
-      "start": 146.89,
-      "end": 149.293,
-      "dur": 2.403,
+      "start": 157.688,
+      "end": 160.335,
+      "dur": 2.647,
       "words": 5
     }
   ]

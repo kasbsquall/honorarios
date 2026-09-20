@@ -14,7 +14,7 @@ export const Cold: React.FC = () => {
   const a500 = cue('cold', 'quinientos');
   const a460 = cue('cold', 'cuatrocientos');
   const a40 = cue('cold', 'cuarenta');
-  const aTx = cue('cold', 'mismo');
+  const aTx = cue('cold', 'sola');
   const card = ramp(f, 4, 18);
   const split = ramp(f, a460 - 4, 16);
   const tear = ramp(f, a40, 14);
@@ -100,7 +100,7 @@ export const Problem: React.FC = () => {
   const aN = cue('problem', 'nadie');
   const aU = cue('problem', 'cuatro');
   const a8 = cue('problem', 'ocho');
-  const aG = cue('problem', 'gastaste');
+  const aG = cue('problem', 'adelantar');
   const fillTo = ramp(f, aU - 6, 40);
   const drain = ramp(f, aG - 8, 26);
   const chips = [
@@ -264,11 +264,10 @@ export const Regla: React.FC = () => {
 export const Falta: React.FC = () => {
   const f = useCurrentFrame();
   const rows = [
-    {w: 'seguimos', t: 'Seguimos en la red de pruebas', s: 'no mueve dinero real todavía'},
+    {w: 'seguimos', t: 'Seguimos en pruebas', s: 'no mueve dinero real todavía'},
     {w: 'nadie', t: 'Nadie ha declarado con esto', s: 'cero usuarios, y lo decimos'},
-    {w: 'convertir', t: 'De dólares a soles en tu banco', s: 'el tramo que no construimos'},
   ];
-  const aH = cue('falta', 'siguiente');
+  const aH = cue('falta', 'hito');
   return (
     <SceneOut>
       <AbsoluteFill style={{padding: '150px 130px 190px', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 80, alignItems: 'center'}}>
@@ -399,7 +398,7 @@ export const Honesto: React.FC = () => {
 export const Precio: React.FC = () => {
   const f = useCurrentFrame();
   const aQ = cue('precio', 'Quien');
-  const aT = cue('precio', 'tope');
+  const aT = cue('precio', 'comisión');
   const aZ = cue('precio', 'cero');
   return (
     <SceneOut>
@@ -427,8 +426,8 @@ export const Precio: React.FC = () => {
           <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aT - 4, 14), borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
             <div style={{color: C.accent}}><FileCode size={46} weight="light" /></div>
             <div>
-              <div style={{fontFamily: FONT.display, fontSize: 42, fontWeight: 600, color: C.ink}}>Tope de 1% en el programa</div>
-              <div style={{fontFamily: FONT.display, fontSize: 28, color: C.ink3}}>subirlo obliga a desplegar otro y a que te mudes</div>
+              <div style={{fontFamily: FONT.display, fontSize: 42, fontWeight: 600, color: C.ink}}>Se fija al desplegar</div>
+              <div style={{fontFamily: FONT.display, fontSize: 28, color: C.ink3}}>no hay función que la cambie después, ni para subirla al tope de 1%</div>
             </div>
           </div>
         </div>
