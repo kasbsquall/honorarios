@@ -57,7 +57,7 @@ function renderIntro(error = "") {
   <section class="intro rise">
     <p class="lbl">Para freelancers en Perú que cobran al exterior</p>
     <h1>Cobra en USDC y deja apartado tu pago a cuenta desde el primer dólar.</h1>
-    <p>Cada cobro pasa por un contrato en Stellar: el 8% queda reservado a tu nombre y el resto llega a tu wallet. Si el mes supera S/ 4,010, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
+    <p>Cada cobro pasa por un contrato en Stellar: el 8% queda reservado a tu nombre y el resto llega a tu wallet. Si el mes supera tu umbral de SUNAT, S/ 4,010 en el caso general, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
     <label class="field name"><span class="lbl">Tu nombre</span><input id="name" maxlength="40" placeholder="Como quieres que aparezca en tu passkey"></label>
     <div class="actions">
       <button class="btn" id="create"><i class="ph-light ph-fingerprint" aria-hidden="true"></i>Crear wallet con passkey</button>
@@ -145,6 +145,11 @@ function readNum(key: string): number {
 // Tipo de cambio de ejemplo, solo para que el panel de muestra tenga algo que calcular.
 const DEMO_FX = 3.75;
 
+/* Rango de cordura del tipo de cambio. No bloquea, avisa: toda la conversion a soles cuelga
+ * de este numero, y un punto decimal de mas convierte un mes obligado en uno tranquilo. */
+const FX_MIN = 2;
+const FX_MAX = 6;
+
 /** El tipo de cambio que el usuario escribio, sin el de ejemplo. */
 function readStoredFx(): number | null {
   try {
@@ -179,6 +184,7 @@ function renderPanel() {
   const gap = est.duePen !== null && reservePen !== null ? est.duePen - reservePen : null;
   const reserveState =
     loading || loadError || gap === null ? ""
+    : est.duePen === 0 && est.provisional ? `<span class="tag"><i class="ph-light ph-dots-three-circle" aria-hidden="true"></i>Falta confirmar tus otras rentas del mes para saber si hay algo que cubrir</span>`
     : est.duePen === 0 ? `<span class="tag ok"><i class="ph-light ph-check" aria-hidden="true"></i>Este mes no hay pago a cuenta que cubrir</span>`
     : gap > 0.5 ? `<span class="tag warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Faltan ${pen2(gap)} para cubrir el pago de ${pen2(est.duePen!)}${
         mode === "demo" ? ", porque en esta cuenta se retiró la reserva antes de cerrar el mes" : ""}</span>`
@@ -192,7 +198,7 @@ function renderPanel() {
       <p class="lbl"><i class="ph-light ph-vault" aria-hidden="true"></i> Reserva preventiva · 8% de cada cobro</p>
       <p class="kpi num ${loading ? "sk" : ""}">${val(() => fromUnits(reserve!))}<small>USDC</small></p>
       ${reserveState}
-      <p class="kpi-note">${mode === "demo" && reserve === 0n ? "Esta cuenta ya retiró su reserva durante la demo, por eso está en cero. " : ""}Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera S/ 4,010; si no, sigue siendo tuya.</p>
+      <p class="kpi-note">${mode === "demo" && reserve === 0n ? "Esta cuenta ya retiró su reserva durante la demo, por eso está en cero. " : ""}Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera tu umbral, S/ ${est.thresholdPen.toLocaleString("es-PE")}; si no, sigue siendo tuya.</p>
       <form id="withdraw" class="withdraw">
         <label class="field"><span class="lbl">Enviar reserva a</span><input class="num" name="to" required placeholder="Cuenta Stellar (G… o C…)"></label>
         <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "").replace(/\.?0+$/, "") : ""}"></label>
@@ -386,6 +392,7 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
     </details>
     <label class="field fx"><span class="lbl">Tipo de cambio (S/ por USDC)</span>
       <input class="num" id="fx" inputmode="decimal" placeholder="TC compra SBS del día de cobro" value="${fx ?? ""}">
+      ${fx !== null && (fx < FX_MIN || fx > FX_MAX) ? `<small class="warn-text"><i class="ph-light ph-warning" aria-hidden="true"></i> S/ ${fx} por dólar está fuera de lo que se ha visto en el mercado (entre ${FX_MIN} y ${FX_MAX}). Un tipo de cambio muy bajo hunde tu total en soles y puede hacer que la app te diga que no llegas al umbral cuando sí llegas. Revísalo.</small>` : ""}
       <small>${mode === "demo" ? `Aquí va ${DEMO_FX} como ejemplo, para que el panel de muestra calcule algo. ` : ""}La norma usa el tipo de cambio compra SBS del día en que cobras; aquí se aplica uno solo a todo el mes como aproximación, así que el total en soles es cercano y no exacto. No hay criterio SUNAT publicado para cobros en cripto: confírmalo con tu contador.</small>
     </label>
     </div></div>`;

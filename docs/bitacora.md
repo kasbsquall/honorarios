@@ -426,3 +426,27 @@ que no consulta el umbral, y que ese dinero se puede retirar.
 El README citaba la resolución en firme mientras la app decía no haberla leído. Esa
 contradicción se acabó por el lado bueno.
 
+## 20 de septiembre de 2026 · Tres fallos que solo se ven mirando la pantalla entera
+
+Citar la resolución destapó incoherencias entre partes de la interfaz que hasta ahora decían
+lo mismo por casualidad.
+
+**El tag verde de la reserva no miraba `provisional`.** El bloque de abajo llevaba días
+diciendo "falta confirmar tus otras rentas", y el elemento más grande de la pantalla, junto a
+la cifra de la reserva, seguía afirmando en verde y con un check que este mes no había nada que
+cubrir. El dato para evitarlo estaba calculado cuatro líneas más arriba. Era el último camino
+que quedaba hacia una calma que la app no puede sostener.
+
+**El mismo KPI citaba S/ 4,010 aunque el usuario fuera director.** El bloque de abajo aplicaba
+correctamente S/ 3,208 y el de arriba le mentía por 802 soles. Ahora los dos leen el mismo
+`thresholdPen`.
+
+**El tipo de cambio no tenía rango de cordura.** Un 0.375 en vez de 3.75 hunde el total en
+soles y produce un "no llegas al umbral" perfectamente falso. No lo bloqueamos, porque no nos
+corresponde decidir qué tipo de cambio es válido, pero se avisa cuando cae fuera de 2 a 6. Y
+bajo el monto estimado se ve ahora con qué tipo de cambio se calculó y si lo puso el usuario.
+
+Probado en producción el peor caso de los tres a la vez: mes bajo umbral, sin confirmar otras
+rentas y con el tipo de cambio absurdo. Sale el aviso ámbar, el aviso del tipo de cambio y la
+procedencia de la cifra. Antes salía un visto verde.
+
