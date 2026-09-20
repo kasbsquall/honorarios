@@ -1,95 +1,88 @@
 {
-  "vo": 135.97,
+  "vo": 154.293,
   "scenes": [
     {
       "id": "cold",
       "start": 1.6,
-      "end": 8.241,
-      "dur": 6.641,
-      "words": 17
+      "end": 8.131,
+      "dur": 6.531,
+      "words": 39
     },
     {
       "id": "brand",
-      "start": 9.321,
-      "end": 12.247,
-      "dur": 2.926,
+      "start": 9.211,
+      "end": 11.666,
+      "dur": 2.456,
       "words": 5
     },
     {
       "id": "problem",
-      "start": 12.527,
-      "end": 24.462,
-      "dur": 11.935,
-      "words": 46
-    },
-    {
-      "id": "solution",
-      "start": 24.742,
-      "end": 34.912,
-      "dur": 10.17,
-      "words": 33
-    },
-    {
-      "id": "passkey",
-      "start": 35.192,
-      "end": 41.972,
-      "dur": 6.78,
-      "words": 19
+      "start": 11.946,
+      "end": 26.418,
+      "dur": 14.472,
+      "words": 45
     },
     {
       "id": "pay",
-      "start": 46.752,
-      "end": 55.808,
-      "dur": 9.056,
-      "words": 28
+      "start": 26.698,
+      "end": 34.9,
+      "dur": 8.202,
+      "words": 25
     },
     {
       "id": "chain",
-      "start": 64.088,
-      "end": 72.587,
-      "dur": 8.499,
-      "words": 17
+      "start": 42.18,
+      "end": 49.73,
+      "dur": 7.549,
+      "words": 18
     },
     {
-      "id": "code",
-      "start": 75.367,
-      "end": 81.125,
-      "dur": 5.759,
-      "words": 15
+      "id": "falta",
+      "start": 53.01,
+      "end": 67.22,
+      "dur": 14.211,
+      "words": 45
+    },
+    {
+      "id": "regla",
+      "start": 68.7,
+      "end": 75.388,
+      "dur": 6.687,
+      "words": 20
     },
     {
       "id": "panel",
-      "start": 82.905,
-      "end": 97.394,
-      "dur": 14.489,
-      "words": 46
+      "start": 77.168,
+      "end": 91.927,
+      "dur": 14.759,
+      "words": 52
     },
     {
-      "id": "withdraw",
-      "start": 101.674,
-      "end": 105.297,
-      "dur": 3.622,
-      "words": 9
+      "id": "honesto",
+      "start": 96.707,
+      "end": 108.038,
+      "dur": 11.331,
+      "words": 31
     },
     {
-      "id": "stack",
-      "start": 110.077,
-      "end": 117.321,
-      "dur": 7.245,
-      "words": 19
+      "id": "precio",
+      "start": 110.818,
+      "end": 125.54,
+      "dur": 14.721,
+      "words": 52
     },
     {
-      "id": "negocio",
-      "start": 118.601,
-      "end": 126.542,
-      "dur": 7.941,
-      "words": 26
+      "id": "region",
+      "start": 127.02,
+      "end": 145.41,
+      "dur": 18.39,
+      "words": 55
     },
     {
       "id": "close",
-      "start": 128.322,
-      "end": 130.97,
-      "dur": 2.647,
+      "start": 146.89,
+      "end": 149.293,
+      "dur": 2.403,
       "words": 5
     }
   ]

@@ -1,0 +1,29 @@
+{
+  "cut": 86.334,
+  "gap": 11.0,
+  "marks": {
+    "intro": 0.711,
+    "ejemplo": 10.133,
+    "ejemplo_umbral": 16.06,
+    "create_click": 24.846,
+    "wallet_ready": 35.835,
+    "link_form": 42.269,
+    "link_ready": 46.974,
+    "pay_page": 51.534,
+    "connect": 57.047,
+    "prepare": 59.738,
+    "sign": 69.787,
+    "paid": 80.334,
+    "panel": 100.816,
+    "umbral": 107.747,
+    "quinta": 114.977,
+    "director": 125.55,
+    "howto": 133.618,
+    "rhe": 146.227,
+    "withdraw_start": 162.35,
+    "withdrawn": 178.823,
+    "end": 186.476,
+    "explorer": 86.334
+  },
+  "total": 194.476
+}

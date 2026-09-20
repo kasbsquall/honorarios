@@ -14,7 +14,7 @@ export const Cold: React.FC = () => {
   const a500 = cue('cold', 'quinientos');
   const a460 = cue('cold', 'cuatrocientos');
   const a40 = cue('cold', 'cuarenta');
-  const aTx = cue('cold', 'misma');
+  const aTx = cue('cold', 'mismo');
   const card = ramp(f, 4, 18);
   const split = ramp(f, a460 - 4, 16);
   const tear = ramp(f, a40, 14);
@@ -95,12 +95,12 @@ export const Brand: React.FC = () => {
 /* ---------------------------------------------------------------- 2 · problema */
 export const Problem: React.FC = () => {
   const f = useCurrentFrame();
-  const aF = cue('problem', 'freelancer');
-  const aX = cue('problem', 'extranjero');
+  const aF = cue('problem', 'facturas');
+  const aX = cue('problem', 'fuera');
   const aN = cue('problem', 'nadie');
   const aU = cue('problem', 'cuatro');
   const a8 = cue('problem', 'ocho');
-  const aG = cue('problem', 'gastó');
+  const aG = cue('problem', 'gastaste');
   const fillTo = ramp(f, aU - 6, 40);
   const drain = ramp(f, aG - 8, 26);
   const chips = [
@@ -223,17 +223,18 @@ const TESTS = [
   '',
   'test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s',
 ];
-export const Code: React.FC = () => {
+export const Regla: React.FC = () => {
   const f = useCurrentFrame();
-  const aS = cue('code', 'firma');
-  const aN = cue('code', 'veintitr');
-  const hl = ramp(f, aS - 6, 12);
+  const aN = cue('regla', 'nadie');
+  const aT = cue('regla', 'Tampoco');
+  const hl = ramp(f, aN - 6, 12);
   return (
     <SceneOut>
-      <AbsoluteFill style={{padding: '150px 90px 190px', display: 'grid', gridTemplateColumns: '1fr 1.05fr', gap: 40}}>
-        <div style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '26px 30px', opacity: ramp(f, 0, 12)}}>
-          <Label size={20} style={{display: 'flex', gap: 10, alignItems: 'center'}}><FileCode size={24} weight="light" /> Código real · contracts/split/src/lib.rs:120</Label>
-          <pre style={{fontFamily: MONO, fontSize: 29, lineHeight: 1.6, color: C.ink2, margin: '22px 0 0'}}>
+      <Halo x={1360} y={520} size={620} o={0.16} />
+      <AbsoluteFill style={{padding: '160px 120px 200px', display: 'grid', gridTemplateColumns: '1fr 0.95fr', gap: 70, alignItems: 'center'}}>
+        <div style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 34px', opacity: ramp(f, 0, 12)}}>
+          <Label size={20} style={{display: 'flex', gap: 10, alignItems: 'center'}}><FileCode size={24} weight="light" /> contracts/split/src/lib.rs</Label>
+          <pre style={{fontFamily: MONO, fontSize: 30, lineHeight: 1.62, color: C.ink2, margin: '24px 0 0'}}>
             {CODE.map((l, i) => {
               const hot = i === 6;
               return (
@@ -245,20 +246,60 @@ export const Code: React.FC = () => {
             })}
           </pre>
         </div>
-        <div style={{background: '#0F0F0D', border: `1px solid ${C.ruleStrong}`, padding: '26px 30px', opacity: ramp(f, 6, 12)}}>
-          <Label size={20} style={{display: 'flex', gap: 10, alignItems: 'center'}}><Terminal size={24} weight="light" /> Salida real · cargo test</Label>
-          <pre style={{fontFamily: MONO, fontSize: 21, lineHeight: 1.62, color: C.ink2, margin: '22px 0 0', whiteSpace: 'pre-wrap'}}>
-            {TESTS.map((l, i) => {
-              const last = i === TESTS.length - 1;
-              const at = last ? aN - 4 : 10 + Math.min(i, 10) * 4;
-              return <div key={i} style={{opacity: ramp(f, at, 6), color: last ? C.ok : l.endsWith('ok') ? C.ink2 : C.ink}}>{l.replace(/ ok$/, '')}{l.endsWith(' ok') && <span style={{color: C.ok}}> ok</span>}</div>;
-            })}
-          </pre>
+        <div>
+          <Label>La regla vive aquí</Label>
+          <div style={{...H, fontSize: 92, marginTop: 22}}>Nadie puede<br />tocar tu parte</div>
+          <div style={{fontFamily: FONT.display, fontSize: 52, color: C.accent, marginTop: 30, opacity: ramp(f, aT, 14), transform: `translateY(${(1 - ramp(f, aT, 14)) * 12}px)`}}>
+            Tampoco nosotros.
+          </div>
         </div>
       </AbsoluteFill>
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
-      <Sfx src="stamp.wav" at={aS - 4} vol={0.22} />
-      <Sfx src="confirm.wav" at={aN - 4} vol={0.16} />
+      <Sfx src="stamp.wav" at={aN - 4} vol={0.2} />
+    </SceneOut>
+  );
+};
+
+/* ---------------------------------------------------------------- lo que falta */
+export const Falta: React.FC = () => {
+  const f = useCurrentFrame();
+  const rows = [
+    {w: 'seguimos', t: 'Seguimos en la red de pruebas', s: 'no mueve dinero real todavía'},
+    {w: 'nadie', t: 'Nadie ha declarado con esto', s: 'cero usuarios, y lo decimos'},
+    {w: 'convertir', t: 'De dólares a soles en tu banco', s: 'el tramo que no construimos'},
+  ];
+  const aH = cue('falta', 'siguiente');
+  return (
+    <SceneOut>
+      <AbsoluteFill style={{padding: '150px 130px 190px', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 80, alignItems: 'center'}}>
+        <div>
+          <Label>Lo que falta</Label>
+          <div style={{...H, fontSize: 96, marginTop: 20}}>Dicho<br />de frente</div>
+        </div>
+        <div style={{display: 'grid', gap: 30}}>
+          {rows.map((r) => {
+            const at = cue('falta', r.w);
+            const o = ramp(f, at - 4, 14);
+            return (
+              <div key={r.w} style={{display: 'flex', gap: 24, alignItems: 'center', opacity: o, transform: `translateY(${(1 - o) * 14}px)`, borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
+                <div style={{color: C.ink3}}><Prohibit size={44} weight="light" /></div>
+                <div>
+                  <div style={{fontFamily: FONT.display, fontSize: 44, fontWeight: 600, color: C.ink}}>{r.t}</div>
+                  <div style={{fontFamily: FONT.display, fontSize: 29, color: C.ink3}}>{r.s}</div>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aH - 4, 14), borderTop: `1px solid ${C.accent}`, paddingTop: 26}}>
+            <div style={{color: C.accent}}><MapPin size={44} weight="light" /></div>
+            <div style={{fontFamily: FONT.display, fontSize: 44, fontWeight: 600, color: C.ink}}>
+              Siguiente hito: el primer freelancer que declare
+            </div>
+          </div>
+        </div>
+      </AbsoluteFill>
+      <Sfx src="whoosh.wav" at={1} vol={0.08} />
+      <Sfx src="confirm.wav" at={aH - 4} vol={0.14} />
     </SceneOut>
   );
 };
@@ -319,37 +360,125 @@ export const Stack: React.FC = () => {
 };
 
 /* ---------------------------------------------------------------- 11 · modelo */
-export const Negocio: React.FC = () => {
+/* ---------------------------------------------------------------- estima, no declara */
+export const Honesto: React.FC = () => {
   const f = useCurrentFrame();
-  const aC = cue('negocio', 'comisión');
-  const aA = cue('negocio', 'tope');
-  const aZ = cue('negocio', 'cero');
-  const row = (at: number, icon: React.ReactNode, t: string, sub: string) => (
-    <div style={{display: 'flex', gap: 26, alignItems: 'center', opacity: ramp(f, at, 14), transform: `translateY(${(1 - ramp(f, at, 14)) * 14}px)`, borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
-      <div style={{color: C.accent}}>{icon}</div>
-      <div>
-        <div style={{fontFamily: FONT.display, fontSize: 46, fontWeight: 600, color: C.ink}}>{t}</div>
-        <div style={{fontFamily: FONT.display, fontSize: 30, color: C.ink3}}>{sub}</div>
-      </div>
-    </div>
-  );
+  const aM = cue('honesto', 'mes');
+  const aH = cue('honesto', 'Hasta');
+  const o1 = ramp(f, aM - 6, 14);
+  const o2 = ramp(f, aM - 2, 14);
+  const o3 = ramp(f, aH - 6, 14);
   return (
     <SceneOut>
-      <Halo x={520} y={520} size={640} o={0.18} />
-      <AbsoluteFill style={{padding: '170px 140px 210px', display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 80, alignItems: 'center'}}>
+      <Halo x={1340} y={560} size={600} o={0.14} />
+      <AbsoluteFill style={{padding: '170px 130px 205px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center'}}>
         <div>
-          <Label>Cómo se sostiene</Label>
-          <div style={{...H, fontSize: 96, marginTop: 20}}>Una comisión<br />por cobro liquidado</div>
-          <div style={{fontFamily: MONO, fontSize: 24, color: C.ink3, marginTop: 26, opacity: ramp(f, aZ, 12)}}>Desplegado en cero durante la hackathon</div>
+          <Label>Lo que la app no hace</Label>
+          <div style={{...H, fontSize: 104, marginTop: 20}}>Estima.<br />No declara.</div>
+          <div style={{fontFamily: FONT.display, fontSize: 36, color: C.ink3, marginTop: 30, lineHeight: 1.4, opacity: o1, transform: `translateY(${(1 - o1) * 12}px)`}}>
+            El mes se mide sobre todo lo que ganaste, no solo sobre lo que pasó por aquí.
+          </div>
         </div>
-        <div style={{display: 'grid', gap: 26}}>
-          {row(aC, <CurrencyCircleDollar size={46} weight="light" />, 'Sale del bruto', 'la reserva del 8% no se toca')}
-          {row(aA + 4, <FileCode size={46} weight="light" />, 'Tope de 1% en el código', 'el constructor rechaza pasarse')}
+        <div style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '34px 36px', opacity: o2, transform: `translateY(${(1 - o2) * 16}px)`}}>
+          <Label size={20} style={{display: 'flex', gap: 10, alignItems: 'center'}}><Vault size={24} weight="light" /> Lo que sale en pantalla</Label>
+          <div style={{display: 'inline-flex', gap: 12, alignItems: 'center', marginTop: 24, border: `1px solid ${C.accent}`, background: 'rgba(232,99,58,0.10)', padding: '14px 20px'}}>
+            <CheckCircle size={30} weight="light" color={C.accent} />
+            <span style={{fontFamily: MONO, fontSize: 26, color: C.ink}}>Falta confirmar tus otras rentas</span>
+          </div>
+          <div style={{fontFamily: FONT.display, fontSize: 34, color: C.ink2, marginTop: 28, lineHeight: 1.35, opacity: o3, transform: `translateY(${(1 - o3) * 10}px)`}}>
+            Hasta que lo confirmes, la app no te dice que estás tranquilo.
+          </div>
         </div>
       </AbsoluteFill>
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
-      <Sfx src="tick.wav" at={aC} vol={0.12} />
-      <Sfx src="tick.wav" at={aA + 4} vol={0.12} />
+      <Sfx src="tick.wav" at={aH - 6} vol={0.12} />
+    </SceneOut>
+  );
+};
+
+export const Precio: React.FC = () => {
+  const f = useCurrentFrame();
+  const aQ = cue('precio', 'Quien');
+  const aT = cue('precio', 'tope');
+  const aZ = cue('precio', 'cero');
+  return (
+    <SceneOut>
+      <Halo x={520} y={520} size={640} o={0.18} />
+      <AbsoluteFill style={{padding: '165px 130px 205px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center'}}>
+        <div>
+          <Label>Cómo se sostiene</Label>
+          <div style={{display: 'flex', alignItems: 'baseline', gap: 18, marginTop: 16}}>
+            <Roll value="0,5" at={2} size={210} />
+            <div style={{...H, fontSize: 96, color: C.accent}}>%</div>
+          </div>
+          <div style={{fontFamily: FONT.display, fontSize: 46, color: C.ink2, marginTop: 8}}>de lo que cobras, solo cuando cobras</div>
+          <div style={{fontFamily: MONO, fontSize: 26, color: C.ink3, marginTop: 34, opacity: ramp(f, aZ - 4, 12)}}>Hoy desplegado en cero</div>
+        </div>
+        <div style={{display: 'grid', gap: 28}}>
+          <div style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 34px', opacity: ramp(f, aQ - 6, 14), transform: `translateY(${(1 - ramp(f, aQ - 6, 14)) * 14}px)`}}>
+            <Label size={20}>Ejemplo</Label>
+            <div style={{fontFamily: FONT.display, fontSize: 44, color: C.ink, marginTop: 14, lineHeight: 1.25}}>
+              Facturas <b>US$ 2,000</b> al mes
+            </div>
+            <div style={{fontFamily: FONT.display, fontSize: 44, color: C.accent, marginTop: 6}}>
+              Pagas <b>US$ 120</b> al año
+            </div>
+          </div>
+          <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aT - 4, 14), borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
+            <div style={{color: C.accent}}><FileCode size={46} weight="light" /></div>
+            <div>
+              <div style={{fontFamily: FONT.display, fontSize: 42, fontWeight: 600, color: C.ink}}>Tope de 1% en el programa</div>
+              <div style={{fontFamily: FONT.display, fontSize: 28, color: C.ink3}}>subirlo obliga a desplegar otro y a que te mudes</div>
+            </div>
+          </div>
+        </div>
+      </AbsoluteFill>
+      <Sfx src="whoosh.wav" at={1} vol={0.08} />
+      <Sfx src="tick.wav" at={aQ - 6} vol={0.12} />
+      <Sfx src="tick.wav" at={aT - 4} vol={0.12} />
+    </SceneOut>
+  );
+};
+
+/* ---------------------------------------------------------------- la region */
+export const Region: React.FC = () => {
+  const f = useCurrentFrame();
+  const paises = [
+    {w: 'México', t: 'México'},
+    {w: 'Colombia', t: 'Colombia'},
+    {w: 'Argentina', t: 'Argentina'},
+  ];
+  const aP = cue('region', 'Perú');
+  const aR = cue('region', 'reescribe');
+  return (
+    <SceneOut>
+      <AbsoluteFill style={{padding: '155px 130px 195px', display: 'grid', gridTemplateRows: 'auto 1fr', gap: 44}}>
+        <div>
+          <Label>Por qué Perú primero</Label>
+          <div style={{...H, fontSize: 84, marginTop: 18}}>Entramos por la norma más difícil</div>
+          <div style={{fontFamily: FONT.display, fontSize: 38, color: C.ink3, marginTop: 20, opacity: ramp(f, aP - 4, 14)}}>
+            Perú solo da entre <b style={{color: C.ink2}}>US$ 10,500 y 67,000</b> al año, con supuestos nuestros que están escritos.
+          </div>
+        </div>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 36, alignContent: 'center'}}>
+          {paises.map((pa, idx) => {
+            const at = cue('region', 'México') - 10 + idx * 7;
+            const o = ramp(f, at, 14);
+            return (
+              <div key={pa.w} style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 30px 34px', opacity: o, transform: `translateY(${(1 - o) * 16}px)`}}>
+                <div style={{color: C.accent}}><Globe size={44} weight="light" /></div>
+                <div style={{fontFamily: FONT.display, fontSize: 52, fontWeight: 600, color: C.ink, marginTop: 16}}>{pa.t}</div>
+                <div style={{fontFamily: FONT.display, fontSize: 27, color: C.ink3, marginTop: 8}}>mismo adelanto, su propio programa</div>
+                <div style={{fontFamily: MONO, fontSize: 22, color: C.ink3, marginTop: 20, borderTop: `1px solid ${C.rule}`, paddingTop: 16, opacity: ramp(f, aR - 4, 14)}}>
+                  contrato {idx + 2} · misma red
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </AbsoluteFill>
+      <Sfx src="whoosh.wav" at={1} vol={0.08} />
+      <Sfx src="tick.wav" at={cue('region', 'México') - 10} vol={0.1} />
     </SceneOut>
   );
 };

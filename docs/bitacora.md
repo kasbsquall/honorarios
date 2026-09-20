@@ -450,3 +450,35 @@ Probado en producción el peor caso de los tres a la vez: mes bajo umbral, sin c
 rentas y con el tipo de cambio absurdo. Sale el aviso ámbar, el aviso del tipo de cambio y la
 procedencia de la cifra. Antes salía un visto verde.
 
+## 20 de septiembre de 2026 · Re-speech: las dos piezas, rehechas
+
+Cuatro versiones de guion y tres rondas de jurado antes de grabar un solo segundo, que es
+justo el orden correcto: las palabras son gratis y el render cuesta media hora.
+
+**El pitch pasa de trece escenas a doce y de 2:17 a 2:36.** Los cambios que movieron la aguja:
+el precio vuelve a estar en el video (en la versión intermedia lo comprimí tanto que
+desapareció, y era lo primero que buscaba el jurado inversor, con su aritmética: medio por
+ciento son ciento veinte dólares al año para quien factura dos mil al mes); la mención a la red
+de pruebas sale de la frase de apertura, donde mataba el mejor momento de la pieza; lo que
+falta deja de ser lo último que se oye, porque el video terminaba disculpándose; Stellar se
+explica la primera vez que se nombra; y desaparece el test en rojo, que para quien no programa
+se lee como un fallo.
+
+Tres correcciones de exactitud que un juez verificó contra el código: la resolución es de
+diciembre de 2025 y rige 2026, el cliente paga con una extensión de escritorio y no "desde
+donde esté", y la portabilidad regional no son cien líneas, porque el 8% y el cierre de mes en
+hora de Lima están escritos en el contrato. Los tests dejaron de nombrarse con una cifra
+redonda que no cuadraba con ningún corte real.
+
+**El demo se regrabó entero.** El anterior mostraba una app que ya no existe, con el contrato
+anterior al redespliegue, y no decía nada de lo que la narración afirmaba. Ahora incluye el
+caso de director, con su umbral de S/ 3,208 y la cita en pantalla.
+
+**Sobre la legibilidad, que era el defecto más caro del paquete.** Cuatro intentos fallidos
+antes de dar con la solución. Grabar a 1280 o 1440 de ancho rompe la tercera columna del panel.
+El zoom de página a 1.3 rompe el grid entero. Grabar a un tamaño y pedir el vídeo a otro hace
+que Playwright componga la página en una esquina. Y adivinar el encuadre desde el montaje no
+funciona porque depende de dónde quedó el scroll en ese instante. Lo que funciona: la grabación
+anota el rectángulo de la zona viva de cada etapa con `boundingBox()`, y el montaje encuadra
+ese rectángulo exacto. El texto se lee y no hay que acertar de memoria.
+

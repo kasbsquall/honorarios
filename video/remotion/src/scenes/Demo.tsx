@@ -88,7 +88,7 @@ export const Chain: React.FC = () => {
   const f = useCurrentFrame();
   const a500 = cue('chain', 'quinientos');
   const a460 = cue('chain', 'cuatrocientos');
-  const aV = cue('chain', 'verificarlo');
+  const aV = cue('chain', 'impuesto');
   const push = ramp(f, a500 - 16, 22, CAMERA);
   const s = 1.0 + 0.35 * push;
   const cx = 960 + (780 - 960) * push;
@@ -130,8 +130,8 @@ export const Panel: React.FC = () => {
   const th = at(54.2, from, rate);
   const how = at(56.7, from, rate);
   const rhe = at(61.1, from, rate);
-  const a616 = cue('panel', 'formulario');
-  const aR = cue('panel', 'recibo');
+  const a616 = cue('panel', 'umbral');
+  const aR = cue('panel', 'director');
   return (
     <SceneOut>
       <Screen src="vid/panel.mp4" tilt={[1, -1.5]} keys={[

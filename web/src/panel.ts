@@ -174,6 +174,8 @@ function renderPanel() {
 
   // Misma cuenta que hace el bloque de abajo, para que las dos partes no se contradigan.
   const fxNow = readFx();
+  // Un TC fuera de rango hunde el total en soles: los avisos verdes no pueden ignorarlo.
+  const fxRaro = fxNow !== null && (fxNow < FX_MIN || fxNow > FX_MAX);
   const reservePen = reserve === null || !fxNow ? null : Number(fromUnits(reserve, 2).replace(/,/g, "")) * fxNow;
   const est = estimate({
     appGrossPen: monthly !== null && fxNow ? Number(fromUnits(monthly, 2).replace(/,/g, "")) * fxNow : null,
@@ -184,6 +186,7 @@ function renderPanel() {
   const gap = est.duePen !== null && reservePen !== null ? est.duePen - reservePen : null;
   const reserveState =
     loading || loadError || gap === null ? ""
+    : est.duePen === 0 && fxRaro ? `<span class="tag warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Revisa el tipo de cambio antes de fiarte de esto</span>`
     : est.duePen === 0 && est.provisional ? `<span class="tag"><i class="ph-light ph-dots-three-circle" aria-hidden="true"></i>Falta confirmar tus otras rentas del mes para saber si hay algo que cubrir</span>`
     : est.duePen === 0 ? `<span class="tag ok"><i class="ph-light ph-check" aria-hidden="true"></i>Este mes no hay pago a cuenta que cubrir</span>`
     : gap > 0.5 ? `<span class="tag warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Faltan ${pen2(gap)} para cubrir el pago de ${pen2(est.duePen!)}${
@@ -322,12 +325,14 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const due = est.duePen;
   // La barra llega al 100% justo en el umbral, y la marca deja ver donde esta ese corte.
   const umbral = est.thresholdPen;
+  const fxRaroT = fx !== null && (fx < FX_MIN || fx > FX_MAX);
   const ratio = pen === null ? 0 : Math.min(pen / umbral, 1);
   const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   const month = new Date(Date.now() - PERU_OFFSET_MS).toLocaleDateString("es-PE", { month: "long", year: "numeric", timeZone: "UTC" });
   const state =
     grossUnavailable ? `<span class="badge warn"><i class="ph-light ph-cloud-slash" aria-hidden="true"></i>No pudimos leer lo cobrado este mes</span>`
     : pen === null ? `<span class="badge"><i class="ph-light ph-question" aria-hidden="true"></i>Falta tipo de cambio</span>`
+    : !over && fxRaroT ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Revisa el tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Supera el umbral</span>`
     : est.provisional ? `<span class="badge"><i class="ph-light ph-dots-three-circle" aria-hidden="true"></i>Falta confirmar tus otras rentas</span>`
     : `<span class="badge ok"><i class="ph-light ph-check" aria-hidden="true"></i>Bajo el umbral</span>`;
@@ -377,7 +382,7 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
     </div>
     <label class="field"><span class="lbl">Retenciones que ya te hicieron este mes (S/)</span><input class="num other-in" data-k="${HELD_KEY}" inputmode="decimal" placeholder="0.00" value="${retenido || ""}"></label>
     <label class="check"><input type="checkbox" id="done4" ${confirmado ? "checked" : ""}><span>Ya revisé: esto es todo lo que gané este mes<small>Los importes de arriba son de ${month}. Mientras no lo confirmes, la app no afirma que no tienes pago a cuenta.</small></span></label>
-    <label class="check"><input type="checkbox" id="dir4" ${director ? "checked" : ""}><span>Mis rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea<small>Ese grupo tiene un umbral mensual distinto. Márcalo y la app deja de estimar en vez de darte un número que no le corresponde.</small></span></label>
+    <label class="check"><input type="checkbox" id="dir4" ${director ? "checked" : ""}><span>Mis rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea<small>Ese grupo tiene su propio umbral, S/ ${DIRECTOR_THRESHOLD_PEN.toLocaleString("es-PE")} al mes en vez de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")}, por el literal b) del artículo 3 de la resolución. Márcalo y la app te compara contra ese.</small></span></label>
     <details class="howto">
       <summary><i class="ph-light ph-list-numbers" aria-hidden="true"></i> Cómo se paga a SUNAT</summary>
       <ol>

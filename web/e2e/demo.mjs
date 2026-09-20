@@ -13,6 +13,13 @@ const CLIENT = Keypair.fromSecret(env.VITE_DEV_CLIENT_SECRET.trim()).publicKey()
 
 const t0 = Date.now();
 const marks = [];
+const box = async (sel) => {
+  try {
+    const b = await page.locator(sel).first().boundingBox({ timeout: 2000 });
+    return b ? { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) } : null;
+  } catch { return null; }
+};
+const markBox = async (name, sel, extra = {}) => mark(name, { ...extra, box: await box(sel) });
 const mark = (name, extra = {}) => {
   marks.push({ name, t: (Date.now() - t0) / 1000, ...extra });
   console.log(name, ((Date.now() - t0) / 1000).toFixed(1), JSON.stringify(extra));
@@ -25,7 +32,16 @@ const context = await browser.newContext({
 });
 // El tipo de cambio lo pone el freelancer y gobierna todo el bloque tributario:
 // sin el, el panel muestra guiones y la narracion hablaria de numeros que no estan.
+// Solo para grabar: el bloque de crear link es sticky y, al recorrer el panel, viaja
+// pegado sobre un hueco vacio de su columna. En uso normal esta bien; en video se lee
+// como un fallo de composicion.
 await context.addInitScript(() => {
+  const css = "#newlink{position:static !important}";
+  document.addEventListener("DOMContentLoaded", () => {
+    const st = document.createElement("style");
+    st.textContent = css;
+    document.head.appendChild(st);
+  });
   try {
     localStorage.setItem("honorarios.fx", "3.75");
     ["honorarios.otras4", "honorarios.quinta", "honorarios.retenido"].forEach((k) => localStorage.removeItem(k));
@@ -54,10 +70,10 @@ await pause(7500);
 // --- 2. Panel de ejemplo: se puede mirar el producto sin instalar nada
 await page.getByRole("button", { name: "Ver un panel de ejemplo" }).click();
 await page.locator(".kpi:not(.sk)").waitFor({ timeout: 120_000 });
-mark("ejemplo");
+await markBox("ejemplo", ".hero");
 await pause(4500);
 await glide("#threshold");
-mark("ejemplo_umbral");
+await markBox("ejemplo_umbral", "#threshold");
 await pause(5000);
 await page.goto(BASE);
 await page.getByRole("button", { name: "Crear wallet con passkey" }).waitFor();
@@ -74,7 +90,7 @@ await pause(5000);
 
 // --- 4. Link de cobro
 await glide("#newlink");
-mark("link_form");
+await markBox("link_form", "#newlink");
 await page.locator('#newlink input[name="amount"]').pressSequentially("500", { delay: 110 });
 await pause(600);
 await page.locator('#newlink input[name="ref"]').pressSequentially("E001-7", { delay: 90 });
@@ -87,7 +103,7 @@ mark("link_ready", { link });
 await pause(4500);
 
 // --- 5. El cliente paga
-await page.goto(`${link}&dev=client`);
+await page.goto(`${link.replace(/^https?:\/\/[^/]+/, BASE)}&dev=client`);
 mark("pay_page");
 await pause(5500);
 for (const [label, name] of [["Connect Freighter", "connect"], ["Prepare USDC", "prepare"], [/^Pay /, "sign"]]) {
@@ -104,25 +120,33 @@ await pause(5500);
 // --- 6. El panel del freelancer
 await page.goto(BASE);
 await page.locator(".kpi:not(.sk)").waitFor({ timeout: 90_000 });
-mark("panel", { reserve: (await page.locator(".kpi").innerText()).replace(/\s+/g, " ") });
+await markBox("panel", ".hero", { reserve: (await page.locator(".kpi").innerText()).replace(/\s+/g, " ") });
 await pause(5500);
 await glide("#threshold");
-mark("umbral");
+await markBox("umbral", "#threshold");
 await pause(6000);
 
 // Otras rentas del mes: el umbral no se mide solo con lo que pasa por la app.
-await page.locator('.other-in[data-k="honorarios.quinta"]').fill("3000");
-await page.locator('.other-in[data-k="honorarios.quinta"]').dispatchEvent("change");
+await page.locator('.other-in[data-k^="honorarios.quinta"]').fill("3000");
+await page.locator('.other-in[data-k^="honorarios.quinta"]').dispatchEvent("change");
 await pause(1200);
-mark("quinta");
+await markBox("quinta", "#threshold");
 await pause(6500);
-await page.locator('.other-in[data-k="honorarios.quinta"]').fill("");
-await page.locator('.other-in[data-k="honorarios.quinta"]').dispatchEvent("change");
+await page.locator('.other-in[data-k^="honorarios.quinta"]').fill("");
+await page.locator('.other-in[data-k^="honorarios.quinta"]').dispatchEvent("change");
 await pause(2500);
+
+// Rentas del inciso b): el umbral baja a 3 208 y la app lo aplica, con su cita.
+await page.locator("#dir4").click();
+await pause(1500);
+await markBox("director", "#threshold");
+await pause(6000);
+await page.locator("#dir4").click();
+await pause(2000);
 
 // --- 7. Como se paga a SUNAT
 await page.locator(".howto summary").click();
-mark("howto");
+await markBox("howto", ".howto");
 await pause(2000);
 await glide(".howto ol");
 await pause(6500);
@@ -132,7 +156,7 @@ await pause(1200);
 // --- 8. Borrador del recibo por honorarios
 await glide(".rhe-open");
 await page.locator(".rhe-open").first().click();
-mark("rhe");
+await markBox("rhe", "dialog.rhe");
 await pause(2500);
 await page.locator('dialog.rhe input[name="client"]').pressSequentially("Studio Nord GmbH", { delay: 70 });
 await pause(700);
@@ -144,12 +168,12 @@ await pause(1500);
 // --- 9. Retiro de la reserva con passkey
 await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
 await pause(2000);
-mark("withdraw_start");
+await markBox("withdraw_start", ".hero");
 await page.locator('#withdraw input[name="to"]').pressSequentially(CLIENT, { delay: 14 });
 await pause(1200);
 await page.getByRole("button", { name: "Retirar reserva" }).click();
 await page.locator(".wd-out a, .wd-out .error").first().waitFor({ timeout: 150_000 });
-mark("withdrawn", {
+await markBox("withdrawn", ".hero", {
   out: (await page.locator(".wd-out").innerText()).trim(),
   href: await page.locator(".wd-out a").getAttribute("href").catch(() => ""),
 });

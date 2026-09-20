@@ -20,24 +20,25 @@ KEY = os.environ["CARTESIA_API_KEY"]
 
 # marca en la grabacion -> lo que se dice al llegar ahi
 LINES = [
-    ("intro", "Honorarios. Un freelancer peruano que cobra al exterior en USDC, sobre Stellar."),
+    ("intro", "Honorarios. Un freelancer peruano que le cobra a clientes del exterior."),
     ("ejemplo", "Cualquiera puede abrir un panel de ejemplo, sin instalar nada."),
     ("ejemplo_umbral", "Ahí ya se ve lo cobrado en el mes y el estimado del pago a cuenta."),
-    ("create_click", "Este es el flujo real. La wallet se crea con una passkey: huella o Face ID, sin frase semilla."),
-    ("wallet_ready", "Lista. Smart account de OpenZeppelin, con las comisiones patrocinadas por el relayer."),
+    ("create_click", "Este es el flujo real. La cuenta se crea con la huella, sin frase que apuntar."),
+    ("wallet_ready", "Lista. Las comisiones de red las patrocina el relayer de la fundación."),
     ("link_form", "El freelancer genera un link de cobro con el monto, el número de recibo y el concepto."),
     ("pay_page", "Esto es lo que abre su cliente desde el extranjero."),
-    ("prepare", "No tiene USDC, así que Stellar se los compra con XLM por un path payment."),
+    ("prepare", "No tiene dólares digitales, así que Stellar se los compra con XLM en el camino."),
     ("sign", "Y firma el pago: una sola llamada al contrato."),
     ("paid", "Cuatrocientos sesenta para el freelancer y cuarenta a la reserva, en la misma transacción."),
+    ("explorer", "Y esto es lo que quedó escrito en público: entraron quinientos, salieron cuatrocientos sesenta a su cuenta y cuarenta se quedaron apartados en el contrato. Cualquiera puede abrir este enlace y comprobarlo."),
     ("panel", "En su panel aparece la reserva, leída del contrato."),
-    ("umbral", "El bloque del pago a cuenta compara lo cobrado en el mes contra el umbral de cuatro mil diez soles."),
+    ("umbral", "Compara lo del mes contra el umbral de cuatro mil diez soles, con la resolución de SUNAT enlazada."),
     ("quinta", "Si además tiene sueldo en planilla, la quinta categoría cuenta para el umbral, pero no entra en la base del ocho por ciento."),
-    ("howto", "Y explica cómo se paga: en soles, con el Formulario Virtual seiscientos dieciséis."),
+    ("director", "Si es director o síndico, su umbral es otro, tres mil doscientos ocho, y la app lo aplica."),
+    ("howto", "Explica cómo se paga: en soles, con el Formulario Virtual seiscientos dieciséis."),
     ("rhe", "También arma el borrador del recibo por honorarios, en dólares y con su equivalente en soles."),
-    ("withdraw_start", "Cuando toca pagar a SUNAT, la reserva se retira firmando otra vez con la passkey."),
-    ("withdrawn", "Cuarenta USDC retirados. Todo lo que se vio está en la cadena y cualquiera puede verificarlo."),
-    ("explorer", "Esta es la transacción del cobro en Stellar Expert."),
+    ("withdraw_start", "Cuando toca pagar a SUNAT, la reserva se retira firmando otra vez con la huella."),
+    ("withdrawn", "Cuarenta USDC retirados. Todo lo que se vio está en la cadena."),
 ]
 
 
@@ -68,10 +69,18 @@ def dur(p: Path) -> float:
 
 def main() -> None:
     OUT.mkdir(exist_ok=True)
-    marks = {m["name"]: m["t"] for m in json.loads((REC / "marks.json").read_text())}
+    raw = {m["name"]: m["t"] for m in json.loads((REC / "marks.json").read_text())}
+    # El corte al explorador va justo despues del cobro, que es cuando el espectador se
+    # pregunta si eso paso de verdad. Se inserta un hueco en la pelicula y todo lo que
+    # viene despues se corre ese mismo hueco.
+    cut = raw["paid"] + 6.0
+    gap = 11.0
+    marks = {k: (t if t < cut else t + gap) for k, t in raw.items()}
+    marks["explorer"] = cut
     end = marks["end"]
-    marks["explorer"] = end + 1.5
     total = end + 8.0
+    (Path(__file__).parent / "remotion" / "src" / "data" / "demo_film.json").write_text(
+        json.dumps({"cut": cut, "gap": gap, "marks": marks, "total": total}, indent=2), encoding="utf8")
 
     pieces, warn = [], []
     for i, (name, text) in enumerate(LINES):

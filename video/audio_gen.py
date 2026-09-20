@@ -29,25 +29,24 @@ import httpx
 
 # EDIT THIS: one entry per scene, in order. ids must match the keys in Video.tsx.
 SCENES = [
-    ("cold", "Quinientos dólares. Cuatrocientos sesenta para ti. Cuarenta apartados para tu pago a cuenta. En la misma transacción."),
+    ("cold", "Quinientos dólares entran. Cuatrocientos sesenta llegan a tu cuenta y cuarenta se quedan separados para el impuesto que te va a tocar. Una transacción, seis segundos. Todavía con dinero de prueba, y el reparto es el mismo que verás."),
     ("brand", "Honorarios. Cobra afuera, declara tranquilo."),
-    ("problem", "Si eres freelancer en Perú y tu cliente está en el extranjero, nadie te retiene impuestos. Pero si en el mes cobras más de cuatro mil diez soles, te toca un pago a cuenta del ocho por ciento. Y para entonces, ese dinero ya se gastó."),
-    ("solution", "Honorarios pone un contrato de Stellar entre tu cliente y tú. Cada cobro se reparte solo: noventa y dos por ciento a tu wallet, ocho por ciento a una reserva a tu nombre."),
-    ("passkey", "Empiezas con tu huella. Se crea una smart wallet sin frase semilla, y las comisiones las cubre un relayer."),
-    ("pay", "Creas un link de cobro y se lo mandas a tu cliente. Él paga con Freighter. Si no tiene USDC, Stellar lo compra con XLM en el camino."),
-    ("chain", "El contrato recibe quinientos y entrega cuatrocientos sesenta al freelancer, en una sola llamada. Cualquiera puede verificarlo."),
-    ("code", "La reserva solo se mueve con tu firma. Y veintitrés pruebas del contrato lo respaldan."),
-    ("panel", "Tu panel lee los cobros desde la red y estima tu pago a cuenta: ocho por ciento del mes si pasas el umbral, cero si no. Te explica cómo pagarlo en soles, con el Formulario seiscientos dieciséis, y te arma el borrador del recibo en dólares."),
-    ("withdraw", "Cuando toca pagar, retiras la reserva con tu huella."),
-    ("stack", "Todo esto se construyó esta semana, en testnet: Soroban, USDC de Circle, path payments y smart accounts con passkeys."),
-    ("negocio", "Para sostenerlo, el contrato puede cobrar una comisión por cobro, con un tope de uno por ciento escrito en el código. Hoy está desplegado en cero."),
+    ("problem", "Si le facturas a un cliente de fuera del país, nadie te descuenta impuestos. Cobras completo y la cuenta llega después. Pasando los cuatro mil diez soles en el mes, SUNAT te pide adelantar el ocho por ciento, y para entonces ya te lo gastaste."),
+    ("pay", "Tu cliente abre un link y paga en minutos, sin bancos de por medio, porque el dinero viaja por Stellar, una red de pagos abierta."),
+    ("chain", "Y queda el comprobante público: quinientos entraron, cuatrocientos sesenta a su cuenta, cuarenta a la parte del impuesto."),
+    ("falta", "Eso ya funciona. Lo que falta, dicho de frente: seguimos en la red de pruebas, nadie ha declarado todavía con esto, y convertir a soles en tu banco es el tramo que no construimos. El siguiente hito es el primer freelancer que declare de verdad."),
+    ("regla", "Quien reparte es un programa que vive en esa red, y nadie puede tocar tu parte del impuesto. Tampoco nosotros."),
+    ("panel", "Tu panel lee lo que llevas cobrado y estima lo que vas a deber. El umbral no lo inventamos: son los cuatro mil diez soles del artículo tres de la resolución que SUNAT publicó en diciembre para este ejercicio. Si eres director el tuyo es más bajo, y la app lo aplica."),
+    ("honesto", "Estima, no declara. El mes se mide sobre todo lo que ganaste, así que si cobraste por fuera tienes que decírselo. Hasta que lo confirmes, no te dice que estás tranquilo."),
+    ("precio", "Cobramos medio por ciento de lo que cobras, y solo cuando cobras. Quien factura dos mil dólares al mes paga ciento veinte al año. El tope de uno por ciento está escrito en el mismo programa, así que para subirlo tendríamos que desplegar otro y convencerte de mudarte. Hoy corre en cero."),
+    ("region", "Perú solo da entre diez y sesenta y siete mil dólares al año, con supuestos nuestros que están escritos. Entramos por aquí porque es la norma más difícil. México, Colombia y Argentina tienen el mismo adelanto y muchos más freelancers en dólares. Por cada país se reescribe el programa y su norma; Stellar no cambia."),
     ("close", "Honorarios. Cobra afuera, declara tranquilo."),
 ]
 
 LEAD = 1.6          # seconds of music before the voice enters
 # Silencio extra tras la voz de una escena, para que la demo respire.
-EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "solution": "confident", "passkey": "enthusiastic", "pay": "excited", "chain": "confident", "code": "confident", "panel": "calm", "withdraw": "content", "stack": "proud", "negocio": "confident", "close": "enthusiastic"}
-POST = {"cold": 0.8, "passkey": 4.5, "pay": 8.0, "chain": 2.5, "code": 1.5, "panel": 4.0, "withdraw": 4.5, "stack": 1.0, "negocio": 1.5, "close": 5.0}
+EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "pay": "excited", "chain": "confident", "falta": "sympathetic", "regla": "confident", "panel": "calm", "honesto": "calm", "precio": "confident", "region": "proud", "close": "enthusiastic"}
+POST = {"cold": 0.8, "pay": 7.0, "chain": 3.0, "falta": 1.2, "regla": 1.5, "panel": 4.5, "honesto": 2.5, "precio": 1.2, "region": 1.2, "close": 5.0}
 GAP = 0.28          # silence inserted between scenes, so beats do not run together
 
 
