@@ -1,7 +1,7 @@
 import "./styles.css";
 import "./pay.css";
 import { StrKey } from "@stellar/stellar-sdk";
-import { EXPLORER, connectWallet, ensureUsdc, fromUnits, payInvoice, short, toUnits } from "./stellar";
+import { EXPLORER, connectWallet, ensureUsdc, fromUnits, payInvoice, serviceFee, short, toUnits } from "./stellar";
 import { MARK, RECEIPT_EN, esc, receiptCard } from "./ui";
 
 type Step = "connect" | "fund" | "sign" | "done";
@@ -25,12 +25,18 @@ let gross = 0n;
 try { gross = toUnits(amountRaw); } catch { gross = 0n; }
 const validTo = StrKey.isValidEd25519PublicKey(to) || StrKey.isValidContract(to);
 let payer = "";
+// Lo que el contrato va a cobrar de verdad, leido de la cadena. Si la pantalla lo calculara
+// por su cuenta, el cliente firmaria un desglose que el contrato no tiene por que respetar.
+let feeBps: bigint | null = null;
 
 if (!validTo || gross <= 0n) {
   app.innerHTML = `<section class="empty rise"><p class="lbl">Invalid link</p><h1>This payment link is incomplete.</h1>
   <p>Ask the freelancer to send you a new link from their Honorarios panel.</p></section>`;
 } else {
   render("connect");
+  serviceFee()
+    .then((f) => { feeBps = f.bps; render("connect"); })
+    .catch(() => { feeBps = null; render("connect"); });
 }
 
 function stepState(step: Step, current: Step) {
@@ -71,11 +77,14 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
   </section>
   <section class="side rise" style="--i:1">
     <div class="${done ? "torn-wrap" : ""}">${receiptCard({
-      gross, title: concept, ref, badge, text: RECEIPT_EN,
+      gross, title: concept, ref, badge, text: RECEIPT_EN, feeBps: feeBps ?? 0n,
       footLeft: payer ? `from ${short(payer)}` : "",
       txHash: opts.txHash,
     })}</div>
-    <p class="note">You pay the full amount. The contract keeps 8% in a reserve that only the freelancer can withdraw for their Peruvian tax prepayment.</p>
+    <p class="note">You pay the full amount. The contract keeps 8% in a reserve that only the freelancer can withdraw for their Peruvian tax prepayment.${
+      feeBps === null ? " The split shown above is read from the contract itself."
+      : feeBps === 0n ? " This contract charges no service fee: the split above is read from the contract itself."
+      : ` This contract charges a ${(Number(feeBps) / 100).toString()}% service fee, read from the contract itself.`}</p>
     ${done
       ? `<a class="btn wide" href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right"></i>View on Stellar Expert</a>`
       : `<button class="btn wide" id="go" ${opts.busy ? "disabled" : ""}>${opts.busy ? `<span class="spin"></span>Waiting for wallet` : action}</button>`}

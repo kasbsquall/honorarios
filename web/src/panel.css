@@ -75,3 +75,14 @@ dialog.rhe[open] { animation: rise 220ms var(--ease) both }
 .howto .src b { color: var(--ink-2); font-weight: 500 }
 /* Aclaracion secundaria junto a un dato o un control deshabilitado. */
 .u { color: var(--ink-3); font-size: var(--t-s) }
+
+/* La cifra del pago a cuenta y su advertencia: en bloques separados, para que la
+   frase no se parta a mitad cuando el numero crece. */
+.th-cap { font-size: var(--t-s); color: var(--ink-3); margin-top: -6px }
+.th-scale { display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; margin-top: 6px }
+/* Filas cuyo texto no cabe en dos columnas: etiqueta arriba, contenido completo debajo. */
+.th-rows div.wide { display: block }
+.th-rows div.wide dd { text-align: left; color: var(--ink-2); margin-top: 2px }
+.check { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: var(--t-s); color: var(--ink-2); cursor: pointer }
+.check input { margin-top: 3px; accent-color: var(--accent) }
+.check small { display: block; color: var(--ink-3); margin-top: 3px; line-height: 1.5 }

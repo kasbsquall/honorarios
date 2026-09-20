@@ -6,3 +6,4 @@ target
 .stellar
 
 .playwright-mcp
+web/.env

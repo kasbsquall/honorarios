@@ -3,19 +3,18 @@ import "./panel.css";
 import { StrKey } from "@stellar/stellar-sdk";
 import { connectPasskey, createPasskeyWallet, restorePasskey, withdrawWithPasskey } from "./passkey";
 import {
-  EXPLORER, FREIGHTER_INSTALL, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, short, taxReserve, toUnits, withdrawWithWallet,
+  EXPLORER, FREIGHTER_INSTALL, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, serviceFee, short, taxReserve, toUnits, withdrawWithWallet,
 } from "./stellar";
 import { openRheDraft } from "./rhe";
+import { SUSPENSION_CAP_PEN, THRESHOLD_PEN, estimate } from "./tax";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
 
-// Umbral 2026 bajo el cual no hay pago a cuenta de cuarta categoria (R.S. 000390-2025/SUNAT).
-const THRESHOLD_PEN = 4010;
-// Pago a cuenta de cuarta categoria: 8% de la renta bruta percibida en el mes.
-const PAYMENT_RATE = 0.08;
 const FX_KEY = "honorarios.fx";
 const OTHER_KEY = "honorarios.otras4";
 const FIFTH_KEY = "honorarios.quinta";
 const HELD_KEY = "honorarios.retenido";
+const ROLE_KEY = "honorarios.dir4";
+const PUBLIC_BASE = (import.meta.env.VITE_PUBLIC_BASE as string | undefined)?.replace(/\/$/, "") || location.origin;
 
 const app = document.getElementById("app")!;
 document.getElementById("brand")!.insertAdjacentHTML("afterbegin", MARK);
@@ -112,6 +111,14 @@ function monthGross(list: Paid[]) {
   return list.filter((p) => limaMonth(p.at) === now).reduce((s, p) => s + p.gross, 0n);
 }
 
+function readFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function readNum(key: string): number {
   try {
     const v = Number(localStorage.getItem(key));
@@ -184,6 +191,7 @@ function renderPanel() {
           : list.length
           ? list.map((p, i) => `<div class="rise" style="--i:${Math.min(i, 7)}">${receiptCard({
               gross: p.gross, title: `De ${short(p.payer)}`, ref: p.ref, text: RECEIPT_ES,
+              actual: { net: p.net, tax: p.tax, fee: p.fee },
               badge: `<span class="badge ok"><i class="ph-light ph-check"></i>Cobrado</span>`,
               footLeft: p.at.toLocaleDateString("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
               txHash: p.txHash,
@@ -250,36 +258,43 @@ function renderThreshold(gross: bigint | null) {
   const retenido = readNum(HELD_KEY);
   const usdc = gross === null ? null : Number(fromUnits(gross, 2).replace(/,/g, ""));
   const aqui = usdc !== null && fx ? usdc * fx : null;
-  // Base del pago a cuenta: solo rentas de cuarta. La quinta la retiene el empleador
-  // con su propio procedimiento, pero sí cuenta para saber si se cruza el umbral.
-  const cuarta = aqui === null ? null : aqui + otras;
-  const pen = cuarta === null ? null : cuarta + quinta;
+  const director = readFlag(ROLE_KEY);
+  const est = estimate({
+    appGrossPen: aqui, otherFourthPen: otras, fifthPen: quinta, withheldPen: retenido, isDirectorIncome: director,
+  });
+  const cuarta = est.fourthBasePen;
+  const pen = est.monthTotalPen;
+  const over = est.overThreshold;
+  const due = est.duePen;
+  // La barra llega al 100% justo en el umbral, y la marca deja ver donde esta ese corte.
   const ratio = pen === null ? 0 : Math.min(pen / THRESHOLD_PEN, 1);
-  const over = pen !== null && pen > THRESHOLD_PEN;
   const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   const month = new Date().toLocaleDateString("es-PE", { month: "long", year: "numeric" });
-  // Lo ya retenido por un cliente peruano se descuenta del pago del mes.
-  const due = cuarta === null ? null : over ? Math.max(cuarta * PAYMENT_RATE - retenido, 0) : 0;
   const state =
-    pen === null ? `<span class="badge"><i class="ph-light ph-question"></i>Falta tipo de cambio</span>`
+    !est.supported ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Fuera de lo que calcula esta app</span>`
+    : pen === null ? `<span class="badge"><i class="ph-light ph-question"></i>Falta tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning"></i>Supera el umbral</span>`
     : `<span class="badge ok"><i class="ph-light ph-check"></i>Bajo el umbral</span>`;
 
   box.innerHTML = `
     <div class="rc-top"><p class="lbl"><i class="ph-light ph-calendar-blank"></i> Pago a cuenta · ${month}</p>${state}</div>
-    <p class="th-num num">${due === null ? "S/ —" : soles(due)}<small>estimado, no es tu declaración</small></p>
-    <div class="meter"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
+    <p class="th-num num">${due === null ? "S/ —" : soles(due)}</p>
+    <p class="th-cap">${due === null ? "esta app no puede estimarlo" : "estimado, no es tu declaración"}</p>
+    <div class="meter" title="${soles(THRESHOLD_PEN)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
+    <p class="th-scale"><span>S/ 0</span><span>umbral ${soles(THRESHOLD_PEN)}</span></p>
     <dl class="th-rows">
       <div><dt>Cobrado por esta app</dt><dd class="num">${aqui === null ? "—" : soles(aqui)}</dd></div>
       <div><dt>Otras rentas de cuarta del mes</dt><dd class="num">${soles(otras)}</dd></div>
       <div><dt><b>Base del pago a cuenta</b> (cuarta)</dt><dd class="num">${cuarta === null ? "—" : soles(cuarta)}</dd></div>
       <div><dt>Rentas de quinta, solo para el umbral</dt><dd class="num">${soles(quinta)}</dd></div>
       <div><dt>Total del mes frente al umbral</dt><dd class="num">${pen === null ? "—" : soles(pen)} <span class="u">de ${soles(THRESHOLD_PEN)}</span></dd></div>
-      <div><dt>Regla</dt><dd>si el total supera el umbral, 8% de la base de cuarta; si no, S/ 0</dd></div>
+      <div class="wide"><dt>Regla</dt><dd>si el total del mes supera el umbral, se paga 8% de la base de cuarta. Si no lo supera, no hay pago a cuenta este mes.</dd></div>
       <div><dt>Retenciones de cuarta ya practicadas</dt><dd class="num">− ${soles(retenido)}</dd></div>
     </dl>
     <p class="th-help">${
-      pen === null
+      !est.supported
+        ? "Marcaste que tus rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea. Ese grupo tiene un umbral mensual propio, más bajo que el general, y esta app no lo tiene verificado, así que no te muestra una cifra en vez de darte una tranquilidad que no puede sostener. Tu reserva sigue intacta y puedes retirarla. Confirma tu umbral con tu contador o en la resolución anual de SUNAT."
+      : pen === null
         ? "Ingresa el tipo de cambio para estimar tu pago a cuenta de este mes."
         : over
           ? (() => {
@@ -299,6 +314,7 @@ function renderThreshold(gross: bigint | null) {
       <label class="field"><span class="lbl">Rentas de quinta del mes (S/)</span><input class="num other-in" data-k="${FIFTH_KEY}" inputmode="decimal" placeholder="0.00" value="${quinta || ""}"></label>
     </div>
     <label class="field"><span class="lbl">Retenciones que ya te hicieron este mes (S/)</span><input class="num other-in" data-k="${HELD_KEY}" inputmode="decimal" placeholder="0.00" value="${retenido || ""}"></label>
+    <label class="check"><input type="checkbox" id="dir4" ${director ? "checked" : ""}><span>Mis rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea<small>Ese grupo tiene un umbral mensual distinto. Márcalo y la app deja de estimar en vez de darte un número que no le corresponde.</small></span></label>
     <details class="howto">
       <summary><i class="ph-light ph-list-numbers"></i> Cómo se paga a SUNAT</summary>
       <ol>
@@ -308,8 +324,8 @@ function renderThreshold(gross: bigint | null) {
         <li>Entra a SUNAT Operaciones en Línea con tu Clave SOL: Mis declaraciones y pagos, Trabajadores independientes (Formulario Virtual 616).</li>
         <li>Declara lo cobrado en el mes y paga con el NPS o en línea. El vencimiento depende del último dígito de tu RUC: <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">revisa el cronograma de obligaciones mensuales en sunat.gob.pe <i class="ph-light ph-arrow-up-right"></i></a></li>
       </ol>
-      <p>Si proyectas cobrar hasta S/ 48,125 en el año puedes pedir la suspensión de pagos a cuenta (Formulario 1609). Si un cliente peruano ya te retuvo el 8%, ese monto se descuenta del pago del mes.</p>
-      <p class="src"><i class="ph-light ph-seal-question"></i> De dónde salen las cifras: la tasa del 8% es el artículo 86 del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF). El umbral de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")} y el tope de S/ 48,125 los tomamos de la resolución anual de SUNAT citada como R.S. 000390-2025/SUNAT, <b>leída de una fuente secundaria y todavía sin contrastar contra el texto publicado en El Peruano</b>. Verifícalas antes de declarar. <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">sunat.gob.pe <i class="ph-light ph-arrow-up-right"></i></a></p>
+      <p>Si proyectas cobrar hasta S/ ${SUSPENSION_CAP_PEN.toLocaleString("es-PE")} en el año puedes pedir la suspensión de pagos a cuenta (Formulario 1609). La suspensión no es automática: rige desde que SUNAT la aprueba, no hacia atrás, y caduca el 31 de diciembre, así que hay que volver a pedirla cada año. Si un cliente peruano ya te retuvo el 8%, ese monto se descuenta del pago del mes.</p>
+      <p class="src"><i class="ph-light ph-seal-question"></i> De dónde salen las cifras: la tasa del 8% es el artículo 86 del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF). El umbral de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")} y el tope anual de S/ ${SUSPENSION_CAP_PEN.toLocaleString("es-PE")} los tomamos de la resolución anual de SUNAT citada como R.S. 000390-2025/SUNAT, <b>leída de una fuente secundaria y todavía sin contrastar contra el texto publicado en El Peruano</b>. Los dos montos salen de porcentajes distintos de la UIT, así que el tope anual no es doce veces el umbral mensual. Verifícalas antes de declarar. <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">sunat.gob.pe <i class="ph-light ph-arrow-up-right"></i></a></p>
     </details>
     <label class="field fx"><span class="lbl">Tipo de cambio (S/ por USDC)</span>
       <input class="num" id="fx" inputmode="decimal" placeholder="TC compra SBS del día de cobro" value="${fx ?? ""}">
@@ -326,6 +342,10 @@ function renderThreshold(gross: bigint | null) {
   box.querySelector<HTMLInputElement>("#fx")!.addEventListener("change", (e) => save(FX_KEY, (e.target as HTMLInputElement).value));
   box.querySelectorAll<HTMLInputElement>(".other-in").forEach((i) =>
     i.addEventListener("change", () => save(i.dataset.k!, i.value)));
+  box.querySelector<HTMLInputElement>("#dir4")!.addEventListener("change", (e) => {
+    try { localStorage.setItem(ROLE_KEY, (e.target as HTMLInputElement).checked ? "1" : ""); } catch { /* sin storage */ }
+    renderThreshold(gross);
+  });
 }
 
 // Ancla SEP-24 que liquida en soles. Se consulta en vivo: si deja de ofrecer PEN, se nota.
@@ -359,7 +379,9 @@ function bindLinkForm() {
     });
     const name = String(d.get("name") ?? "").trim();
     if (name) params.set("name", name);
-    const url = `${location.origin}/pay.html?${params}`;
+    // El link se lo mandas a un cliente en el extranjero: tiene que apuntar al dominio
+    // publico, no a la maquina desde la que lo generaste.
+    const url = `${PUBLIC_BASE}/pay.html?${params}`;
     const out = form.querySelector("#linkout")!;
     out.classList.remove("hidden");
     out.innerHTML = `<code class="mono">${esc(url)}</code>

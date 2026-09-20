@@ -19,7 +19,7 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 1. El freelancer crea su wallet con una passkey (huella o Face ID). No hay frase semilla y las comisiones las patrocina el relayer de SDF.
 2. Genera un link de cobro con monto, N° de recibo y concepto, y se lo envía a su cliente.
 3. El cliente paga con Freighter. Si no tiene USDC, la app lo compra con XLM mediante un path payment.
-4. El contrato reparte 92/8 y emite un evento `Paid` con la referencia del recibo.
+4. El contrato reparte 92/8 y emite un evento `Paid` con la referencia del recibo. La página que firma el cliente lee la comisión del contrato con `fee()` antes de mostrar el desglose, así que en pantalla aparece lo que el contrato va a hacer y no lo que el navegador supone.
 5. El panel lee del contrato lo cobrado en el mes y estima el pago a cuenta (8% de las rentas de cuarta, si el total del mes supera S/ 4,010; cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
 
 ## Cómo usa Stellar
@@ -56,6 +56,7 @@ Diagramas de componentes, flujo de cobro y retiro: [docs/arquitectura.md](docs/a
 ```
 contracts/split/   contrato Soroban (Rust) y sus 23 tests
 web/               frontend (Vite + TypeScript): pay.html y panel
+web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con 11 tests
 web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
 docs/              arquitectura y bitácora de decisiones
@@ -91,7 +92,10 @@ Frontend:
 
 ```sh
 cd web && npm install && npm run dev
+npm test     # 11 tests de la estimación del pago a cuenta
 ```
+
+El link de cobro apunta al dominio de `VITE_PUBLIC_BASE` (ver `.env`), no a la máquina desde la que se genera: lo recibe un cliente en el extranjero.
 
 Pruebas E2E en testnet. Usan un firmante de desarrollo que solo existe con `npm run dev` y lee llaves de testnet desde `web/.env.development.local` (fuera del repo):
 
@@ -107,7 +111,7 @@ Todo el repositorio. El historial de commits empieza el 19 de septiembre de 2026
 
 ## Cómo se sostiene
 
-El contrato puede cobrar una comisión por cobro liquidado, que sale del bruto junto al neto y la reserva. Está implementada y probada: `fee_bps` se fija al desplegar, tiene un tope duro de 1% que el constructor rechaza superar, el evento `Paid` publica cuánto se cobró, y la función `fee()` deja el valor a la vista de cualquiera antes de usar el contrato. La reserva del 8% nunca se toca con la comisión.
+El contrato puede cobrar una comisión por cobro liquidado, que sale del bruto junto al neto y la reserva. La página de pago la lee de la cadena con `fee()` y la muestra desglosada antes de que el cliente firme. Está implementada y probada: `fee_bps` se fija al desplegar, tiene un tope duro de 1% que el constructor rechaza superar, el evento `Paid` publica cuánto se cobró, y la función `fee()` deja el valor a la vista de cualquiera antes de usar el contrato. La reserva del 8% nunca se toca con la comisión.
 
 **Este contrato está desplegado con la comisión en cero**, porque durante la hackathon no se cobra nada. No hay precio validado con usuarios y por eso no hay una cifra propuesta aquí: lo que existe es el mecanismo, auditable y con su límite escrito en el código. El contrato es MIT.
 
@@ -123,7 +127,8 @@ SUNAT recibe soles, no USDC. El panel consulta en vivo el `stellar.toml` de un a
 - La cifra del umbral y el tope de suspensión vienen de una fuente secundaria y no los hemos contrastado contra el texto publicado en El Peruano. La interfaz lo dice donde aparecen.
 - `month_gross` cuenta lo que entra por el contrato y cualquiera puede pagar a nombre de un tercero, así que un extraño podría inflar ese acumulado regalando dinero. Es caro de hacer y no toca la reserva, pero el número no es resistente a manipulación.
 - Las comisiones son gratis mientras el relayer público de SDF en testnet lo sea. No hay modelo de patrocinio en la red principal.
-- No hay pruebas automatizadas del frontend: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
+- La lógica tributaria está aislada en `web/src/tax.ts` con 11 tests (`npm test`). El resto del frontend no tiene pruebas automatizadas: los archivos de `web/e2e/` son guiones de grabación, sin aserciones.
+- Las rentas de cuarta por función de director, mandatario, regidor, síndico o albacea tienen un umbral mensual propio, más bajo, que no hemos verificado. El panel pregunta por ese caso y, si lo marcas, deja de estimar en vez de mostrar un "bajo el umbral" que no le corresponde.
 - No encontramos una norma de SUNAT específica para honorarios cobrados en cripto. El tipo de cambio para medir el umbral lo ingresa el freelancer y la app no lo fija.
 - La app no emite comprobantes: arma un borrador para copiar en SUNAT Operaciones en Línea.
 - El ancla de soles vive en la red principal. Desde testnet solo se consulta su información, no se hace el retiro.

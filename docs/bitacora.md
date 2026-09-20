@@ -208,3 +208,50 @@ cobro `1dc6e5f29558665ed4bd51719b42c057176052bc696a3694853c01ea20e23ebf`, retiro
 reemplazarlo por este corte antes de enviar el formulario, o el enlace y el repositorio dirán
 cosas distintas.
 
+## 20 de septiembre de 2026 · Arreglos de la tercera ronda de jurado agnóstico
+
+Cuatro jueces agnósticos (ingeniero de blockchain, inversor, diseñador de producto, contador
+tributarista peruano) puntuaron 83, 72, 84 y 82, los cuatro colocándolo segundo o tercero de
+diez. Lo que sigue son los hallazgos accionables y qué se hizo con cada uno.
+
+**La pantalla de pago no leía `fee()`.** El contrato calcula `net = gross - tax - fee` y el
+frontend replicaba la aritmética restando solo la reserva. Con la comisión en cero el número
+coincidía, pero el mecanismo de transparencia no estaba conectado: si el contrato cobrase algo,
+el cliente firmaría un desglose falso. Ahora `serviceFee()` lee la comisión de la cadena una vez
+por carga, `split()` la recibe como parámetro, y el recibo muestra su fila y su porcentaje
+cuando existe. Los cobros ya liquidados muestran las cifras del evento `Paid`, sin re-derivar.
+Fuente: `web/src/stellar.ts`, `web/src/ui.ts`, `web/src/pay.ts`.
+
+**La lógica tributaria no tenía pruebas.** Era el único sitio donde el producto puede
+equivocarse contra SUNAT y el único sin red. Extraída a `web/src/tax.ts` como función pura, con
+11 tests que fijan el operador estrictamente mayor del umbral, la exclusión de la quinta de la
+base, el descuento de retenciones sin negativos y la ausencia de cifra cuando falta el tipo de
+cambio.
+
+**Omisión material: el umbral de directores y regidores.** El contador señaló que las rentas del
+inciso b) del artículo 33 tienen históricamente un umbral mensual menor, que la app no conoce.
+Aplicar el general le habría dicho "bajo el umbral, S/ 0" a alguien ya obligado, y en silencio.
+No inventamos la cifra: el panel pregunta por ese caso y, al marcarlo, deja de estimar y lo
+explica. La regla del proyecto manda marcar lo que no se puede citar, no rellenarlo.
+
+**El link de cobro apuntaba a la máquina que lo generó.** Ahora usa `VITE_PUBLIC_BASE`. Es un
+arreglo de producto, no de grabación: ese link se lo mandas a un cliente en el extranjero.
+
+**Texto de interfaz.** La fila "Regla" se cortaba contra el borde en cinco fotogramas del video
+demo; ahora ocupa su propia línea completa. La advertencia "estimado, no es tu declaración" se
+partía a mitad de frase junto a la cifra grande; ahora va en su propio bloque. La barra del
+umbral no decía dónde caía el corte; ahora lleva su escala.
+
+**Suspensión y tope anual.** Se añadió que la suspensión rige desde que SUNAT la aprueba y no
+hacia atrás, que caduca el 31 de diciembre, y que el tope anual no es doce veces el umbral
+mensual porque salen de porcentajes distintos de la UIT.
+
+**Lo que NO se hizo, y por qué.** Cambiar el contrato (comisión mutable con evento, consentimiento
+del freelancer para evitar reservas huérfanas) obliga a redesplegar, y el contrato vigente es el
+que aparece en la captura del explorador de los dos videos. Queda para la ronda de re-speech,
+donde los videos se rehacen de todos modos.
+
+**Crítica de fondo que ningún arreglo de código resuelve:** el track se llama Real-World Assets &
+Compliant Rails y el rail de salida a soles no está cerrado. Dos jueces lo pusieron como el
+motivo principal de no darle el primer puesto.
+

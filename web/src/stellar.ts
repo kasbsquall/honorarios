@@ -44,10 +44,25 @@ export function fromUnits(units: bigint, digits = 2): string {
   return `${sign}${whole.toLocaleString("en-US")}${digits ? "." + frac : ""}`;
 }
 
-/** Mismo reparto que el contrato, con el mismo redondeo hacia arriba de la reserva. */
-export function split(gross: bigint) {
+/** Comision del servicio con la que se desplego el contrato, leida de la cadena.
+ *  Se consulta una sola vez por carga: es inmutable mientras viva el contrato. */
+let feeCache: Promise<{ bps: bigint; to: string }> | null = null;
+export function serviceFee(): Promise<{ bps: bigint; to: string }> {
+  feeCache ??= (async () => {
+    const client = (await honorarios()) as any;
+    const [bps, to] = (await client.fee()).result;
+    return { bps: BigInt(bps), to: String(to) };
+  })();
+  return feeCache;
+}
+
+/** Mismo reparto que el contrato: reserva redondeada hacia arriba, comision truncada.
+ *  El feeBps tiene que venir de `serviceFee()`, no de una constante local: si el contrato
+ *  cobrase algo y la pantalla no lo supiera, el cliente firmaria un desglose falso. */
+export function split(gross: bigint, feeBps: bigint = 0n) {
   const tax = (gross * TAX_BPS + 9_999n) / 10_000n;
-  return { gross, tax, net: gross - tax };
+  const fee = (gross * feeBps) / 10_000n;
+  return { gross, tax, fee, net: gross - tax - fee };
 }
 
 export function short(addr: string) {
@@ -181,6 +196,7 @@ export type Paid = {
   gross: bigint;
   net: bigint;
   tax: bigint;
+  fee: bigint;
   ref: string;
   payer: string;
   txHash: string;
@@ -219,6 +235,8 @@ export async function paidEvents(freelancer: string): Promise<Paid[]> {
         gross: BigInt(v.gross),
         net: BigInt(v.net),
         tax: BigInt(v.tax),
+        // El campo fee existe desde que el contrato puede cobrar comision.
+        fee: BigInt(v.fee ?? 0),
         ref: String(v.receipt_ref),
         payer: String(v.payer),
         txHash: e.txHash,

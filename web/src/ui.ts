@@ -6,19 +6,21 @@ export function esc(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-type ReceiptText = { kicker: string; net: string; tax: string; stub: string };
+type ReceiptText = { kicker: string; net: string; tax: string; fee: string; stub: string };
 
 export const RECEIPT_ES: ReceiptText = {
   kicker: "Cobro",
-  net: "Neto para ti · 92%",
+  net: "Neto para ti",
   tax: "Reserva preventiva · 8%",
+  fee: "Comisión del servicio",
   stub: "Reserva 8%",
 };
 
 export const RECEIPT_EN: ReceiptText = {
   kicker: "Invoice",
-  net: "To the freelancer · 92%",
+  net: "To the freelancer",
   tax: "Peru tax reserve · 8%",
+  fee: "Service fee",
   stub: "Tax reserve",
 };
 
@@ -28,10 +30,15 @@ export function receiptCard(opts: {
   ref: string;
   badge: string;
   text: ReceiptText;
+  feeBps?: bigint;
+  /** Reparto real de un cobro ya liquidado, tal como lo publico el contrato. */
+  actual?: { net: bigint; tax: bigint; fee: bigint };
   footLeft?: string;
   txHash?: string;
 }) {
-  const { net, tax } = split(opts.gross);
+  const { net, tax, fee } = opts.actual ?? split(opts.gross, opts.feeBps ?? 0n);
+  const pct = (part: bigint) =>
+    opts.gross === 0n ? "" : ` · ${(Number((part * 10000n) / opts.gross) / 100).toFixed(2).replace(/\.?0+$/, "")}%`;
   const t = opts.text;
   return `
   <article class="receipt">
@@ -41,10 +48,12 @@ export function receiptCard(opts: {
         ${opts.badge}
       </div>
       <p class="rc-amt">${fromUnits(opts.gross)}<small>USDC</small></p>
-      <div class="bar" role="img" aria-label="92% / 8%"><i class="n"></i><i class="s"></i></div>
+      <div class="bar" role="img" aria-label="${fromUnits(net)} / ${fromUnits(tax)}"><i class="n" style="flex:${Number(net)}"></i>${
+        fee > 0n ? `<i class="f" style="flex:${Number(fee)}"></i>` : ""}<i class="s" style="flex:${Number(tax)}"></i></div>
       <dl class="legend">
-        <dt><span class="sq" style="background:var(--ink)"></span><i class="ph-light ph-wallet"></i>${t.net}</dt><dd>${fromUnits(net)}</dd>
+        <dt><span class="sq" style="background:var(--ink)"></span><i class="ph-light ph-wallet"></i>${t.net}${pct(net)}</dt><dd>${fromUnits(net)}</dd>
         <dt><span class="sq" style="background:var(--accent)"></span><i class="ph-light ph-vault"></i>${t.tax}</dt><dd>${fromUnits(tax)}</dd>
+        ${fee > 0n ? `<dt><span class="sq" style="background:var(--ink-3)"></span><i class="ph-light ph-receipt"></i>${t.fee}${pct(fee)}</dt><dd>${fromUnits(fee)}</dd>` : ""}
       </dl>
       ${
         opts.footLeft || opts.txHash
