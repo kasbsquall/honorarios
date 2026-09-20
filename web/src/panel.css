@@ -82,7 +82,7 @@ dialog.rhe[open] { animation: rise 220ms var(--ease) both }
 .th-scale { display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; margin-top: 6px }
 /* Filas cuyo texto no cabe en dos columnas: etiqueta arriba, contenido completo debajo. */
 .th-rows div.wide { display: block }
-.th-rows div.wide dd { text-align: left; color: var(--ink-2); margin-top: 2px }
+.th-rows div.wide dd { text-align: left; color: var(--ink-2); margin-top: 2px; white-space: normal }
 .check { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: var(--t-s); color: var(--ink-2); cursor: pointer }
 .check input { margin-top: 3px; accent-color: var(--accent) }
 .check small { display: block; color: var(--ink-3); margin-top: 3px; line-height: 1.5 }
@@ -118,8 +118,11 @@ select.inline { background: none; border: 0; color: inherit; font: inherit; padd
   #newlink { position: sticky; top: 24px }
 }
 /* A partir de cierto ancho el bloque fiscal se reparte en dos: lectura a la izquierda,
-   lo que el usuario toca a la derecha. */
-@media (min-width: 1180px) {
+   lo que el usuario toca a la derecha. La medida es la del bloque, no la de la ventana:
+   con una media query, una pantalla ancha partia en dos una columna de 500px y dejaba
+   las etiquetas rotas palabra a palabra. */
+.block { container-type: inline-size }
+@container (min-width: 720px) {
   .th-body { display: grid; grid-template-columns: 1.05fr .95fr; gap: 32px; align-items: start }
   .th-body > div { display: grid; gap: 18px; align-content: start }
 }

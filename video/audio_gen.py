@@ -40,7 +40,6 @@ SCENES = [
     ("retiro", "Arma el borrador del recibo, y la reserva se retira firmando con la huella. Nadie más puede sacar ese dinero, tampoco nosotros."),
     ("precio", "El plan es cobrar medio por ciento de cada cobro, y solo cuando cobras: quien factura dos mil dólares al mes pagaría ciento veinte al año. Hoy el contrato está desplegado en cero, y la comisión se fija al desplegar. No hay forma de cambiarla después."),
     ("region", "En Perú hay dos millones y medio de independientes menores de cuarenta y uno, según el INEI, y solo el trece por ciento tiene RUC. El mismo adelanto existe en México, Colombia y Argentina. Por cada país se reescribe el contrato y su norma; Stellar no cambia."),
-    ("falta", "Lo que falta, dicho de frente: seguimos en pruebas y nadie ha declarado todavía con esto. Ese es el siguiente hito."),
     ("close", "Honorarios. Cobra afuera, declara tranquilo."),
 ]
 
@@ -50,8 +49,8 @@ REUSE = {"brand": "audio_v4/scenes/brand.wav", "close": "audio_v4/scenes/close.w
 
 LEAD = 1.6          # seconds of music before the voice enters
 # Silencio extra tras la voz de una escena, para que la demo respire.
-EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "wallet": "confident", "pay": "excited", "chain": "confident", "panel": "calm", "limites": "calm", "retiro": "content", "precio": "confident", "region": "proud", "falta": "sympathetic", "close": "enthusiastic"}
-POST = {"cold": 1.2, "brand": 0.6, "problem": 1.5, "wallet": 4.0, "pay": 3.5, "chain": 5.5, "panel": 6.0, "limites": 5.0, "retiro": 5.5, "precio": 1.5, "region": 1.5, "falta": 1.2, "close": 5.0}
+EMOTION = {"cold": "confident", "brand": "enthusiastic", "problem": "sympathetic", "wallet": "confident", "pay": "excited", "chain": "confident", "panel": "calm", "limites": "calm", "retiro": "content", "precio": "confident", "region": "proud", "close": "enthusiastic"}
+POST = {"cold": 1.2, "brand": 0.6, "problem": 1.5, "wallet": 4.0, "pay": 3.5, "chain": 5.5, "panel": 6.0, "limites": 5.0, "retiro": 5.5, "precio": 1.5, "region": 1.5, "close": 5.0}
 GAP = 0.28          # silence inserted between scenes, so beats do not run together
 
 

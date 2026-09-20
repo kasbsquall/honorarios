@@ -1,11 +1,11 @@
 [
   {
     "name": "intro",
-    "t": 0.711
+    "t": 0.632
   },
   {
     "name": "ejemplo",
-    "t": 10.133,
+    "t": 10.05,
     "box": {
       "x": 448,
       "y": 196,
@@ -15,26 +15,26 @@
   },
   {
     "name": "ejemplo_umbral",
-    "t": 16.06,
+    "t": 15.989,
     "box": {
       "x": 449,
-      "y": -281,
+      "y": -60,
       "w": 511,
-      "h": 1640
+      "h": 1200
     }
   },
   {
     "name": "create_click",
-    "t": 24.846
+    "t": 24.76
   },
   {
     "name": "wallet_ready",
-    "t": 35.835,
-    "who": " PASSKEY · CAOC…DSKJ"
+    "t": 35.697,
+    "who": " PASSKEY · CATN…J5FR"
   },
   {
     "name": "link_form",
-    "t": 42.269,
+    "t": 42.143,
     "box": {
       "x": 961,
       "y": 354,
@@ -44,33 +44,33 @@
   },
   {
     "name": "link_ready",
-    "t": 46.974,
-    "link": "https://honorarios-pe.vercel.app/pay.html?to=CAOCNOP3JWH6HGZEBYO6DZTR2JILT2HPDD4FQZMHLGP7ZET23Q7ADSKJ&amount=500&ref=E001-7&concept=Dise%C3%B1o+de+identidad+visual"
+    "t": 46.925,
+    "link": "https://honorarios-pe.vercel.app/pay.html?to=CATNE6YKD72P5OTSW5N6U3SR7AOAQ7R5GQYVX66B6VKV5IDIY6R7J5FR&amount=500&ref=E001-7&concept=Dise%C3%B1o+de+identidad+visual"
   },
   {
     "name": "pay_page",
-    "t": 51.534
+    "t": 51.481
   },
   {
     "name": "connect",
-    "t": 57.047
+    "t": 56.986
   },
   {
     "name": "prepare",
-    "t": 59.738
+    "t": 59.649
   },
   {
     "name": "sign",
-    "t": 69.787
+    "t": 65.124
   },
   {
     "name": "paid",
-    "t": 80.334,
-    "tx": "https://stellar.expert/explorer/testnet/tx/973f5decc652c2143d4e50a60a3c6cb8777f2ea74b27e8d848a3d865b3988d1f"
+    "t": 75.148,
+    "tx": "https://stellar.expert/explorer/testnet/tx/4668b6f344a715d3cdd3f943ff398873c657241a3fb8ffed1efe4c3efc03c8f9"
   },
   {
     "name": "panel",
-    "t": 89.816,
+    "t": 83.598,
     "reserve": "40.00USDC",
     "box": {
       "x": 448,
@@ -81,47 +81,47 @@
   },
   {
     "name": "umbral",
-    "t": 96.747,
+    "t": 90.528,
     "box": {
       "x": 449,
-      "y": -257,
+      "y": -52,
       "w": 511,
-      "h": 1594
+      "h": 1184
     }
   },
   {
     "name": "quinta",
-    "t": 103.977,
+    "t": 97.755,
     "box": {
       "x": 449,
-      "y": -257,
+      "y": -52,
       "w": 511,
-      "h": 1594
+      "h": 1184
     }
   },
   {
     "name": "director",
-    "t": 114.55,
+    "t": 108.314,
     "box": {
       "x": 449,
-      "y": -257,
+      "y": -52,
       "w": 511,
-      "h": 1594
+      "h": 1204
     }
   },
   {
     "name": "howto",
-    "t": 122.618,
+    "t": 116.377,
     "box": {
-      "x": 1610,
-      "y": 635,
-      "w": 138,
-      "h": 2034
+      "x": 473,
+      "y": 924,
+      "w": 463,
+      "h": 578
     }
   },
   {
     "name": "rhe",
-    "t": 135.227,
+    "t": 128.988,
     "box": {
       "x": 640,
       "y": 22,
@@ -131,7 +131,7 @@
   },
   {
     "name": "withdraw_start",
-    "t": 151.35,
+    "t": 145.064,
     "box": {
       "x": 448,
       "y": 64,
@@ -141,19 +141,19 @@
   },
   {
     "name": "withdrawn",
-    "t": 167.823,
+    "t": 160.914,
     "out": "Retiraste 40.00 USDC. Ver transacción",
-    "href": "https://stellar.expert/explorer/testnet/tx/39bc56607f8450bfaffbfe927e2cc6f8c413351f0e6dbbaece089e940c4994cb",
+    "href": "https://stellar.expert/explorer/testnet/tx/b47aa15ee86b4df29336159ee89d5fad2b441afae61cf9037eb38d73782d913e",
     "box": {
       "x": 448,
-      "y": 64,
+      "y": 70,
       "w": 1024,
       "h": 503
     }
   },
   {
     "name": "end",
-    "t": 175.476,
-    "video": "C:\\Users\\User\\Downloads\\proyectos2026\\stellar\\honorarios\\video\\rec_demo\\page@851959f31504492c931135770400b7fe.webm"
+    "t": 168.406,
+    "video": "C:\\Users\\User\\Downloads\\proyectos2026\\stellar\\honorarios\\video\\rec_demo\\page@8322ac03a644263a286a64c9e73e898b.webm"
   }
 ]

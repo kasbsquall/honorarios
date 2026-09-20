@@ -19,6 +19,13 @@ const BOXES: Record<string, Box> = Object.fromEntries(
 );
 
 const encuadre = (k: string, max = 1.45) => {
+  // "completo" es la pagina entera. Ampliar recorta el contexto y deja a la vista bloques
+  // sueltos que se leen como manchas: a 1080p la pagina completa se lee sin ampliar.
+  // La pagina no ocupa el cuadro: deja una franja muerta a la izquierda y otra abajo.
+  // "lleno" se centra en el contenido real y amplia lo justo para llenarlo. "plano" es
+  // para las pantallas cuyo texto llega al borde derecho, donde ampliar ya recorta la cita.
+  if (k === 'lleno') return {cx: 1080, cy: 470, s: 1.15};
+  if (k === 'plano') return {cx: 960, cy: 540, s: 1};
   const b = BOXES[k];
   if (!b || b.w < 80) return {cx: 960, cy: 540, s: 1.08};
   const top = Math.max(b.y, 0);
@@ -38,7 +45,7 @@ const encuadre = (k: string, max = 1.45) => {
 const Clip: React.FC<{src: string; foco: string; max?: number; children?: React.ReactNode}> = ({src, foco, max, children}) => {
   const f = useCurrentFrame();
   const {cx, cy, s} = encuadre(foco, max);
-  const drift = 1 + f * 0.00022; // ~0.7% en veinte segundos
+  const drift = s > 1.02 ? 1 + f * 0.00022 : 1; // ~0.7% en veinte segundos
   const k = s * drift;
   return (
     <AbsoluteFill style={{overflow: 'hidden', background: C.paper}}>
@@ -84,14 +91,14 @@ const Nota: React.FC<{at: number; children: React.ReactNode; icon?: React.ReactN
 
 export const Wallet: React.FC = () => (
   <SceneOut>
-    <Clip src="vid/wallet.mp4" foco="link_form" max={1.3} />
+    <Clip src="vid/wallet.mp4" foco="lleno" />
     <Sfx src="whoosh.wav" at={1} vol={0.08} />
   </SceneOut>
 );
 
 export const Pago: React.FC = () => (
   <SceneOut>
-    <Clip src="vid/pay.mp4" foco="pay_page" max={1.25} />
+    <Clip src="vid/pay.mp4" foco="lleno" />
     <Sfx src="whoosh.wav" at={1} vol={0.08} />
   </SceneOut>
 );
@@ -100,7 +107,7 @@ export const Panel: React.FC = () => (
   <SceneOut>
     {/* Se encuadra el ancho completo del contenido (la caja de "panel"), no la columna
         central: esa caja mide 511px y recortaba la cita de la resolucion por la derecha. */}
-    <Clip src="vid/panel.mp4" foco="panel" max={1.3}>
+    <Clip src="vid/panel.mp4" foco="lleno">
       <Nota at={cue('panel', 'tipo')} icon={<ArrowRight size={34} weight="light" />}>
         El tipo de cambio lo pone el usuario: el total en soles es aproximado, y la app lo advierte.
       </Nota>
@@ -111,7 +118,7 @@ export const Panel: React.FC = () => (
 
 export const Limites: React.FC = () => (
   <SceneOut>
-    <Clip src="vid/limites.mp4" foco="panel" max={1.22}>
+    <Clip src="vid/limites.mp4" foco="lleno">
       <Nota at={cue('limites', 'estima')} icon={<ArrowDown size={34} weight="light" />}>
         Estima, no declara.
       </Nota>
@@ -122,7 +129,7 @@ export const Limites: React.FC = () => (
 
 export const Retiro: React.FC = () => (
   <SceneOut>
-    <Clip src="vid/retiro.mp4" foco="withdraw_start" max={1.35}>
+    <Clip src="vid/retiro.mp4" foco="lleno">
       <Nota at={cue('retiro', 'Nadie')} icon={<Vault size={34} weight="light" />}>
         La firma del dueño es la única que abre la reserva.
       </Nota>

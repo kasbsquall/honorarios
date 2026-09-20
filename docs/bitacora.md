@@ -509,3 +509,28 @@ esa mide 511px y recortaba por la derecha la cita de la R.S. 000390-2025/SUNAT, 
 justo lo que hay que poder leer.
 
 **Pendiente:** subir a YouTube y completar el enlace del README. Rotar la clave de Cartesia.
+
+## 2026-09-20 · Segunda pasada sobre la pieza única
+
+**Un defecto del video destapó uno de la app.** El texto de la regla tributaria se cortaba
+por el borde derecho de la pantalla. No era el encuadre: el bloque fiscal partía en dos
+columnas según el ancho de la *ventana* (`@media (min-width: 1180px)`), no según el ancho
+del bloque, que mide unos 500px. A pantalla completa quedaban dos columnas de 240px con las
+etiquetas rotas palabra a palabra y la cita de la R.S. desbordando. Se cambió a container
+query sobre `.block` y el `white-space: nowrap` de los importes se anuló en la fila de la
+regla, que es prosa. Ver `web/src/panel.css`.
+
+**Encuadre.** Las pantallas grabadas van a tamaño casi real (1.15x, centrado en el contenido
+en x=1080): ampliar más recorta la cita, que es justo lo que hay que poder leer. La marca
+persistente del video se oculta en las escenas de pantalla, porque la app ya muestra la suya
+en su cabecera y se veía "Honorarios" dos veces.
+
+**Logo de SUNAT.** Kevin lo pidió expresamente. Va en la escena del problema, junto a la
+cita de la resolución, sobre su chip blanco. Se descartó superponerlo a la grabación: en
+esa pantalla siempre tapa un control, y la propia app ya muestra el número de la resolución.
+
+**Escena "Lo que falta" eliminada.** Lo que decía pasa al cierre en una línea: "en pruebas,
+sin usuarios todavía". El video queda en 2:38.
+
+**Banderas** dibujadas con sus franjas y sin escudos, para Perú, México, Colombia y
+Argentina. No se usan logotipos de instituciones más allá del de SUNAT.

@@ -93,6 +93,19 @@ export const Brand: React.FC = () => {
 };
 
 /* ---------------------------------------------------------------- 2 · problema */
+
+/** El logotipo oficial de SUNAT acompaña siempre a la cita de la norma, nunca suelto:
+ *  identifica de quién es la resolución, sin insinuar que la entidad respalda la app.
+ *  Va sobre su chip blanco porque el archivo es a color y su manual pide fondo claro. */
+export const SelloSunat: React.FC<{texto: string; alto?: number}> = ({texto, alto = 34}) => (
+  <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
+    <div style={{background: '#ffffff', padding: '9px 13px', display: 'flex'}}>
+      <Img src={staticFile('img/sunat.png')} style={{height: alto, width: 'auto', display: 'block'}} />
+    </div>
+    <span style={{fontFamily: MONO, fontSize: 21, letterSpacing: '0.06em', color: C.ink3}}>{texto}</span>
+  </div>
+);
+
 export const Problem: React.FC = () => {
   const f = useCurrentFrame();
   const aF = cue('problem', 'facturas');
@@ -129,7 +142,7 @@ export const Problem: React.FC = () => {
               <i style={{position: 'absolute', inset: 0, background: C.accent, transformOrigin: 'left', transform: `scaleX(${Math.max(0, ramp(f, a8 - 4, 16) * (1 - drain))})`, left: '86%', width: '14%'}} />
               <div style={{position: 'absolute', left: '86%', top: -18, bottom: -18, width: 3, background: C.ink}} />
             </div>
-            <Label size={20} style={{marginTop: 18}}>Fuente: R.S. 000390-2025/SUNAT</Label>
+            <div style={{marginTop: 22}}><SelloSunat texto="R.S. 000390-2025 · artículo 3" /></div>
           </div>
           <div style={{position: 'relative'}}>
             <Halo x={180} y={140} size={560} o={0.26 * ramp(f, a8, 12)} />
@@ -256,49 +269,6 @@ export const Regla: React.FC = () => {
       </AbsoluteFill>
       <Sfx src="whoosh.wav" at={1} vol={0.08} />
       <Sfx src="stamp.wav" at={aN - 4} vol={0.2} />
-    </SceneOut>
-  );
-};
-
-/* ---------------------------------------------------------------- lo que falta */
-export const Falta: React.FC = () => {
-  const f = useCurrentFrame();
-  const rows = [
-    {w: 'seguimos', t: 'Seguimos en pruebas', s: 'no mueve dinero real todavía'},
-    {w: 'nadie', t: 'Nadie ha declarado con esto', s: 'cero usuarios, y lo decimos'},
-  ];
-  const aH = cue('falta', 'hito');
-  return (
-    <SceneOut>
-      <AbsoluteFill style={{padding: '150px 130px 190px', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 80, alignItems: 'center'}}>
-        <div>
-          <Label>Lo que falta</Label>
-          <div style={{...H, fontSize: 96, marginTop: 20}}>Dicho<br />de frente</div>
-        </div>
-        <div style={{display: 'grid', gap: 30}}>
-          {rows.map((r) => {
-            const at = cue('falta', r.w);
-            const o = ramp(f, at - 4, 14);
-            return (
-              <div key={r.w} style={{display: 'flex', gap: 24, alignItems: 'center', opacity: o, transform: `translateY(${(1 - o) * 14}px)`, borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
-                <div style={{color: C.ink3}}><Prohibit size={44} weight="light" /></div>
-                <div>
-                  <div style={{fontFamily: FONT.display, fontSize: 44, fontWeight: 600, color: C.ink}}>{r.t}</div>
-                  <div style={{fontFamily: FONT.display, fontSize: 29, color: C.ink3}}>{r.s}</div>
-                </div>
-              </div>
-            );
-          })}
-          <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aH - 4, 14), borderTop: `1px solid ${C.accent}`, paddingTop: 26}}>
-            <div style={{color: C.accent}}><MapPin size={44} weight="light" /></div>
-            <div style={{fontFamily: FONT.display, fontSize: 44, fontWeight: 600, color: C.ink}}>
-              Siguiente hito: el primer freelancer que declare
-            </div>
-          </div>
-        </div>
-      </AbsoluteFill>
-      <Sfx src="whoosh.wav" at={1} vol={0.08} />
-      <Sfx src="confirm.wav" at={aH - 4} vol={0.14} />
     </SceneOut>
   );
 };
@@ -439,13 +409,28 @@ export const Precio: React.FC = () => {
   );
 };
 
+
+/** Banderas dibujadas con las franjas oficiales y nada mas. Sin escudos, porque a este
+ *  tamaño se convierten en una mancha, y sin logotipos de instituciones: el video propone
+ *  un producto que no es oficial y una marca ajena sugeriria un respaldo que no existe. */
+const Bandera: React.FC<{franjas: string[]; pesos?: number[]; horizontal?: boolean}> = ({franjas, pesos, horizontal}) => (
+  <div style={{
+    display: 'flex', flexDirection: horizontal ? 'column' : 'row',
+    width: 76, height: 50, border: `1px solid ${C.rule}`, overflow: 'hidden',
+  }}>
+    {franjas.map((c, i) => (
+      <div key={i} style={{flex: pesos ? pesos[i] : 1, background: c}} />
+    ))}
+  </div>
+);
+
 /* ---------------------------------------------------------------- la region */
 export const Region: React.FC = () => {
   const f = useCurrentFrame();
   const paises = [
-    {w: 'México', t: 'México'},
-    {w: 'Colombia', t: 'Colombia'},
-    {w: 'Argentina', t: 'Argentina'},
+    {w: 'México', t: 'México', franjas: ['#006847', '#ffffff', '#ce1126'], horizontal: false},
+    {w: 'Colombia', t: 'Colombia', franjas: ['#fcd116', '#003893', '#ce1126'], pesos: [2, 1, 1], horizontal: true},
+    {w: 'Argentina', t: 'Argentina', franjas: ['#74acdf', '#ffffff', '#74acdf'], horizontal: true},
   ];
   const aP = cue('region', 'Perú');
   const aR = cue('region', 'reescribe');
@@ -453,7 +438,10 @@ export const Region: React.FC = () => {
     <SceneOut>
       <AbsoluteFill style={{padding: '155px 130px 195px', display: 'grid', gridTemplateRows: 'auto 1fr', gap: 44}}>
         <div>
-          <Label>Por qué Perú primero</Label>
+          <div style={{display: 'flex', alignItems: 'center', gap: 18}}>
+            <Bandera franjas={['#d91023', '#ffffff', '#d91023']} />
+            <Label>Por qué Perú primero</Label>
+          </div>
           <div style={{...H, fontSize: 84, marginTop: 18}}>Entramos por la norma más difícil</div>
           <div style={{fontFamily: FONT.display, fontSize: 38, color: C.ink3, marginTop: 20, opacity: ramp(f, aP - 4, 14)}}>
             Perú solo da entre <b style={{color: C.ink2}}>US$ 10,500 y 67,000</b> al año, con supuestos nuestros que están escritos.
@@ -465,7 +453,7 @@ export const Region: React.FC = () => {
             const o = ramp(f, at, 14);
             return (
               <div key={pa.w} style={{background: C.surface, border: `1px solid ${C.ruleStrong}`, padding: '30px 30px 34px', opacity: o, transform: `translateY(${(1 - o) * 16}px)`}}>
-                <div style={{color: C.accent}}><Globe size={44} weight="light" /></div>
+                <Bandera franjas={pa.franjas} pesos={pa.pesos} horizontal={pa.horizontal} />
                 <div style={{fontFamily: FONT.display, fontSize: 52, fontWeight: 600, color: C.ink, marginTop: 16}}>{pa.t}</div>
                 <div style={{fontFamily: FONT.display, fontSize: 27, color: C.ink3, marginTop: 8}}>mismo adelanto, su propio programa</div>
                 <div style={{fontFamily: MONO, fontSize: 22, color: C.ink3, marginTop: 20, borderTop: `1px solid ${C.rule}`, paddingTop: 16, opacity: ramp(f, aR - 4, 14)}}>
@@ -491,7 +479,7 @@ export const Close: React.FC = () => {
   return (
     <AbsoluteFill style={{opacity: fade}}>
       <Halo x={620} y={470} size={700} o={0.2} />
-      <AbsoluteFill style={{padding: '0 150px', display: 'grid', gridTemplateColumns: '1.4fr 1fr', alignItems: 'center', gap: 60}}>
+      <AbsoluteFill style={{padding: '0 150px', display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 90}}>
         <div>
           <div style={{display: 'flex', alignItems: 'center', gap: 34}}>
             <div style={{width: 230, height: 230, margin: '-40px -30px -40px -40px'}}><Logo3D size={230} draw={draw} spinFrom={0} /></div>
@@ -502,11 +490,12 @@ export const Close: React.FC = () => {
           </div>
           <div style={{fontFamily: MONO, fontSize: 26, color: C.ink3, marginTop: 50, lineHeight: 1.7, opacity: ramp(f, 30, 14)}}>
             github.com/kasbsquall/honorarios<br />
-            Stellar testnet · la app no emite comprobantes
+            Stellar testnet · en pruebas, sin usuarios todavía<br />
+            la app no emite comprobantes
           </div>
         </div>
-        <div style={{opacity: ramp(f, 14, 14), justifySelf: 'center', textAlign: 'center'}}>
-          <div style={{padding: 26, border: `1px solid ${C.ruleStrong}`, background: C.surface}}>
+        <div style={{opacity: ramp(f, 14, 14), textAlign: 'center'}}>
+          <div style={{padding: 24, background: C.surface, width: 'max-content', margin: '0 auto'}}>
             <Img src={staticFile('img/qr-light.svg')} style={{width: 300, height: 300, display: 'block'}} />
           </div>
           <div style={{fontFamily: MONO, fontSize: 30, color: C.ink, marginTop: 22}}>honorarios-pe.vercel.app</div>

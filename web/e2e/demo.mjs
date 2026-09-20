@@ -36,7 +36,12 @@ const context = await browser.newContext({
 // pegado sobre un hueco vacio de su columna. En uso normal esta bien; en video se lee
 // como un fallo de composicion.
 await context.addInitScript(() => {
-  const css = "#newlink{position:static !important}";
+  // .grid2 pinta sus lineas divisorias con su propio fondo y un gap de 1px. Sin el
+  // sticky, la columna del formulario termina pronto y ese fondo queda a la vista como
+  // una franja gris hasta el borde inferior, asi que durante la grabacion el contenedor
+  // toma el color del papel. Se pierden las lineas de 1px entre bloques; el borde queda.
+  const css = "#newlink{position:static !important;align-self:start !important}"
+    + ".grid2{background:var(--paper) !important}";
   document.addEventListener("DOMContentLoaded", () => {
     const st = document.createElement("style");
     st.textContent = css;

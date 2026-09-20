@@ -3,16 +3,17 @@ import {SCENES} from './timing';
 import {C} from './theme';
 import {Captions} from './lib/Captions';
 import {Ground, Mark} from './lib/film';
-import {Cold, Brand, Problem, Falta, Precio, Region, Close} from './scenes/Story';
+import {Cold, Brand, Problem, Precio, Region, Close} from './scenes/Story';
 import {Wallet, Pago, Cadena, Panel, Limites, Retiro} from './scenes/Recorrido';
 
 const MAP: Record<string, React.FC> = {
   cold: Cold, brand: Brand, problem: Problem, wallet: Wallet, pay: Pago, chain: Cadena,
   panel: Panel, limites: Limites, retiro: Retiro, precio: Precio, region: Region,
-  falta: Falta, close: Close,
+  close: Close,
 };
-// Escenas donde la marca ya ocupa el cuadro: la marca persistente se oculta.
-const NO_MARK = new Set(['brand', 'close']);
+// Escenas donde la marca ya ocupa el cuadro, o donde la cabecera de la propia app la
+// muestra y se verian dos veces la misma palabra: la marca persistente se oculta.
+const NO_MARK = new Set(['brand', 'close', 'wallet', 'pay', 'panel', 'limites', 'retiro']);
 
 const FilmMark: React.FC = () => {
   const f = useCurrentFrame();
