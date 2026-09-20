@@ -1,22 +1,26 @@
 import { describe, expect, test } from "vitest";
-import { PAYMENT_RATE, SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
+import { DIRECTOR_CAP_PEN, DIRECTOR_THRESHOLD_PEN, PAYMENT_RATE, SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
 
 const base = { appGrossPen: 0, otherFourthPen: 0, fifthPen: 0, withheldPen: 0, isDirectorIncome: false, confirmedComplete: true };
 
-describe("las cifras salen de la UIT, no de una constante suelta", () => {
-  test("el tope anual de suspension es 8.75 UIT", () => {
+describe("los importes son los que cita la resolucion, no una derivacion", () => {
+  // Articulo 3 de la R.S. 000390-2025/SUNAT, copia en evidencias/2026-09-20-resolucion-umbral.
+  test("regimen general: literales a) y c)", () => {
+    expect(THRESHOLD_PEN).toBe(4010);
     expect(SUSPENSION_CAP_PEN).toBe(48_125);
-    expect(SUSPENSION_CAP_PEN).toBe(8.75 * UIT_PEN);
   });
 
-  test("el umbral mensual es la doceava parte del tope anual, truncada", () => {
-    expect(THRESHOLD_PEN).toBe(4010); // 48 125 / 12 = 4 010.41...
+  test("rentas del inciso b) del articulo 33: literales b) y d)", () => {
+    expect(DIRECTOR_THRESHOLD_PEN).toBe(3208);
+    expect(DIRECTOR_CAP_PEN).toBe(38_500);
   });
 
-  test("la misma regla reproduce los montos de 2025, con la UIT en S/ 5,350", () => {
-    const cap2025 = 8.75 * 5350;
-    expect(cap2025).toBe(46_812.5);
-    expect(Math.floor(cap2025 / 12)).toBe(3901);
+  test("el umbral del inciso b) es mas bajo que el general, que es la razon de distinguirlos", () => {
+    expect(DIRECTOR_THRESHOLD_PEN).toBeLessThan(THRESHOLD_PEN);
+  });
+
+  test("la UIT de 2026 queda como referencia del ajuste", () => {
+    expect(UIT_PEN).toBe(5500);
   });
 });
 
@@ -104,28 +108,42 @@ describe("pago a cuenta de cuarta categoria", () => {
     expect(r.provisional).toBe(false);
   });
 
-  test("rentas de director quedan fuera: la app no conoce su umbral y no inventa uno", () => {
-    const r = estimate({ ...base, appGrossPen: 1875, isDirectorIncome: true });
-    expect(r.supported).toBe(false);
-    expect(r.duePen).toBeNull();
-    expect(r.reason).toBe("unsupported-role");
-    // Y nunca puede decir "bajo el umbral", que es la afirmacion peligrosa.
+  test("un director se compara contra su propio umbral, no contra el general", () => {
+    const r = estimate({ ...base, appGrossPen: 3500, isDirectorIncome: true });
+    expect(r.thresholdPen).toBe(DIRECTOR_THRESHOLD_PEN);
+    // Con el umbral general (4 010) este mes habria salido "no debes nada".
+    expect(r.overThreshold).toBe(true);
+    expect(r.duePen).toBe(280); // 8% de 3 500
+  });
+
+  test("un director por debajo de su umbral tampoco paga", () => {
+    const r = estimate({ ...base, appGrossPen: 3000, isDirectorIncome: true });
+    expect(r.overThreshold).toBe(false);
+    expect(r.duePen).toBe(0);
+  });
+
+  test("igualar el umbral del inciso b) no obliga", () => {
+    const r = estimate({ ...base, appGrossPen: DIRECTOR_THRESHOLD_PEN, isDirectorIncome: true });
     expect(r.overThreshold).toBe(false);
   });
 
-  test("un director por debajo del umbral general tampoco recibe un 'no debes nada'", () => {
-    // Su umbral es menor que el general y no lo conocemos: compararlo contra el general
-    // le diria que esta tranquilo cuando puede estar ya obligado.
-    const r = estimate({ ...base, appGrossPen: 3500, isDirectorIncome: true });
+  test("la quinta tambien suma al umbral del inciso b), sin entrar en la base", () => {
+    const r = estimate({ ...base, appGrossPen: 1000, fifthPen: 2500, isDirectorIncome: true });
+    expect(r.monthTotalPen).toBe(3500);
+    expect(r.overThreshold).toBe(true);
+    expect(r.duePen).toBe(80); // 8% de 1 000
+  });
+
+  test("sin tipo de cambio, el umbral aplicable ya se conoce y se puede mostrar", () => {
+    const r = estimate({ ...base, appGrossPen: null, isDirectorIncome: true });
+    expect(r.thresholdPen).toBe(DIRECTOR_THRESHOLD_PEN);
     expect(r.duePen).toBeNull();
-    expect(r.overThreshold).toBe(false);
-    expect(r.supported).toBe(false);
-    expect(r.provisional).toBe(false);
   });
 
   test("el caso de director sigue mostrando lo acumulado del mes", () => {
     const r = estimate({ ...base, appGrossPen: 1875, otherFourthPen: 500, fifthPen: 1000, isDirectorIncome: true });
     expect(r.fourthBasePen).toBe(2375);
     expect(r.monthTotalPen).toBe(3375);
+    expect(r.thresholdPen).toBe(DIRECTOR_THRESHOLD_PEN);
   });
 });

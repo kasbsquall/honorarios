@@ -391,3 +391,38 @@ Está advertido en pantalla y en el módulo.
 para pasar de ahí no es código: una cita literal de la resolución anual de SUNAT, un camino real
 de USDC a soles, y salir de testnet.
 
+## 20 de septiembre de 2026 · La resolución aparece, y con ella el umbral de director
+
+Durante toda la semana la app dijo en pantalla que el umbral lo derivaba de la UIT y que no
+habíamos leído la resolución que lo fija. Era honesto y era el techo del proyecto: tres jurados
+distintos lo señalaron como el dato principal sin confirmar de un producto de impuestos.
+
+Hoy la encontramos. **R.S. 000390-2025/SUNAT**, del 30 de diciembre de 2025, descargada del
+propio sitio de SUNAT y guardada en `evidencias/2026-09-20-resolucion-umbral/`. Su artículo 3
+fija cuatro importes para 2026, y la derivación acertaba en los dos que ya usábamos:
+
+| literal | importe | a quién |
+|---|---|---|
+| a) | S/ 4,010 mensuales | régimen general de cuarta |
+| b) | S/ 3,208 mensuales | rentas del inciso b) del art. 33 |
+| c) | S/ 48,125 anuales | régimen general |
+| d) | S/ 38,500 anuales | rentas del inciso b) |
+
+**El literal b) es el hallazgo.** Era exactamente el número que la app declaraba no conocer, y
+por no conocerlo dejaba a un director sin estimación, con un cartel de "fuera de lo que calcula
+esta app". Ahora se compara contra su propio umbral y recibe su cifra. Un director con S/ 3,500
+en el mes pasa de no tener respuesta a saber que debe S/ 280.
+
+Las constantes dejaron de derivarse y ahora se copian de la resolución, con la cita en el
+código y el enlace al PDF en la pantalla. Los tests fijan los cuatro importes por separado y que
+el del inciso b) sea menor que el general, que es la razón de distinguirlos. 31 tests.
+
+**Lo otro de la misma ronda.** La cifra en soles cuelga entera de un tipo de cambio que se
+teclea, y eso no se veía junto al número: ahora la línea bajo el monto dice con qué tipo de
+cambio se calculó y si es el de ejemplo o el que ingresó el usuario. Y cuando el mes no llega al
+umbral, el panel explica que el contrato apartó el 8% igual, porque la reserva es una regla fija
+que no consulta el umbral, y que ese dinero se puede retirar.
+
+El README citaba la resolución en firme mientras la app decía no haberla leído. Esa
+contradicción se acabó por el lado bueno.
+

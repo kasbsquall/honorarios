@@ -10,7 +10,7 @@ Proyecto para la hackathon Stellar Odyssey Perú (19 al 26 de septiembre de 2026
 
 ## Problema
 
-Un freelancer peruano que cobra a clientes del exterior no tiene agente de retención. Si en el mes cobra más de S/ 4,010, le toca hacer por su cuenta el pago a cuenta del 8% (R.S. 000390-2025/SUNAT). Lo común es que cuando llega la fecha ese dinero ya se gastó, porque llegó mezclado con el resto del cobro.
+Un freelancer peruano que cobra a clientes del exterior no tiene agente de retención. Si en el mes cobra más de S/ 4,010, le toca hacer por su cuenta el pago a cuenta del 8% (artículo 86 del TUO de la LIR; el umbral es el del artículo 3.a de la [R.S. 000390-2025/SUNAT](https://www.sunat.gob.pe/legislacion/superin/2025/000390-2025.pdf), con copia en `evidencias/`). Lo común es que cuando llega la fecha ese dinero ya se gastó, porque llegó mezclado con el resto del cobro.
 
 ## Solución
 
@@ -20,7 +20,7 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 2. Genera un link de cobro con monto, N° de recibo y concepto, y se lo envía a su cliente.
 3. El cliente paga con Freighter. Si no tiene USDC, la app lo compra con XLM mediante un path payment.
 4. El contrato reparte 92/8 y emite un evento `Paid` con la referencia del recibo. La página que firma el cliente lee la comisión del contrato con `fee()` antes de mostrar el desglose, así que en pantalla aparece lo que el contrato va a hacer y no lo que el navegador supone.
-5. El panel lee del contrato lo cobrado en el mes y estima el pago a cuenta (8% de las rentas de cuarta, si el total del mes supera S/ 4,010; cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
+5. El panel lee del contrato lo cobrado en el mes y estima el pago a cuenta (8% de las rentas de cuarta, si el total del mes supera S/ 4,010, o S/ 3,208 si son rentas de director, síndico, mandatario, gestor de negocios, albacea o regidor; cero si no), explica cómo se paga a SUNAT (Formulario Virtual 616, en soles) y arma un borrador del recibo por honorarios listo para copiar en SUNAT.
 
 ## Cómo usa Stellar
 

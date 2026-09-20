@@ -6,7 +6,7 @@ import {
   CONTRACT_ID, EXPLORER, FREIGHTER_INSTALL, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, serviceFee, short, taxReserve, toUnits, withdrawWithWallet,
 } from "./stellar";
 import { openRheDraft } from "./rhe";
-import { SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
+import { DIRECTOR_CAP_PEN, DIRECTOR_THRESHOLD_PEN, SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
 
 const FX_KEY = "honorarios.fx";
@@ -145,12 +145,17 @@ function readNum(key: string): number {
 // Tipo de cambio de ejemplo, solo para que el panel de muestra tenga algo que calcular.
 const DEMO_FX = 3.75;
 
-function readFx(): number | null {
+/** El tipo de cambio que el usuario escribio, sin el de ejemplo. */
+function readStoredFx(): number | null {
   try {
     const v = Number(localStorage.getItem(FX_KEY));
     if (v > 0) return v;
   } catch { /* sin storage */ }
-  return mode === "demo" ? DEMO_FX : null;
+  return null;
+}
+
+function readFx(): number | null {
+  return readStoredFx() ?? (mode === "demo" ? DEMO_FX : null);
 }
 
 function renderPanel() {
@@ -292,6 +297,8 @@ function bindWithdraw() {
 function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const box = app.querySelector("#threshold")!;
   const fx = readFx();
+  // De donde sale el TC importa tanto como el numero: toda la cifra en soles cuelga de el.
+  const fxIsSample = fx !== null && readStoredFx() === null;
   const otras = readNum(OTHER_KEY);
   const quinta = readNum(FIFTH_KEY);
   const retenido = readNum(HELD_KEY);
@@ -308,12 +315,12 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   const over = est.overThreshold;
   const due = est.duePen;
   // La barra llega al 100% justo en el umbral, y la marca deja ver donde esta ese corte.
-  const ratio = pen === null ? 0 : Math.min(pen / THRESHOLD_PEN, 1);
+  const umbral = est.thresholdPen;
+  const ratio = pen === null ? 0 : Math.min(pen / umbral, 1);
   const soles = (n: number) => "S/ " + n.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   const month = new Date(Date.now() - PERU_OFFSET_MS).toLocaleDateString("es-PE", { month: "long", year: "numeric", timeZone: "UTC" });
   const state =
     grossUnavailable ? `<span class="badge warn"><i class="ph-light ph-cloud-slash" aria-hidden="true"></i>No pudimos leer lo cobrado este mes</span>`
-    : !est.supported ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Fuera de lo que calcula esta app</span>`
     : pen === null ? `<span class="badge"><i class="ph-light ph-question" aria-hidden="true"></i>Falta tipo de cambio</span>`
     : over ? `<span class="badge warn"><i class="ph-light ph-warning" aria-hidden="true"></i>Supera el umbral</span>`
     : est.provisional ? `<span class="badge"><i class="ph-light ph-dots-three-circle" aria-hidden="true"></i>Falta confirmar tus otras rentas</span>`
@@ -322,28 +329,24 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
   box.innerHTML = `
     <div class="rc-top"><p class="lbl"><i class="ph-light ph-calendar-blank" aria-hidden="true"></i> Pago a cuenta · ${month}</p>${state}</div>
     <p class="th-num num">${due === null ? "S/ —" : soles(due)}</p>
-    <p class="th-cap">${due === null ? "esta app no puede estimarlo" : "estimado, no es tu declaración"}</p>
-    ${!est.supported ? "" : `<div class="meter" title="${soles(THRESHOLD_PEN)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>`}
-    ${!est.supported ? "" : `<p class="th-scale"><span>${pen === null ? "acumulado del mes" : `acumulado ${soles(pen)}`}</span><span>umbral ${soles(THRESHOLD_PEN)}${
-      over && pen ? ` · lo superas ${(pen / THRESHOLD_PEN).toFixed(1).replace(".0", "")} veces` : ""}</span></p>`}
+    <p class="th-cap">${due === null ? "esta app no puede estimarlo"
+      : `estimado, no es tu declaración · en soles al TC ${fx}${fxIsSample ? " de ejemplo" : " que ingresaste"}`}</p>
+    <div class="meter" title="${soles(umbral)} es el umbral"><i style="transform:scaleX(${ratio})" class="${over ? "over" : ""}"></i></div>
+    <p class="th-scale"><span>${pen === null ? "acumulado del mes" : `acumulado ${soles(pen)}`}</span><span>umbral ${soles(umbral)}${
+      over && pen ? ` · lo superas ${(pen / umbral).toFixed(1).replace(".0", "")} veces` : ""}</span></p>
     <div class="th-body"><div>
     <dl class="th-rows">
       <div><dt>Cobrado por esta app</dt><dd class="num">${aqui === null ? "—" : soles(aqui)}</dd></div>
       <div><dt>Otras rentas de cuarta del mes</dt><dd class="num">${soles(otras)}</dd></div>
       <div><dt><b>Base del pago a cuenta</b> (cuarta)</dt><dd class="num">${cuarta === null ? "—" : soles(cuarta)}</dd></div>
       <div><dt>Rentas de quinta, solo para el umbral</dt><dd class="num">${soles(quinta)}</dd></div>
-      <div><dt>Total del mes${est.supported ? " frente al umbral" : ""}</dt><dd class="num">${pen === null ? "—" : soles(pen)}${
-        est.supported ? ` <span class="u">de ${soles(THRESHOLD_PEN)}</span>` : ""}</dd></div>
-      <div class="wide"><dt>Regla</dt><dd>${est.supported
-        ? "si el total del mes supera el umbral, se paga 8% de la base de cuarta. Si no lo supera, no hay pago a cuenta este mes."
-        : `el umbral de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")} es el general y no es el tuyo: las rentas del inciso b) tienen uno propio, más bajo, que esta app no tiene verificado. Por eso no te comparamos contra ninguno.`}</dd></div>
+      <div><dt>Total del mes frente al umbral</dt><dd class="num">${pen === null ? "—" : soles(pen)} <span class="u">de ${soles(umbral)}</span></dd></div>
+      <div class="wide"><dt>Regla</dt><dd>si el total del mes supera el umbral, se paga 8% de la base de cuarta. Si no lo supera, no hay pago a cuenta este mes. Tu umbral es ${soles(umbral)}, el del ${director ? "literal b)" : "literal a)"} del artículo 3 de la R.S. 000390-2025/SUNAT${director ? ", que es el de director, síndico, mandatario, gestor de negocios, albacea y regidor" : ""}.</dd></div>
       <div><dt>Retenciones de cuarta ya practicadas</dt><dd class="num">− ${soles(retenido)}</dd></div>
     </dl>
     <p class="th-help">${
       grossUnavailable
         ? "El contrato no respondió cuánto llevas cobrado este mes, así que no estimamos nada. No usamos la lista de cobros de abajo para reemplazarlo: el nodo solo guarda los últimos días y la suma saldría corta, que en un cálculo de impuestos es el peor error posible. Recarga en un momento."
-      : !est.supported
-        ? "Marcaste que tus rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea. Ese grupo tiene un umbral mensual propio, más bajo que el general, y esta app no lo tiene verificado, así que no te muestra una cifra en vez de darte una tranquilidad que no puede sostener. Tu reserva sigue intacta y puedes retirarla. Confirma tu umbral con tu contador o en la resolución anual de SUNAT."
       : pen === null
         ? "Ingresa el tipo de cambio para estimar tu pago a cuenta de este mes."
         : over
@@ -358,7 +361,7 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
             })()
           : est.provisional
             ? "Con lo cobrado por esta app no se cruza el umbral, pero el umbral se mide sobre todo lo que ganaste este mes. Completa arriba tus otras rentas y confírmalo: hasta entonces esto no es un “no debes nada”."
-            : "Con lo declarado aquí no habría pago a cuenta. Espera al cierre del mes antes de retirar la reserva: un cobro más puede cruzar el umbral y el 8% se aplica al total del mes."
+            : "Con lo declarado aquí no habría pago a cuenta, y aun así el contrato apartó el 8% de cada cobro: la reserva es una regla fija y no consulta el umbral. Ese dinero es tuyo y puedes retirarlo. Espera al cierre del mes para hacerlo: un cobro más puede cruzar el umbral y el 8% se aplica al total del mes."
     }</p>
     <p class="th-help"><i class="ph-light ph-warning-circle" aria-hidden="true"></i> Esto es un estimado con lo que esta app puede saber. El umbral se mide sobre todos tus ingresos del mes, incluidas las rentas de cuarta cobradas fuera de aquí y las de quinta si estás en planilla. Y el 8% es pago a cuenta: en la declaración anual el impuesto se recalcula sobre la renta neta, así que puede quedar saldo por pagar o a favor.</p>
     </div><div>
@@ -379,7 +382,7 @@ function renderThreshold(gross: bigint | null, grossUnavailable = false) {
         <li>Declara lo cobrado en el mes y paga con el NPS o en línea. El vencimiento depende del último dígito de tu RUC: <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">revisa el cronograma de obligaciones mensuales en sunat.gob.pe <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></li>
       </ol>
       <p>Si proyectas cobrar hasta S/ ${SUSPENSION_CAP_PEN.toLocaleString("es-PE")} en el año puedes pedir la suspensión de pagos a cuenta (Formulario 1609). La suspensión no es automática: rige desde que SUNAT la aprueba, no hacia atrás, y caduca el 31 de diciembre, así que hay que volver a pedirla cada año. Si un cliente peruano ya te retuvo el 8%, ese monto se descuenta del pago del mes.</p>
-      <p class="src"><i class="ph-light ph-seal-question" aria-hidden="true"></i> De dónde salen las cifras: la tasa del 8% es el artículo 86 del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF). El tope anual de S/ ${SUSPENSION_CAP_PEN.toLocaleString("es-PE")} es 8.75 UIT, y el umbral mensual de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")} es su doceava parte truncada a soles: por eso doce veces el mensual no da el anual. La UIT de 2026 son S/ ${UIT_PEN.toLocaleString("es-PE")}, fijada por el <a href="https://busquedas.elperuano.pe/dispositivo/NL/2469116-1" target="_blank" rel="noopener">D.S. 301-2025-EF publicado en El Peruano <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a>. La misma regla reproduce los montos de 2025 con la UIT de ese año. <b>Aun así no hemos leído el texto de la resolución anual de SUNAT que los fija</b>: verifícalo antes de declarar. <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">sunat.gob.pe <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></p>
+      <p class="src"><i class="ph-light ph-seal-check" aria-hidden="true"></i> De dónde salen las cifras: la tasa del 8% es el artículo 86 del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF). Los umbrales son los del artículo 3 de la <a href="https://www.sunat.gob.pe/legislacion/superin/2025/000390-2025.pdf" target="_blank" rel="noopener">Resolución de Superintendencia N.° 000390-2025/SUNAT <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a>, del 30 de diciembre de 2025: S/ ${THRESHOLD_PEN.toLocaleString("es-PE")} mensuales y S/ ${SUSPENSION_CAP_PEN.toLocaleString("es-PE")} anuales en el régimen general, y S/ ${DIRECTOR_THRESHOLD_PEN.toLocaleString("es-PE")} mensuales y S/ ${DIRECTOR_CAP_PEN.toLocaleString("es-PE")} anuales para director, síndico, mandatario, gestor de negocios, albacea y regidor. SUNAT los ajustó a la UIT de 2026, S/ ${UIT_PEN.toLocaleString("es-PE")} según el D.S. 301-2025-EF. Copiamos los importes de la resolución, no los derivamos.</p>
     </details>
     <label class="field fx"><span class="lbl">Tipo de cambio (S/ por USDC)</span>
       <input class="num" id="fx" inputmode="decimal" placeholder="TC compra SBS del día de cobro" value="${fx ?? ""}">
