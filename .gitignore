@@ -20,3 +20,7 @@ video/qa_final/
 video/qa_mp4/
 video/jurado/
 video/rec_demo/*.webm
+
+# El video vive en YouTube (https://youtu.be/L0_wNoNNIJ0); el render local no se versiona.
+/honorarios-1080p.mp4
+/raw.mp4
