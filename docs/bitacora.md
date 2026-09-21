@@ -745,3 +745,19 @@ montaje.
 registra la entrada del 19 de septiembre (funcionalidad 30, Stellar 25, originalidad 20,
 viabilidad 15, documentación 10) no aparece en él. Puede venir de las bases, que son un documento
 distinto y no lo tenemos. Queda por verificar cuál gobierna.
+
+## 2026-09-21 · Video final publicado
+
+Video final (2:38) en https://youtu.be/L0_wNoNNIJ0. Reemplaza al v7 (2:17) de la entrada del 19 de
+septiembre, que mostraba el contrato anterior `CDGZLOQD…5YETA`. El final muestra el contrato vigente
+`CCTU5SUS…X3EU` y la transacción `4668b6f3…c8f9` que cita la tabla de evidencias. El README ya no
+remite al archivo local.
+
+El formulario de entrega pide dos videos: uno de demo sin límite de duración, que es el que evalúa
+el jurado, y uno de pitch de máximo 3 minutos que se proyecta en el Demo Day. Este sirve para los
+dos: muestra el producto funcionando en grabación real y dura menos del tope.
+
+Al preparar los textos del formulario apareció un dato viejo: decía 19 tests del contrato. Hoy son
+23 (`contracts/split/src/test.rs`), tres de ellos con autenticación estricta vía `set_auths(&[])`
+sin firma simulada: `withdraw_requires_the_freelancer_signature`,
+`a_third_party_cannot_withdraw_someone_elses_reserve` y `pay_requires_the_payer_signature`.

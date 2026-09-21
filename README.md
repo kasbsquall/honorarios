@@ -4,7 +4,7 @@
 
 Cobra a clientes del exterior en USDC sobre Stellar y separa automáticamente la reserva para tu pago a cuenta de cuarta categoría (SUNAT, Perú).
 
-**App:** https://honorarios-pe.vercel.app · **Video (2:38):** pendiente de subir a YouTube · el archivo es `honorarios-1080p.mp4`, en la raiz · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
+**App:** https://honorarios-pe.vercel.app · **Video (2:38):** https://youtu.be/L0_wNoNNIJ0 · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
 
 Proyecto para la hackathon Stellar Odyssey Perú (19 al 26 de septiembre de 2026). Todo el código se escribió durante el evento.
 
