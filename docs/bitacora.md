@@ -709,3 +709,39 @@ salieron del render, sin ninguno caído ni duplicado. 158.485 s, bt709, rango li
 decodifica `https://honorarios-pe.vercel.app` desde tres fotogramas distintos del cierre. Audio a
 48 kHz, media de -23.2 dBFS y pico de -5.0 dBFS, sin muestras saturadas, y la pista de audio mide
 exactamente lo mismo que la de video, así que no hay desfase.
+
+**Cuarta pasada.** Un cuarto revisor ajeno marcó "no publicar" por un defecto que las tres
+pasadas anteriores habían dado por bueno, y tenía razón: en la apertura el borde y el fondo del
+recibo estaban puestos en la rejilla que contiene las dos piezas, no en cada pieza. El talón se
+aparta por la perforación con `translate(36px,14px) rotate(4deg)`, pero el borde del padre seguía
+dibujando la silueta sin rasgar, así que quedaba una esquina de borde flotando y el talón asomaba
+por fuera sin contorno. Se leía como dos rectángulos mal encajados, sobre el objeto protagonista,
+del segundo 10 al 14. El borde y el fondo pasaron a cada una de las dos piezas.
+
+Ese mismo fallo estructural existe en el CSS de la aplicación y se ve en la grabación del
+navegador (segundo 53). Ahí el desborde son 22px sobre una tarjeta de 460px. No se corrige, porque
+hacerlo obliga a regrabar el recorrido entero en testnet, lo que genera una transacción nueva e
+invalida el hash que cita la tabla de evidencias del README. Queda anotado como deuda de la web.
+
+De la misma revisión: "13 %" pasó a "13%", porque convivía con "0.5%" en el mismo cuadro, y el
+bloque "Se fija al desplegar" tenía los descendentes del titular apoyados en la primera línea del
+cuerpo.
+
+**Descartado con motivo:** el recuadro sobre la captura del explorador, que tapa la columna de
+etiquetas a propósito para dejar a la vista el hash, la llamada al contrato y las firmas; el chip
+claro bajo el logotipo de SUNAT, que el archivo a color necesita; y el contador rodando a mitad
+de giro en el fotograma 60, que es un estado transitorio de la animación y no se percibe en
+movimiento.
+
+**Contrastado con las bases del evento (PDF del workshop, 55 páginas).** Los tres entregables
+obligatorios están cubiertos: repositorio público con README, video de 2:38 contra un tope de 3
+minutos, y contrato desplegado y verificable. De los seis criterios del jurado, el video cubre
+problema real, Stellar como pieza central, demo funcional y el bonus de claridad. Queda sin
+nombrar el track dentro del video, que sí está en el README. Y "ejecución" se evalúa mostrando el
+producto funcionando en vivo en las jornadas presenciales, lo que es trabajo de ensayo, no de
+montaje.
+
+**Discrepancia sin resolver:** este PDF da seis criterios sin peso. La rúbrica con pesos que
+registra la entrada del 19 de septiembre (funcionalidad 30, Stellar 25, originalidad 20,
+viabilidad 15, documentación 10) no aparece en él. Puede venir de las bases, que son un documento
+distinto y no lo tenemos. Queda por verificar cuál gobierna.

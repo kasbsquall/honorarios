@@ -26,8 +26,13 @@ export const Cold: React.FC = () => {
     <SceneOut>
       <Halo x={1320} y={560} size={760} o={0.30 * tear} />
       <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', transform: `scale(${push})`, perspective: 1800}}>
-        <div style={{position: 'relative', width: 1180, transformStyle: 'preserve-3d', transform: `rotateY(${ry}deg) rotateX(${rx}deg)`, display: 'grid', gridTemplateColumns: '1fr 120px', background: C.surface, border: `1px solid ${C.ruleStrong}`, borderRadius: 2, boxShadow: '0 60px 120px -50px rgba(0,0,0,0.9)', opacity: card}}>
-          <div style={{padding: '52px 60px', display: 'grid', gap: 34}}>
+        {/* El borde y el fondo van en cada una de las dos piezas, no en la rejilla que las
+            contiene. Estando en el padre, el borde seguía dibujando la silueta sin rasgar
+            mientras el talón se apartaba, así que quedaba una esquina de borde en el aire y
+            el talón asomaba por fuera sin contorno: se leía como dos rectángulos mal
+            encajados y no como un talón arrancado. */}
+        <div style={{position: 'relative', width: 1180, transformStyle: 'preserve-3d', transform: `rotateY(${ry}deg) rotateX(${rx}deg)`, display: 'grid', gridTemplateColumns: '1fr 120px', opacity: card}}>
+          <div style={{padding: '52px 60px', display: 'grid', gap: 34, background: C.surface, border: `1px solid ${C.ruleStrong}`, borderRight: 'none', borderRadius: '2px 0 0 2px', boxShadow: '0 60px 120px -50px rgba(0,0,0,0.9)'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
               <div>
                 <Label>Cobro · E001-7</Label>
@@ -56,7 +61,7 @@ export const Cold: React.FC = () => {
               <span>tx 4668b6f3…c8f9</span>
             </div>
           </div>
-          <div style={{borderLeft: `2px dashed ${C.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.surface, transform: `translate(${tear * 36}px, ${tear * 14}px) rotate(${tear * 4}deg)`, boxShadow: tear ? '0 30px 60px -30px rgba(0,0,0,0.9)' : undefined}}>
+          <div style={{border: `1px solid ${C.ruleStrong}`, borderLeft: `2px dashed ${C.ruleStrong}`, borderRadius: '0 2px 2px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.surface, transform: `translate(${tear * 36}px, ${tear * 14}px) rotate(${tear * 4}deg)`, boxShadow: '0 60px 120px -50px rgba(0,0,0,0.9)'}}>
             <span style={{writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontFamily: MONO, fontSize: 26, letterSpacing: '0.12em', color: C.accent}}>RESERVA 8%</span>
           </div>
           <Sheen at={a500 + 8} dur={30} />
@@ -420,8 +425,10 @@ export const Precio: React.FC = () => {
           <div style={{display: 'flex', gap: 24, alignItems: 'center', opacity: ramp(f, aQ - 6, 14), borderTop: `1px solid ${C.rule}`, paddingTop: 26}}>
             <div style={{color: C.accent}}><FileCode size={46} weight="light" /></div>
             <div>
-              <div style={{fontFamily: FONT.display, fontSize: 42, fontWeight: 600, color: C.ink}}>Se fija al desplegar</div>
-              <div style={{fontFamily: FONT.display, fontSize: 28, color: C.ink3}}>no hay función que la cambie después, ni para subirla al tope de 1%</div>
+              <div style={{fontFamily: FONT.display, fontSize: 42, fontWeight: 600, color: C.ink, lineHeight: 1.1}}>Se fija al desplegar</div>
+              {/* Sin este margen los descendentes de "desplegar" se apoyaban en la primera
+                  línea del cuerpo y se leía como un margen olvidado. */}
+              <div style={{fontFamily: FONT.display, fontSize: 28, color: C.ink3, marginTop: 10}}>no hay función que la cambie después, ni para subirla al tope de 1%</div>
             </div>
           </div>
         </div>
@@ -490,7 +497,7 @@ export const Region: React.FC = () => {
 
         <div style={{display: 'grid', gridTemplateColumns: 'auto auto 1fr', gap: 54, alignItems: 'baseline'}}>
           {dato(aI, '2.5 M', 'independientes menores de 41', 'INEI')}
-          {dato(aI + 14, '13 %', 'de ellos tiene RUC', 'INEI')}
+          {dato(aI + 14, '13%', 'de ellos tiene RUC', 'INEI')}
           <div style={{justifySelf: 'end', textAlign: 'right', maxWidth: 660}}>
             {dato(aI + 28, 'US$ 10,500 – 67,000', 'lo que este producto ingresaría en Perú al 0.5%, al año', 'Estimación propia, no un dato de mercado')}
           </div>
