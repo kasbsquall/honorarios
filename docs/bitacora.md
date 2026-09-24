@@ -800,3 +800,16 @@ queda vacío hasta volver a correr `seed-demo.mjs`.
 - Recorridos `passkey.mjs` y `record.mjs` repetidos tras los arreglos de la revisión: pasan.
 - Cuenta del panel de ejemplo al cierre: 2,420 USDC en el mes, reserva 148.60 USDC. El README
   fecha esas cifras porque cambian cuando alguien paga el recibo pendiente.
+
+## 2026-09-25 · Publicado el v3
+
+Con OK explícito del usuario: push de `f803d1f`, `b9a9298` y `a24ee7c` a `main` (CI verde) y
+despliegue de producción en Vercel. `vercel deploy --prod` no movió `honorarios-pe.vercel.app`,
+que era un alias fijado a mano a un despliegue anterior; se reasignó con `vercel alias set` a
+`web-1n95m7pb0-kevins-projects-03009f90.vercel.app`. Verificado en el dominio público: contrato
+`CAWIYCJA…XDDF`, panel de ejemplo con reserva 148.60 USDC y pago a cuenta S/ 726, página de pago
+de E001-4 por 180 USDC, CSP con el ancla de pruebas y sin violaciones. El panel de ejemplo tarda
+entre 2.5 y 3.5 s en producción (cuatro mediciones); el README decía 2 y se corrigió a 3.
+
+Video: la recomendación fue no rehacerlo, y el usuario no pidió rehacerlo. Muestra el v2, que sigue verificable, y un video nuevo cambiaría el
+link que ya está en el formulario enviado.

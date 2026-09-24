@@ -4,7 +4,7 @@
 
 Honorarios aparta el 8% de cada cobro del exterior para que el freelancer peruano tenga listo su pago a cuenta de SUNAT (el adelanto mensual del impuesto a la renta de cuarta categoría, que le toca pagar por su cuenta cuando su cliente no le retiene).
 
-**App:** https://honorarios-pe.vercel.app · **Panel de ejemplo, sin wallet ni instalación, carga en unos 2 segundos:** https://honorarios-pe.vercel.app/?demo · **Video (2:38):** https://youtu.be/L0_wNoNNIJ0 · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
+**App:** https://honorarios-pe.vercel.app · **Panel de ejemplo, sin wallet ni instalación, carga en unos 3 segundos:** https://honorarios-pe.vercel.app/?demo · **Video (2:38):** https://youtu.be/L0_wNoNNIJ0 · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
 
 El panel de ejemplo lee en vivo una cuenta de pruebas. Al 24 de septiembre llevaba cobrados en el mes 2,420 USDC (S/ 9,075 al tipo de cambio de ejemplo de 3.75): muestra el pago a cuenta que le toca, S/ 726, la reserva que tiene para cubrirlo y un recibo pendiente que puedes abrir y pagar. Las cifras cambian si alguien paga ese recibo.
 
