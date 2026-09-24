@@ -33,6 +33,32 @@ Un contrato Soroban recibe cada cobro en USDC y lo reparte en el mismo momento: 
 | **Relayer de SDF** (OpenZeppelin Channels) | Patrocina las comisiones de la smart wallet |
 | **RPC `getEvents`** | El panel reconstruye los cobros desde la cadena, sin base de datos |
 
+## Controles de cumplimiento (track 03)
+
+El track pide activos reales con controles legales. Aquí el activo es la factura del
+freelancer, un recibo por honorarios, y el control es el pago a cuenta de cuarta categoría. Cada
+fila dice dónde se hace cumplir. Si la regla vive en el contrato, la aplica la red y nadie la
+puede saltar desde la app.
+
+| Control | Cómo se cumple | Dónde |
+|---|---|---|
+| Ningún cobro sin reserva | El 8% del bruto se aparta en la misma transacción del pago. No existe una ruta de cobro que lo omita | [`lib.rs:150`](contracts/split/src/lib.rs#L150), tasa en `TAX_BPS` ([`lib.rs:10`](contracts/split/src/lib.rs#L10)) |
+| La duda favorece a la reserva | El 8% se redondea hacia arriba y la comisión hacia abajo | [`lib.rs:149`](contracts/split/src/lib.rs#L149), test `the_reserve_rounds_up` |
+| Solo el titular retira su reserva | El retiro exige la firma del freelancer. Un tercero que firma por sí mismo es rechazado | [`lib.rs:207`](contracts/split/src/lib.rs#L207), tests `withdraw_requires_the_freelancer_signature` y `a_third_party_cannot_withdraw_someone_elses_reserve`, con autenticación estricta |
+| No se retira más de lo reservado | El contrato rechaza un retiro mayor al saldo | [`lib.rs:214`](contracts/split/src/lib.rs#L214), test `cannot_withdraw_more_than_reserve` |
+| El mes tributario es el de Lima | El acumulado mensual cierra a medianoche de Lima, no en UTC | `period_of` en [`lib.rs:42`](contracts/split/src/lib.rs#L42), test `the_month_closes_at_midnight_in_lima` |
+| Lo cobrado en el mes queda en la cadena | El contrato suma el bruto por freelancer y por mes, sin base de datos | [`lib.rs:143`](contracts/split/src/lib.rs#L143), test `month_gross_accumulates_and_separates_periods` |
+| Umbrales citados, no derivados | S/ 4,010 al mes en el régimen general y S/ 3,208 para el literal b), con sus topes anuales, copiados del artículo 3 de la R.S. 000390-2025/SUNAT. La app enlaza la resolución en pantalla | [`tax.ts:22`](web/src/tax.ts#L22) |
+| La comisión tiene tope y no toca la reserva | Se fija al desplegar. El constructor rechaza más de 1% | [`lib.rs:106`](contracts/split/src/lib.rs#L106), tests `rejects_a_fee_above_the_cap` y `the_tax_reserve_is_never_touched_by_the_fee` |
+| Cada cobro lleva su recibo | El N° de recibo viaja en el evento `Paid` junto al bruto, el neto, la reserva y el mes | [`lib.rs:169`](contracts/split/src/lib.rs#L169) |
+| Partes válidas | El freelancer no puede ser el mismo pagador ni el contrato | [`lib.rs:136`](contracts/split/src/lib.rs#L136), test `rejects_payer_as_freelancer` |
+| Borrador del comprobante | La app arma el recibo por honorarios para copiar en SUNAT Operaciones en Línea. No emite ni envía nada a SUNAT | [`rhe.ts`](web/src/rhe.ts) |
+
+**Lo que estos controles no cubren.** El contrato solo conoce lo que pasa por él. El umbral se
+mide sobre todos los ingresos del mes, así que el panel pide a mano las otras rentas. Y cualquiera
+puede pagar a nombre de otro, lo que infla el acumulado del mes. Los dos casos están en
+[Límites conocidos](#límites-conocidos).
+
 ## Evidencia on-chain (testnet)
 
 La tabla es la corrida que se ve en el video, de principio a fin y sin cortes: la wallet se crea
