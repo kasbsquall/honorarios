@@ -4,8 +4,9 @@ import { StrKey } from "@stellar/stellar-sdk";
 import { connectPasskey, createPasskeyWallet, extendWithPasskey, issueWithPasskey, restorePasskey, withdrawWithPasskey } from "./passkey";
 import {
   CONTRACT_ID, EXPLORER, FREIGHTER_INSTALL, type Issued, type Paid, addUsdcTrustline, connectWallet, extendWithWallet, fromUnits, issueWithWallet, issuedEvents, readReceipt,
-  monthGross as chainMonthGross, paidEvents, reserveLiveUntil, short, taxReserve, toUnits, usdcBalance, withdrawWithWallet,
+  monthGross as chainMonthGross, paidEvents, reserveLiveUntil, sendUsdcWithMemo, short, taxReserve, toUnits, usdcBalance, withdrawWithWallet,
 } from "./stellar";
+import { type AnchorTx, anchorLogin, anchorTx, startWithdraw, withdrawLimits } from "./sep24";
 import { openRheDraft } from "./rhe";
 import { DIRECTOR_CAP_PEN, DIRECTOR_THRESHOLD_PEN, SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
 import { MARK, RECEIPT_ES, esc, receiptCard } from "./ui";
@@ -221,7 +222,7 @@ function renderPanel() {
   app.innerHTML = `
   ${loadError ? `<p class="error" role="alert"><i class="ph-light ph-warning" aria-hidden="true"></i> No pudimos leer tus cobros de la red. Lo que ves no es tu saldo: recarga en un momento. <button class="linkbtn" id="retry">Reintentar</button>${
     mode !== "demo" ? ` Si tu reserva lleva más de un mes sin movimiento, la red pudo archivarla: <button class="linkbtn renew">restáurala</button>, sin mover fondos.` : ""}</p>` : ""}
-  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye" aria-hidden="true"></i> Panel de ejemplo con una cuenta de pruebas, en testnet: los recibos, los cobros, la reserva y el acumulado del mes se leen de la cadena en vivo. Este mes cruza el umbral, así que el bloque de abajo muestra un pago a cuenta real. La reserva se queda corta frente a él a propósito: en esta cuenta se retiraron 40 USDC antes del cierre del mes, que es justo lo que la app advierte que no conviene hacer. Emitir recibos y retirar necesitan la firma de esa cuenta; lo que sí puedes hacer es abrir un recibo de "Por cobrar" y pagarlo con Freighter en testnet. <a href="${EXPLORER}/${DEMO_ADDRESS.startsWith("G") ? "account" : "contract"}/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></p>` : ""}
+  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye" aria-hidden="true"></i> Panel de ejemplo con una cuenta de pruebas, en testnet: los recibos, los cobros, la reserva y el acumulado del mes se leen de la cadena en vivo. Este mes cruza el umbral, así que el bloque de abajo muestra un pago a cuenta real. La reserva se queda corta frente a él a propósito: en esta cuenta se retiró parte de la reserva antes del cierre del mes, que es justo lo que la app advierte que no conviene hacer. Emitir recibos y retirar necesitan la firma de esa cuenta; lo que sí puedes hacer es abrir un recibo de "Por cobrar" y pagarlo con Freighter en testnet. <a href="${EXPLORER}/${DEMO_ADDRESS.startsWith("G") ? "account" : "contract"}/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></p>` : ""}
   <section class="hero rise" style="--i:0">
     <div>
       <p class="lbl"><i class="ph-light ph-vault" aria-hidden="true"></i> Reserva preventiva · 8% de cada cobro</p>
@@ -437,11 +438,12 @@ function renderThreshold() {
     <label class="field"><span class="lbl">Retenciones que ya te hicieron este mes (S/)</span><input class="num other-in" data-k="${HELD_KEY}" inputmode="decimal" placeholder="0.00" value="${retenido || ""}"></label>
     <label class="check"><input type="checkbox" id="done4" ${confirmado ? "checked" : ""}><span>Ya revisé: esto es todo lo que gané este mes<small>Los importes de arriba son de ${month}. Mientras no lo confirmes, la app no afirma que no tienes pago a cuenta.</small></span></label>
     <label class="check"><input type="checkbox" id="dir4" ${director ? "checked" : ""}><span>Mis rentas de cuarta son por función de director, mandatario, regidor, síndico o albacea<small>Ese grupo tiene su propio umbral, S/ ${DIRECTOR_THRESHOLD_PEN.toLocaleString("es-PE")} al mes en vez de S/ ${THRESHOLD_PEN.toLocaleString("es-PE")}, por el literal b) del artículo 3 de la resolución. Márcalo y la app te compara contra ese.</small></span></label>
-    <details class="howto">
+    <details class="howto" ${sep ? "open" : ""}>
       <summary><i class="ph-light ph-list-numbers" aria-hidden="true"></i> Cómo se paga a SUNAT</summary>
       <ol>
         <li>Retira la reserva a tu wallet y conviértela a soles. SUNAT solo recibe soles.
           <div id="offramp" class="offramp"><span class="spin"></span> Consultando anclas de soles en Stellar…</div>
+          <div id="sep24" class="offramp"></div>
         </li>
         <li>Entra a SUNAT Operaciones en Línea con tu Clave SOL: Mis declaraciones y pagos, Trabajadores independientes (Formulario Virtual 616).</li>
         <li>Declara lo cobrado en el mes y paga con el NPS o en línea. El vencimiento depende del último dígito de tu RUC: <a href="https://www.sunat.gob.pe" target="_blank" rel="noopener">revisa el cronograma de obligaciones mensuales en sunat.gob.pe <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></li>
@@ -457,6 +459,7 @@ function renderThreshold() {
     </div></div>`;
 
   renderOfframp();
+  renderSep24();
 
   const save = (key: string, raw: string) => {
     const v = Number(raw.replace(",", "."));
@@ -613,4 +616,124 @@ function offerTrustline(show: (html: string) => void, out: Element) {
       out.insertAdjacentHTML("beforeend", `<p class="error">${esc(err instanceof Error ? err.message : "No se pudo activar.")}</p>`);
     }
   });
+}
+
+// Estado del retiro por el ancla de pruebas. Vive fuera del DOM porque el bloque del umbral
+// se vuelve a pintar con cada cambio de los campos, y el retiro no puede perderse con eso.
+type SepState = { token: string; id: string; tx?: AnchorTx; msg: string; busy: boolean; hashes: string[] };
+let sep: SepState | null = null;
+const SEP_POLL_MS = 3000;
+// Diez minutos para llenar el formulario del ancla y que liquide; despues se deja de consultar.
+const SEP_POLL_LIMIT = 200;
+
+function renderSep24() {
+  const box = app.querySelector("#sep24");
+  if (!box) return;
+  if (mode !== "freighter") {
+    box.innerHTML = `<small>${mode === "demo"
+      ? "Con una cuenta conectada por Freighter, este paso ejecuta en testnet el retiro completo por SEP-24 contra el ancla de pruebas de SDF."
+      : "El retiro por el ancla de pruebas funciona hoy con Freighter. Una wallet con passkey necesita la autenticación SEP-45 del ancla, que no está conectada."}</small>`;
+    return;
+  }
+  const t = sep?.tx;
+  const links = (sep?.hashes ?? []).map((h) => `<a href="${EXPLORER}/tx/${h}" target="_blank" rel="noopener">${short(h)} <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a>`).join(" · ");
+  box.innerHTML = `
+    <p><b>Pruébalo en testnet.</b> El ancla de pruebas de SDF habla el mismo protocolo, SEP-24, y simula la salida a un banco: no hay soles ni banco real. Tu reserva sale del contrato y llega al ancla en dos firmas. Ese ancla acepta hasta 10 USDC por retiro, así que retira una parte.</p>
+    ${!sep ? `<button type="button" class="btn ghost" id="sep24-go" ${!reserve ? "disabled" : ""}><i class="ph-light ph-bank" aria-hidden="true"></i>Retirar la reserva por el ancla de pruebas</button>` : ""}
+    ${t?.status === "pending_user_transfer_start" && !sep?.busy
+      ? `<button type="button" class="btn" id="sep24-send"><i class="ph-light ph-paper-plane-tilt" aria-hidden="true"></i>Enviar ${esc(t.amount_in ?? "")} USDC al ancla</button>` : ""}
+    ${sep ? `<p class="u" role="status">${sep.busy ? `<span class="spin"></span> ` : ""}${esc(sep.msg)}${
+      t?.more_info_url ? ` <a href="${esc(t.more_info_url)}" target="_blank" rel="noopener">Ver el retiro en el ancla <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a>` : ""}</p>` : ""}
+    ${links ? `<p class="u">Transacciones: ${links}</p>` : ""}`;
+  box.querySelector("#sep24-go")?.addEventListener("click", startSep24);
+  box.querySelector("#sep24-send")?.addEventListener("click", sendSep24);
+}
+
+const SEP_STATUS: Record<string, string> = {
+  incomplete: "Completa tus datos en la ventana del ancla.",
+  pending_user_transfer_start: "El ancla recibió tus datos y espera el USDC.",
+  pending_anchor: "El ancla está procesando el retiro.",
+  pending_stellar: "El ancla está confirmando el pago en Stellar.",
+  pending_external: "El ancla está enviando el dinero al banco de prueba.",
+  completed: "Retiro completado por el ancla de pruebas.",
+  error: "El ancla marcó el retiro con error.",
+  expired: "El retiro venció antes de completarse.",
+  refunded: "El ancla devolvió el dinero.",
+};
+
+async function startSep24() {
+  // La ventana se abre dentro del clic: si se abre despues de esperar, el navegador la bloquea.
+  const popup = window.open("", "_blank");
+  sep = { token: "", id: "", msg: "Firma en Freighter para identificarte ante el ancla.", busy: true, hashes: [] };
+  renderSep24();
+  try {
+    const lim = await withdrawLimits();
+    const available = Number(fromUnits(reserve ?? 0n, 7).replace(/,/g, ""));
+    if (available < lim.min) throw new Error(`El ancla de pruebas pide al menos ${lim.min} USDC por retiro y tu reserva tiene ${available}.`);
+    // El ancla de pruebas tiene un tope por retiro: se propone el menor de los dos.
+    const amount = Math.min(available, lim.max);
+    sep.token = await anchorLogin(me);
+    sep.msg = `Abriendo el formulario del ancla por ${amount} USDC (acepta entre ${lim.min} y ${lim.max} por retiro)…`;
+    renderSep24();
+    const { id, url } = await startWithdraw(sep.token, me, String(amount));
+    sep.id = id;
+    if (popup) popup.location.href = url;
+    sep.msg = popup ? SEP_STATUS.incomplete : "Tu navegador bloqueó la ventana del ancla.";
+    renderSep24();
+    if (!popup) app.querySelector("#sep24 [role=status]")?.insertAdjacentHTML("beforeend", ` <a href="${esc(url)}" target="_blank" rel="noopener">Abrir el formulario</a>`);
+    pollSep24(0);
+  } catch (err) {
+    popup?.close();
+    sep = { token: "", id: "", msg: err instanceof Error ? err.message : "No se pudo iniciar el retiro.", busy: false, hashes: [] };
+    renderSep24();
+    sep = null;
+  }
+}
+
+async function pollSep24(n: number) {
+  if (!sep?.id || n > SEP_POLL_LIMIT) return;
+  try {
+    const tx = await anchorTx(sep.token, sep.id);
+    const changed = tx.status !== sep.tx?.status;
+    sep.tx = tx;
+    // El ancla espera el USDC y todavia no se envio nada: le toca al usuario, no hay espera.
+    const waiting = tx.status === "pending_user_transfer_start" && sep.hashes.length === 0;
+    const finished = ["completed", "error", "expired", "refunded"].includes(tx.status);
+    if (changed) {
+      sep.msg = SEP_STATUS[tx.status] ?? `Estado del ancla: ${tx.status}.`;
+      sep.busy = !waiting && !finished;
+      renderSep24();
+    }
+    if (finished) {
+      reserve = await taxReserve(me).catch(() => reserve);
+      return;
+    }
+  } catch { /* un fallo de red no corta el seguimiento */ }
+  setTimeout(() => pollSep24(n + 1), SEP_POLL_MS);
+}
+
+async function sendSep24() {
+  const t = sep?.tx;
+  if (!sep || !t?.withdraw_anchor_account || !t.amount_in) return;
+  const amount = toUnits(t.amount_in);
+  if (reserve === null || amount > reserve) {
+    sep.msg = "El ancla pide más de lo que tienes en la reserva. Corrige el monto en su formulario.";
+    renderSep24();
+    return;
+  }
+  sep.busy = true;
+  sep.msg = "Firma 1 de 2: retiras la reserva del contrato a tu cuenta.";
+  renderSep24();
+  try {
+    sep.hashes.push(await withdrawWithWallet(me, me, amount));
+    sep.msg = "Firma 2 de 2: envías el USDC al ancla con la referencia del retiro.";
+    renderSep24();
+    sep.hashes.push(await sendUsdcWithMemo(me, t.withdraw_anchor_account, t.amount_in, t.withdraw_memo ?? "", t.withdraw_memo_type ?? "text"));
+    sep.msg = "Enviado. Esperando que el ancla lo confirme…";
+    renderSep24();
+  } catch (err) {
+    sep.busy = false;
+    sep.msg = err instanceof Error ? err.message : "No se pudo enviar al ancla.";
+    renderSep24();
+  }
 }

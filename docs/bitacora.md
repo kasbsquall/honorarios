@@ -761,3 +761,42 @@ Al preparar los textos del formulario apareció un dato viejo: decía 19 tests d
 23 (`contracts/split/src/test.rs`), tres de ellos con autenticación estricta vía `set_auths(&[])`
 sin firma simulada: `withdraw_requires_the_freelancer_signature`,
 `a_third_party_cannot_withdraw_someone_elses_reserve` y `pay_requires_the_payer_signature`.
+
+## 2026-09-24 · Contrato v3 con recibo en la cadena (pausa de la noche)
+
+Decidido por el usuario tras el jurado simulado (`rivals/06-jurado.md`, fuera del repo): aplicar las
+cuatro líneas de mejora. Hecho y en commits locales `f803d1f` y `b9a9298`, sin push ni despliegue:
+
+- Contrato v3 `CAWIYCJA…XDDF` (ledger 4842759): `issue()` con firma del freelancer, `pay()` solo
+  sobre recibos emitidos y sin pagar. 31 tests. Evidencia en `evidencias/2026-09-24-contrato-v3/`.
+- Cinco ataques rechazados en testnet (`web/scripts/rejections.mjs`), errores leídos del RPC.
+- App: emisión al crear el link, página de pago que lee el recibo de la cadena, "Por cobrar",
+  trustline antes de emitir, TTL de la reserva con `extend_reserve`, enlace `?demo`.
+- README y `docs/arquitectura.md` reescritos. El video sigue mostrando el v2; el README lo dice.
+
+Sin commit todavía: dos arreglos de la revisión de código (trustline comprobada al enviar, "Por
+cobrar" leído del contrato), el texto nuevo de la portada y el retiro SEP-24 contra el ancla de
+pruebas de SDF (`web/src/sep24.ts`, `web/e2e/sep24.mjs`). El SEP-24 falla después de enviar el
+formulario del ancla: el panel no llega a mostrar el botón de envío. El ancla acepta de 1 a 10 USDC
+por retiro (`/sep24/info`).
+
+Descartado: pagador con passkey. No resuelve cómo entran los dólares del cliente y en testnet no
+hay forma de cargar USDC a una smart wallet sin otra wallet.
+
+Pendiente: terminar o cortar SEP-24, repetir e2e, actualizar cifras del panel de ejemplo en el
+README (hoy 1,920 USDC y reserva 113.60, pero cambian con cada recorrido), commit, y push más
+despliegue en Vercel con OK explícito del usuario. Desde el 1 de octubre el panel de ejemplo
+queda vacío hasta volver a correr `seed-demo.mjs`.
+
+## 2026-09-25 · Retiro SEP-24 con el ancla de pruebas y cierre del v3
+
+- El fallo de la noche: al pasar el ancla a `pending_user_transfer_start` el panel seguía marcado
+  como ocupado y no pintaba el botón de envío. Corregido en `web/src/panel.ts` (`pollSep24`).
+- El ancla de pruebas acepta de 1 a 10 USDC por retiro (`/sep24/info`); la app lee esos límites y
+  los dice en pantalla. Corrida completa de 5 USDC con estado final `completed`, hashes en
+  `evidencias/2026-09-24-contrato-v3/origen.md`. Solo con Freighter: la passkey necesitaría SEP-45.
+- La CSP de `web/vercel.json` no permitía `testanchor.stellar.org`; en producción el retiro habría
+  quedado bloqueado. Agregado y comprobado sirviendo el build con esas cabeceras.
+- Recorridos `passkey.mjs` y `record.mjs` repetidos tras los arreglos de la revisión: pasan.
+- Cuenta del panel de ejemplo al cierre: 2,420 USDC en el mes, reserva 148.60 USDC. El README
+  fecha esas cifras porque cambian cuando alguien paga el recibo pendiente.

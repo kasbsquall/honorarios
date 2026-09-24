@@ -4,6 +4,7 @@ import {
   BASE_FEE,
   Horizon,
   Keypair,
+  Memo,
   Networks,
   Operation,
   TransactionBuilder,
@@ -105,7 +106,7 @@ export async function connectWallet(): Promise<string> {
   return access.address;
 }
 
-async function sign(xdrTx: string, address: string): Promise<string> {
+export async function sign(xdrTx: string, address: string): Promise<string> {
   const dev = devKeypair();
   if (dev && dev.publicKey() === address) {
     const tx = TransactionBuilder.fromXDR(xdrTx, NETWORK);
@@ -157,6 +158,19 @@ export async function ensureUsdc(payer: string, amount: bigint): Promise<string 
   const signed = TransactionBuilder.fromXDR(await sign(tx.toXDR(), payer), NETWORK);
   const res = await horizon.submitTransaction(signed);
   return res.hash;
+}
+
+/** Pago clasico de USDC con memo: es como un ancla SEP-24 reconoce a que retiro corresponde. */
+export async function sendUsdcWithMemo(from: string, to: string, amount: string, memo: string, memoType: string): Promise<string> {
+  const account = await horizon.loadAccount(from);
+  const m = memoType === "id" ? Memo.id(memo) : memoType === "hash" ? Memo.hash(Array.from(atob(memo), (c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join("")) : Memo.text(memo);
+  const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
+    .addOperation(Operation.payment({ destination: to, asset: USDC, amount }))
+    .addMemo(m)
+    .setTimeout(120)
+    .build();
+  const signed = TransactionBuilder.fromXDR(await sign(tx.toXDR(), from), NETWORK);
+  return (await horizon.submitTransaction(signed)).hash;
 }
 
 /** Da de alta la trustline de USDC en una cuenta G con Freighter. Sin ella, la cuenta no

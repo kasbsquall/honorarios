@@ -6,7 +6,7 @@ Honorarios aparta el 8% de cada cobro del exterior para que el freelancer peruan
 
 **App:** https://honorarios-pe.vercel.app · **Panel de ejemplo, sin wallet ni instalación, carga en unos 2 segundos:** https://honorarios-pe.vercel.app/?demo · **Video (2:38):** https://youtu.be/L0_wNoNNIJ0 · **Red:** Stellar testnet · **Track:** Real-World Assets & Compliant Rails
 
-El panel de ejemplo lee en vivo una cuenta de pruebas que este mes cobró 1,920 USDC (S/ 7,200 al tipo de cambio de ejemplo de 3.75): muestra el pago a cuenta que le toca, S/ 576, la reserva que tiene para cubrirlo y un recibo pendiente que puedes abrir y pagar.
+El panel de ejemplo lee en vivo una cuenta de pruebas. Al 24 de septiembre llevaba cobrados en el mes 2,420 USDC (S/ 9,075 al tipo de cambio de ejemplo de 3.75): muestra el pago a cuenta que le toca, S/ 726, la reserva que tiene para cubrirlo y un recibo pendiente que puedes abrir y pagar. Las cifras cambian si alguien paga ese recibo.
 
 Proyecto para la hackathon Stellar Odyssey Perú (19 al 26 de septiembre de 2026). Todo el código se escribió durante el evento: [historial de commits](https://github.com/kasbsquall/honorarios/commits/main).
 
@@ -34,7 +34,16 @@ Hoy, en testnet, con una wallet de Stellar en su navegador (Freighter) y USDC o 
 
 ## De la reserva a SUNAT, en soles
 
-SUNAT recibe soles. En la red principal eso lo hace un ancla que liquida soles por SEP-24; el panel consulta en vivo el `stellar.toml` de Anclap ("Sol Digital", PEN) y lo muestra en el paso 1 de "Cómo se paga a SUNAT". Esa liquidación ocurre en la red principal y esta app corre en testnet, así que desde aquí no se retira a un banco peruano.
+SUNAT recibe soles. En la red principal eso lo hace un ancla que liquida soles por SEP-24; el panel consulta en vivo el `stellar.toml` de Anclap ("Sol Digital", PEN) y lo muestra en el paso 1 de "Cómo se paga a SUNAT". Esa ancla opera en la red principal, así que desde testnet no se retira a un banco peruano.
+
+Lo que sí corre en testnet es el mismo camino con el ancla de pruebas de SDF, que acepta el USDC de Circle y simula la salida a un banco (sin soles ni banco real). Con una cuenta conectada por Freighter, el paso 1 ejecuta el retiro completo:
+
+1. La wallet se identifica ante el ancla firmando su reto (SEP-10).
+2. El ancla abre su formulario de retiro (SEP-24) y el freelancer pone ahí sus datos.
+3. El freelancer firma dos veces: retira la reserva del contrato a su cuenta y envía el USDC al ancla con la referencia que el ancla pidió.
+4. El panel sigue el estado del ancla hasta que marca el retiro como completado.
+
+Corrida del 24 de septiembre, 5 USDC (el ancla de pruebas acepta de 1 a 10 por retiro): retiro de la reserva [`ab823589…9e6c`](https://stellar.expert/explorer/testnet/tx/ab8235898915356276d3e59d23a5fec6915b75e2f2df31cb10fab3a8e3029e6c) y envío al ancla [`ab6c7806…e39b`](https://stellar.expert/explorer/testnet/tx/ab6c7806f6cd8bacaffdd777ad0a34ca5fa75db4d6cd1c20c5cf95782153e39b). El guion es `web/e2e/sep24.mjs`. Una wallet con passkey necesitaría la autenticación para contratos del ancla (SEP-45), que no está conectada.
 
 ## Cómo usa Stellar
 
@@ -45,6 +54,7 @@ SUNAT recibe soles. En la red principal eso lo hace un ancla que liquida soles p
 | **Path payments** (`path_payment_strict_receive`) | El cliente paga aunque solo tenga XLM |
 | **Smart accounts de OpenZeppelin + passkeys** (secp256r1, `smart-account-kit`) | Wallet del freelancer sin frase semilla |
 | **Relayer de SDF** (OpenZeppelin Channels) | Patrocina las comisiones de la smart wallet |
+| **SEP-10 y SEP-24** con el ancla de pruebas de SDF | Retiro de la reserva hasta un banco simulado, de punta a punta en testnet |
 | **RPC `getEvents` y `getLedgerEntries`** | El panel reconstruye recibos y cobros desde la cadena, sin base de datos, y lee hasta cuándo vive la reserva |
 
 ## Controles de cumplimiento (track 03)
@@ -100,7 +110,7 @@ node scripts/rejections.mjs   # los cinco ataques; imprime hash, estado y error 
 | Recibo emitido con passkey desde una smart wallet | [`3ca133a0…17a7`](https://stellar.expert/explorer/testnet/tx/3ca133a095cf45f41500aa1061dfa2e89b30bedc71fc732ff92f33402c6917a7) |
 | Pago de ese recibo y retiro firmado con passkey | [`51f402ea…8f10`](https://stellar.expert/explorer/testnet/tx/51f402ea6f6389cfff25e686b95bd58fc32d11fc6751f9a08d5c4a5713ce8f10), [`55d10bf3…1866`](https://stellar.expert/explorer/testnet/tx/55d10bf3a29f5f8d766c350544090787b74d7c195c316160e1e3b36748451866) |
 
-La cuenta del panel de ejemplo es [`GCY5…HSSA`](https://stellar.expert/explorer/testnet/account/GCY5LQWZD36VIBSH6PSJOHJK4F3LSNFPTMJMRH7UWKI5L4PPKCXZHSSA). Este mes tiene cuatro recibos pagados (500, 620, 300 y 500 USDC: 1,920 USDC, S/ 7,200 al tipo de cambio de ejemplo de 3.75, con un pago a cuenta de S/ 576) y uno pendiente, E001-4 por 180 USDC. Su reserva, 113.60 USDC o S/ 426, se queda corta frente a ese pago porque se retiraron 40 USDC antes del cierre del mes, que es justo lo que la app advierte que no conviene hacer. La lista completa de hashes está en [`evidencias/2026-09-24-contrato-v3/origen.md`](evidencias/2026-09-24-contrato-v3/origen.md).
+La cuenta del panel de ejemplo es [`GCY5…HSSA`](https://stellar.expert/explorer/testnet/account/GCY5LQWZD36VIBSH6PSJOHJK4F3LSNFPTMJMRH7UWKI5L4PPKCXZHSSA). Al 24 de septiembre tenía cinco recibos pagados en el mes (500, 620, 300, 500 y 500 USDC: 2,420 USDC, S/ 9,075 al tipo de cambio de ejemplo de 3.75, con un pago a cuenta de S/ 726) y uno pendiente, E001-4 por 180 USDC. Su reserva, 148.60 USDC o S/ 557.25, se queda corta frente a ese pago porque se retiraron 45 USDC antes del cierre del mes (40 a su cuenta y 5 por el ancla de pruebas), que es justo lo que la app advierte que no conviene hacer. La lista completa de hashes está en [`evidencias/2026-09-24-contrato-v3/origen.md`](evidencias/2026-09-24-contrato-v3/origen.md).
 
 **La corrida del video** es anterior al recibo en la cadena: usa el contrato v2, [`CCTU5SUS…X3EU`](https://stellar.expert/explorer/testnet/contract/CCTU5SUST4I6O5JIO6UHRGI2NW6FHWFNHVRGWPTKCGKCY7Z4X3CMX3EU), donde el link llevaba el monto y el freelancer no firmaba nada al crearlo. Esa corrida sigue verificable de principio a fin: la wallet se crea en el minuto 0:31 del video ([`CATN…J5FR`](https://stellar.expert/explorer/testnet/contract/CATNE6YKD72P5OTSW5N6U3SR7AOAQ7R5GQYVX66B6VKV5IDIY6R7J5FR)), el cobro de 500 USDC es [`4668b6f3…c8f9`](https://stellar.expert/explorer/testnet/tx/4668b6f344a715d3cdd3f943ff398873c657241a3fb8ffed1efe4c3efc03c8f9) y el retiro con passkey del minuto 1:48 es [`b47aa15e…d913`](https://stellar.expert/explorer/testnet/tx/b47aa15ee86b4df29336159ee89d5fad2b441afae61cf9037eb38d73782d913e).
 
