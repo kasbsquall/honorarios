@@ -30,7 +30,7 @@ Los links de cobro con cripto ya existen. Lo que agrega Honorarios es lo que pas
 
 ## Cómo se ve
 
-Capturas del dominio público durante el ensayo de la demo en vivo del 24 de septiembre. El guion, los tiempos medidos de cada paso y el plan B están en [docs/demo-en-vivo.md](docs/demo-en-vivo.md).
+Capturas del dominio público tomadas en un recorrido de prueba en producción el 24 de septiembre. Los tiempos medidos de cada paso están en [docs/demo-en-vivo.md](docs/demo-en-vivo.md).
 
 | Panel de ejemplo: un mes que cruza el umbral | Estimado del pago a cuenta en soles |
 |---|---|
@@ -143,7 +143,7 @@ web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con s
 web/scripts/       seed del panel de ejemplo, ataques rechazados y check-demo
 web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
-docs/              arquitectura, bitácora de decisiones, guion de la demo en vivo y capturas
+docs/              arquitectura, bitácora de decisiones, recorrido de prueba en producción y capturas
 ```
 
 ## Contrato
@@ -192,7 +192,7 @@ node web/e2e/record.mjs    # recibo firmado y cobro con Freighter
 node web/e2e/passkey.mjs   # passkey con autenticador WebAuthn virtual: wallet, recibo, cobro y retiro
 node web/e2e/demo.mjs      # recorrido completo, grabado sin cortes para el video
 node web/e2e/sep24.mjs     # retiro de la reserva por el ancla de pruebas de SDF
-node web/e2e/ensayo.mjs    # ensayo de la demo en vivo contra el dominio público, con tiempos y capturas
+node web/e2e/ensayo.mjs    # recorrido de prueba contra el dominio público, con tiempos y capturas
 ```
 
 `node scripts/check-demo.mjs`, desde `web/` y también en CI, comprueba que la cuenta del panel de ejemplo cobró en el contrato vigente. Existe porque un redespliegue dejó esa constante apuntando a un contrato muerto y el panel mostró ceros hasta que alguien lo abrió.
