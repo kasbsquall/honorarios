@@ -832,3 +832,11 @@ de Lima): descripción en una línea que abre con la reserva, "¿Cómo usa Stell
 la cadena, 31 tests, los ataques rechazados y SEP-24, evidencia on-chain apuntando al contrato v3
 `CAWIYCJA…XDDF` y link de la app `https://honorarios-pe.vercel.app`. Los videos no cambiaron. La
 edición la hizo el usuario; Claude no entró a la plataforma.
+
+## 2026-09-24 · Evaluación virtual, sin demo presencial
+
+El usuario confirmó que no asiste a ninguna demo presencial: la evaluación es virtual y todo
+ocurre en septiembre. El jurado ve el formulario, el README, el video y la app por su cuenta.
+`docs/demo-en-vivo.md` queda como registro del ensayo en producción (tiempos y capturas), sin uso
+para una presentación. El aviso de que el panel de ejemplo sale vacío desde el 1 de octubre deja
+de ser urgente mientras la revisión termine en septiembre.
