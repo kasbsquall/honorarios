@@ -824,3 +824,11 @@ dominio público con passkey: crear wallet 16.3 s, emitir recibo 10.6 s, pago 10
 11.5 s. El pago lo firmó la cuenta de prueba desde local porque Freighter no existe sin interfaz.
 Guion, tiempos y plan B en `docs/demo-en-vivo.md`; capturas en `docs/capturas/` y cinco de ellas
 en el README. El usuario pidió no rotar ninguna clave.
+
+## 2026-09-24 · Formulario de entrega actualizado
+
+El usuario editó y guardó la entrega en la plataforma (editable hasta el 25 de septiembre, 11:59 p. m.
+de Lima): descripción en una línea que abre con la reserva, "¿Cómo usa Stellar?" con el recibo en
+la cadena, 31 tests, los ataques rechazados y SEP-24, evidencia on-chain apuntando al contrato v3
+`CAWIYCJA…XDDF` y link de la app `https://honorarios-pe.vercel.app`. Los videos no cambiaron. La
+edición la hizo el usuario; Claude no entró a la plataforma.
