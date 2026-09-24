@@ -44,12 +44,13 @@ mark("link_form");
 await page.locator('#newlink input[name="amount"]').pressSequentially("500", { delay: 90 });
 await page.locator('#newlink input[name="ref"]').pressSequentially("E001-7", { delay: 60 });
 await page.locator('#newlink input[name="concept"]').pressSequentially("Diseño de identidad visual", { delay: 35 });
-await page.getByRole("button", { name: "Crear link" }).click();
+await page.getByRole("button", { name: "Emitir recibo y crear link" }).click();
+await page.locator("#linkout code").waitFor({ timeout: 120_000 }); // el recibo se firma y se emite en la cadena
 const link = await page.locator("#linkout code").innerText();
 mark("link_ready", { link });
 await pause(1800);
 
-await page.goto(`${link}&dev=client`);
+await page.goto(`${link.replace(/^https?:\/\/[^/]+/, BASE)}&dev=client`);
 mark("pay_page");
 await pause(1800);
 for (const label of ["Connect Freighter", "Prepare USDC", /^Pay /]) {

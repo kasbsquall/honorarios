@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { Address, Contract, Keypair, Networks, TransactionBuilder, nativeToScVal, rpc, scValToNative } from "@stellar/stellar-sdk";
 
 const src = readFileSync("src/panel.ts", "utf8");
-const wallet = src.match(/DEMO_ADDRESS = "(C[A-Z0-9]+)"/)[1];
+const wallet = src.match(/DEMO_ADDRESS = "([GC][A-Z0-9]+)"/)[1];
 const contract = readFileSync("src/stellar.ts", "utf8").match(/CONTRACT_ID = "(C[A-Z0-9]+)"/)[1];
 const server = new rpc.Server("https://soroban-testnet.stellar.org");
 // Cualquier cuenta existente sirve como remitente de una simulacion: no se firma ni se envia.

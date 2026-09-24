@@ -1,80 +1,42 @@
-// Deja en la cuenta del panel de ejemplo un mes que cruza el umbral de S/ 4,010.
-// Sin esto el escaparate ensena el caso aburrido ("no debes nada"), que es justo el mes
-// en que el producto no hace falta. Los cobros son reales y quedan en la cadena.
-import { readFileSync } from "node:fs";
-import {
-  Asset, BASE_FEE, Contract, Horizon, Keypair, Networks, Operation,
-  TransactionBuilder, Address, nativeToScVal, rpc,
-} from "@stellar/stellar-sdk";
+// Deja en la cuenta del panel de ejemplo un mes que cruza el umbral de S/ 4,010, y un recibo
+// emitido sin pagar para que cualquiera pueda probar la pagina de pago. Sin esto el escaparate
+// ensena el caso aburrido ("no debes nada"), que es justo el mes en que el producto no hace
+// falta. Todo es real y queda en la cadena. Se puede repetir: salta lo que ya esta hecho.
+import { CONTRACT, DEMO, addr, client, ensureClientUsdc, freelancer, i128, invoke, read, str, usdc } from "./chain.mjs";
 
-const CONTRACT = readFileSync("src/stellar.ts", "utf8").match(/CONTRACT_ID = "(C[A-Z0-9]+)"/)[1];
-const FREELANCER = readFileSync("src/panel.ts", "utf8").match(/DEMO_ADDRESS = "(C[A-Z0-9]+)"/)[1];
-const USDC = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
-const COBROS = [
-  { amount: "620.00", ref: "E001-8" },
-  { amount: "300.00", ref: "E001-9" },
+if (freelancer.publicKey() !== DEMO) throw new Error("La cuenta del panel de ejemplo no es la del freelancer de pruebas.");
+
+const RECIBOS = [
+  { ref: "E001-1", amount: "500.00", concept: "Diseño de identidad", pay: true },
+  { ref: "E001-2", amount: "620.00", concept: "Rediseño de sitio web", pay: true },
+  { ref: "E001-3", amount: "300.00", concept: "Ilustración editorial", pay: true },
+  { ref: "E001-4", amount: "180.00", concept: "Mantenimiento web de octubre", pay: false },
 ];
+// Retiro antes del cierre del mes: el panel lo usa para ensenar el aviso de reserva corta.
+const RETIRO = "40.00";
 
-const env = Object.fromEntries(readFileSync(".env.development.local", "utf8").split(/\r?\n/).filter(Boolean).map((l) => l.split("=")));
-const payer = Keypair.fromSecret(env.VITE_DEV_CLIENT_SECRET.trim());
-const horizon = new Horizon.Server("https://horizon-testnet.stellar.org");
-const soroban = new rpc.Server("https://soroban-testnet.stellar.org");
+console.log(`contrato ${CONTRACT}\nfreelancer ${DEMO}\ncliente ${client.publicKey()}`);
+const toPay = RECIBOS.filter((r) => r.pay).reduce((a, r) => a + Number(r.amount), 0);
+const bought = await ensureClientUsdc(toPay + 200);
+if (bought) console.log(`compra de USDC del cliente: ${bought}`);
 
-async function usdcBalance() {
-  const acc = await horizon.loadAccount(payer.publicKey());
-  const b = acc.balances.find((x) => x.asset_code === "USDC" && x.asset_issuer === USDC.issuer);
-  return Number(b?.balance ?? 0);
-}
-
-async function buyUsdc(need) {
-  const acc = await horizon.loadAccount(payer.publicKey());
-  const paths = await horizon.strictReceivePaths([Asset.native()], USDC, need.toFixed(7)).call();
-  if (!paths.records.length) throw new Error("no hay ruta XLM -> USDC");
-  const best = paths.records[0];
-  const tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: Networks.TESTNET })
-    .addOperation(Operation.pathPaymentStrictReceive({
-      sendAsset: Asset.native(),
-      sendMax: (Number(best.source_amount) * 1.15).toFixed(7),
-      destination: payer.publicKey(),
-      destAsset: USDC,
-      destAmount: need.toFixed(7),
-      path: best.path.map((p) => (p.asset_type === "native" ? Asset.native() : new Asset(p.asset_code, p.asset_issuer))),
-    }))
-    .setTimeout(120).build();
-  tx.sign(payer);
-  const res = await horizon.submitTransaction(tx);
-  console.log(`  compra de ${need.toFixed(2)} USDC: ${res.hash}`);
-}
-
-async function pay({ amount, ref }) {
-  const units = BigInt(Math.round(Number(amount) * 1e7));
-  const acc = await soroban.getAccount(payer.publicKey());
-  let tx = new TransactionBuilder(acc, { fee: "2000000", networkPassphrase: Networks.TESTNET })
-    .addOperation(new Contract(CONTRACT).call(
-      "pay",
-      nativeToScVal(new Address(payer.publicKey())),
-      nativeToScVal(new Address(FREELANCER)),
-      nativeToScVal(units, { type: "i128" }),
-      nativeToScVal(ref, { type: "string" }),
-    )).setTimeout(120).build();
-  tx = await soroban.prepareTransaction(tx);
-  tx.sign(payer);
-  const sent = await soroban.sendTransaction(tx);
-  for (let i = 0; i < 40; i++) {
-    await new Promise((r) => setTimeout(r, 1500));
-    const g = await soroban.getTransaction(sent.hash);
-    if (g.status === "SUCCESS") return sent.hash;
-    if (g.status === "FAILED") throw new Error(JSON.stringify(g.resultXdr));
+for (const r of RECIBOS) {
+  let rec = await read("receipt", addr(DEMO), str(r.ref));
+  if (!rec) {
+    const h = await invoke(freelancer, "issue", addr(DEMO), str(r.ref), i128(usdc(r.amount)), str(r.concept));
+    console.log(`emitido ${r.ref} por ${r.amount} USDC: ${h}`);
+    rec = { paid: false };
   }
-  throw new Error("timeout");
+  if (r.pay && !rec.paid) {
+    const h = await invoke(client, "pay", addr(client.publicKey()), addr(DEMO), str(r.ref));
+    console.log(`pagado ${r.ref}: ${h}`);
+  }
 }
 
-const total = COBROS.reduce((a, c) => a + Number(c.amount), 0);
-const have = await usdcBalance();
-console.log(`pagador ${payer.publicKey()} · USDC ${have.toFixed(2)} · necesita ${total.toFixed(2)}`);
-if (have < total) await buyUsdc(total - have + 1);
-
-for (const c of COBROS) {
-  const hash = await pay(c);
-  console.log(`cobro ${c.ref} de ${c.amount} USDC -> ${hash}`);
+const reserva = await read("tax_reserve", addr(DEMO));
+// 8% de 1,420 USDC son 113.6: si la reserva sigue entera, todavia no se hizo el retiro.
+if (reserva === usdc("113.6")) {
+  const h = await invoke(freelancer, "withdraw_tax", addr(DEMO), addr(DEMO), i128(usdc(RETIRO)));
+  console.log(`retiro de ${RETIRO} USDC de la reserva: ${h}`);
 }
+console.log(`reserva final ${(Number(await read("tax_reserve", addr(DEMO))) / 1e7).toFixed(2)} USDC`);

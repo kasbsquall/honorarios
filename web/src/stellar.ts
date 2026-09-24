@@ -1,4 +1,5 @@
 import {
+  Address,
   Asset,
   BASE_FEE,
   Horizon,
@@ -17,14 +18,16 @@ import { getNetworkDetails, isConnected, requestAccess, signTransaction } from "
 export const NETWORK = Networks.TESTNET;
 export const RPC_URL = "https://soroban-testnet.stellar.org";
 export const HORIZON_URL = "https://horizon-testnet.stellar.org";
-export const CONTRACT_ID = "CCTU5SUST4I6O5JIO6UHRGI2NW6FHWFNHVRGWPTKCGKCY7Z4X3CMX3EU";
+export const CONTRACT_ID = "CAWIYCJAOXFIL5XHIIXK34XOSLSFTLUU5LP6JEL65QECGZM5WATUXDDF";
 export const USDC = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 export const TAX_BPS = 800n;
 export const EXPLORER = "https://stellar.expert/explorer/testnet";
 const DECIMALS = 7;
 const PATH_SLIPPAGE = 1.05;
+// Un ledger de testnet cierra cada ~5 s: sirve para pasar un TTL en ledgers a una fecha.
+const LEDGER_SECONDS = 5;
 // Ledger del despliegue del contrato: no hay eventos antes de esto.
-const DEPLOY_LEDGER = 4_770_618;
+const DEPLOY_LEDGER = 4_842_759;
 // El RPC de testnet recorre como maximo ~10k ledgers por consulta.
 const EVENT_SCAN_STEP = 9_000;
 
@@ -156,7 +159,19 @@ export async function ensureUsdc(payer: string, amount: bigint): Promise<string 
   return res.hash;
 }
 
-function honorarios(publicKey?: string) {
+/** Da de alta la trustline de USDC en una cuenta G con Freighter. Sin ella, la cuenta no
+ *  puede recibir el neto de un cobro y el cliente veria fallar su pago al firmar. */
+export async function addUsdcTrustline(address: string): Promise<string> {
+  const account = await horizon.loadAccount(address);
+  const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
+    .addOperation(Operation.changeTrust({ asset: USDC }))
+    .setTimeout(120)
+    .build();
+  const signed = TransactionBuilder.fromXDR(await sign(tx.toXDR(), address), NETWORK);
+  return (await horizon.submitTransaction(signed)).hash;
+}
+
+export function honorarios(publicKey?: string) {
   return contract.Client.from({
     contractId: CONTRACT_ID,
     networkPassphrase: NETWORK,
@@ -179,10 +194,51 @@ function hashOf(sent: any): string {
   return hash;
 }
 
-export async function payInvoice(payer: string, freelancer: string, gross: bigint, ref: string): Promise<string> {
-  const client = (await honorarios(payer)) as any;
-  const tx = await client.pay({ payer, freelancer, gross, receipt_ref: ref });
+export type Receipt = { gross: bigint; concept: string; paid: boolean };
+
+/** El recibo tal como lo guarda el contrato. `null` si nadie lo emitio. */
+export async function readReceipt(freelancer: string, ref: string): Promise<Receipt | null> {
+  const client = (await honorarios()) as any;
+  const r = (await client.receipt({ freelancer, receipt_ref: ref })).result;
+  if (!r) return null;
+  return { gross: BigInt(r.gross), concept: String(r.concept), paid: Boolean(r.paid) };
+}
+
+/** El freelancer emite el recibo firmando con Freighter. Solo lo emitido se puede cobrar. */
+export async function issueWithWallet(freelancer: string, ref: string, gross: bigint, concept: string): Promise<string> {
+  const client = (await honorarios(freelancer)) as any;
+  const tx = await client.issue({ freelancer, receipt_ref: ref, gross, concept });
   return hashOf(await tx.signAndSend());
+}
+
+/** El monto no viaja en el link: el contrato cobra lo que dice el recibo emitido. */
+export async function payInvoice(payer: string, freelancer: string, ref: string): Promise<string> {
+  const client = (await honorarios(payer)) as any;
+  const tx = await client.pay({ payer, freelancer, receipt_ref: ref });
+  return hashOf(await tx.signAndSend());
+}
+
+/** Renueva el TTL de la reserva con Freighter. Si la reserva ya estaba archivada, el
+ *  cliente del SDK la restaura antes (restore: true). */
+export async function extendWithWallet(freelancer: string): Promise<string> {
+  const client = (await honorarios(freelancer)) as any;
+  const tx = await client.extend_reserve({ freelancer }, { restore: true });
+  return hashOf(await tx.signAndSend({ force: true }));
+}
+
+/** Hasta cuando vive la reserva en la red antes de archivarse. `null` si no existe. */
+export async function reserveLiveUntil(freelancer: string): Promise<Date | null> {
+  const key = xdr.LedgerKey.contractData(
+    new xdr.LedgerKeyContractData({
+      contract: new Address(CONTRACT_ID).toScAddress(),
+      key: xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("TaxReserve"), nativeToScVal(freelancer, { type: "address" })]),
+      durability: xdr.ContractDataDurability.persistent(),
+    }),
+  );
+  const [res, latest] = await Promise.all([server.getLedgerEntries(key), server.getLatestLedger()]);
+  const until = res.entries[0]?.liveUntilLedgerSeq;
+  if (until === undefined) return null;
+  return new Date(Date.now() + (until - latest.sequence) * LEDGER_SECONDS * 1000);
 }
 
 export async function withdrawWithWallet(freelancer: string, to: string, amount: bigint): Promise<string> {
@@ -216,9 +272,10 @@ export type Paid = {
   at: Date;
 };
 
-export async function paidEvents(freelancer: string): Promise<Paid[]> {
+/** Eventos del contrato con ese nombre y ese freelancer como topic, del mas nuevo al mas viejo. */
+async function contractEvents(name: string, freelancer: string) {
   const { sequence } = await server.getLatestLedger();
-  const topics = [[xdr.ScVal.scvSymbol("paid").toXDR("base64"), nativeToScVal(freelancer, { type: "address" }).toXDR("base64")]];
+  const topics = [[xdr.ScVal.scvSymbol(name).toXDR("base64"), nativeToScVal(freelancer, { type: "address" }).toXDR("base64")]];
   const probe = await server.getEvents({ startLedger: sequence - 1, filters: [], limit: 1 });
   const from = Math.max(DEPLOY_LEDGER, probe.oldestLedger);
   const windows: number[] = [];
@@ -240,9 +297,11 @@ export async function paidEvents(freelancer: string): Promise<Paid[]> {
   };
 
   const pages = await Promise.all(windows.map(scan));
-  return pages
-    .flat()
-    .map((e) => {
+  return pages.flat().reverse();
+}
+
+export async function paidEvents(freelancer: string): Promise<Paid[]> {
+  return (await contractEvents("paid", freelancer)).map((e) => {
       const v = scValToNative(e.value);
       return {
         gross: BigInt(v.gross),
@@ -255,6 +314,15 @@ export async function paidEvents(freelancer: string): Promise<Paid[]> {
         txHash: e.txHash,
         at: new Date(e.ledgerClosedAt),
       };
-    })
-    .reverse();
+    });
+}
+
+export type Issued = { ref: string; gross: bigint; concept: string; at: Date };
+
+/** Recibos emitidos por el freelancer, pagados o no. */
+export async function issuedEvents(freelancer: string): Promise<Issued[]> {
+  return (await contractEvents("issued", freelancer)).map((e) => {
+    const v = scValToNative(e.value);
+    return { ref: String(v.receipt_ref), gross: BigInt(v.gross), concept: String(v.concept), at: new Date(e.ledgerClosedAt) };
+  });
 }

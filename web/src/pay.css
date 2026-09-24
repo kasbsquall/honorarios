@@ -24,3 +24,4 @@
 @media (min-width: 900px) { .desktop-only-note { display: none } }
 
 .to-addr { font-size: var(--t-s); color: var(--ink-3); letter-spacing: .04em }
+.lines .u { color: var(--ink-3); font-size: var(--t-xs) }

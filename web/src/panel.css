@@ -134,3 +134,17 @@ select.inline { background: none; border: 0; color: inherit; font: inherit; padd
 .wd-hint { grid-column: 1 / -1; font-size: var(--t-s); line-height: 1.5 }
 
 .how .price { border-top: 1px solid var(--rule); padding-top: 16px; max-width: 78ch; line-height: 1.6 }
+
+/* Recibos emitidos y sin pagar: filas densas, el monto alineado a la derecha. */
+.pending { list-style: none; padding: 0; margin: 0 0 64px; border-top: 1px solid var(--rule-strong) }
+.pending li { display: grid; grid-template-columns: 8ch 1fr auto; gap: 8px 20px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rule); font-size: var(--t-s) }
+.pending li > span:first-child { color: var(--ink-3) }
+.pending li > span:nth-child(3) { text-align: right; font-size: var(--t-m); letter-spacing: -.02em }
+.pending li > span:nth-child(3) small { font-size: var(--t-xs); color: var(--ink-3); letter-spacing: 0 }
+.pending .acts { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap }
+@media (min-width: 760px) {
+  .pending li { grid-template-columns: 8ch 1fr auto auto }
+  .pending .acts { grid-column: auto }
+}
+.ttl { margin-top: 8px; color: var(--ink-3) }
+.pending a.btn { text-decoration: none }

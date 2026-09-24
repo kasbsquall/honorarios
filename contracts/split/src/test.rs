@@ -51,12 +51,17 @@ fn setup_with_fee(fee_bps: i128) -> Setup {
     }
 }
 
+/// El freelancer emite el recibo y el cliente lo paga: es el unico camino de un cobro.
+fn cobrar(s: &Setup, freelancer: &Address, gross: i128, receipt_ref: &str) -> i128 {
+    let r = String::from_str(&s.env, receipt_ref);
+    s.contract.issue(freelancer, &r, &gross, &String::from_str(&s.env, "Servicios"));
+    s.contract.pay(&s.payer, freelancer, &r)
+}
+
 #[test]
 fn pay_splits_net_and_tax_reserve() {
     let s = setup();
-    let receipt = String::from_str(&s.env, "E001-12");
-
-    let net = s.contract.pay(&s.payer, &s.freelancer, &500_0000000, &receipt);
+    let net = cobrar(&s, &s.freelancer, 500_0000000, "E001-12");
 
     assert_eq!(net, 460_0000000);
     assert_eq!(s.usdc.balance(&s.freelancer), 460_0000000);
@@ -68,10 +73,8 @@ fn pay_splits_net_and_tax_reserve() {
 #[test]
 fn reserve_accumulates_across_payments() {
     let s = setup();
-    let receipt = String::from_str(&s.env, "E001-13");
-
-    s.contract.pay(&s.payer, &s.freelancer, &100_0000000, &receipt);
-    s.contract.pay(&s.payer, &s.freelancer, &200_0000000, &receipt);
+    cobrar(&s, &s.freelancer, 100_0000000, "E001-13");
+    cobrar(&s, &s.freelancer, 200_0000000, "E001-14");
 
     assert_eq!(s.contract.tax_reserve(&s.freelancer), 24_0000000);
 }
@@ -80,8 +83,9 @@ fn reserve_accumulates_across_payments() {
 fn rejects_non_positive_amount() {
     let s = setup();
     let receipt = String::from_str(&s.env, "E001-14");
+    let concept = String::from_str(&s.env, "Servicios");
 
-    let result = s.contract.try_pay(&s.payer, &s.freelancer, &0, &receipt);
+    let result = s.contract.try_issue(&s.freelancer, &receipt, &0, &concept);
 
     assert_eq!(result, Err(Ok(Error::InvalidAmount)));
 }
@@ -90,8 +94,7 @@ fn rejects_non_positive_amount() {
 fn freelancer_withdraws_reserve() {
     let s = setup();
     let sunat = Address::generate(&s.env);
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-15"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-15");
 
     s.contract.withdraw_tax(&s.freelancer, &sunat, &30_0000000);
 
@@ -113,8 +116,9 @@ fn cannot_withdraw_more_than_reserve() {
 fn rejects_payer_as_freelancer() {
     let s = setup();
     let receipt = String::from_str(&s.env, "E001-16");
+    s.contract.issue(&s.payer, &receipt, &100_0000000, &String::from_str(&s.env, "Servicios"));
 
-    let result = s.contract.try_pay(&s.payer, &s.payer, &100_0000000, &receipt);
+    let result = s.contract.try_pay(&s.payer, &s.payer, &receipt);
 
     assert_eq!(result, Err(Ok(Error::InvalidParty)));
 }
@@ -123,8 +127,9 @@ fn rejects_payer_as_freelancer() {
 fn rejects_contract_as_freelancer() {
     let s = setup();
     let receipt = String::from_str(&s.env, "E001-17");
+    let concept = String::from_str(&s.env, "Servicios");
 
-    let result = s.contract.try_pay(&s.payer, &s.contract.address, &100_0000000, &receipt);
+    let result = s.contract.try_issue(&s.contract.address, &receipt, &100_0000000, &concept);
 
     assert_eq!(result, Err(Ok(Error::InvalidParty)));
 }
@@ -134,7 +139,9 @@ fn rejects_long_receipt_ref() {
     let s = setup();
     let long = String::from_str(&s.env, "E001-000000000000000000000000000001");
 
-    let result = s.contract.try_pay(&s.payer, &s.freelancer, &100_0000000, &long);
+    let concept = String::from_str(&s.env, "Servicios");
+
+    let result = s.contract.try_issue(&s.freelancer, &long, &100_0000000, &concept);
 
     assert_eq!(result, Err(Ok(Error::ReceiptRefTooLong)));
 }
@@ -143,7 +150,7 @@ fn rejects_long_receipt_ref() {
 fn pay_extends_reserve_ttl() {
     use soroban_sdk::testutils::storage::Persistent as _;
     let s = setup();
-    s.contract.pay(&s.payer, &s.freelancer, &100_0000000, &String::from_str(&s.env, "E001-18"));
+    cobrar(&s, &s.freelancer, 100_0000000, "E001-18");
 
     let ttl = s.env.as_contract(&s.contract.address, || {
         s.env.storage().persistent().get_ttl(&DataKey::TaxReserve(s.freelancer.clone()))
@@ -174,8 +181,14 @@ fn setup_enforcing_auth() -> Setup {
         fee_to,
         env,
     };
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-1"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-1");
+    // Un recibo emitido y sin pagar, para probar que pagarlo exige la firma del cliente.
+    s.contract.issue(
+        &s.freelancer,
+        &String::from_str(&s.env, "E001-2"),
+        &100_0000000,
+        &String::from_str(&s.env, "Servicios"),
+    );
     s.env.set_auths(&[]); // a partir de aqui nadie tiene firma concedida
     s
 }
@@ -210,18 +223,15 @@ fn a_third_party_cannot_withdraw_someone_elses_reserve() {
 #[should_panic(expected = "InvalidAction")]
 fn pay_requires_the_payer_signature() {
     let s = setup_enforcing_auth();
-    s.contract
-        .pay(&s.payer, &s.freelancer, &100_0000000, &String::from_str(&s.env, "E001-2"));
+    s.contract.pay(&s.payer, &s.freelancer, &String::from_str(&s.env, "E001-2"));
 }
 
 #[test]
 fn month_gross_accumulates_and_separates_periods() {
     let s = setup();
     let period = s.contract.current_period();
-    s.contract
-        .pay(&s.payer, &s.freelancer, &300_0000000, &String::from_str(&s.env, "E001-3"));
-    s.contract
-        .pay(&s.payer, &s.freelancer, &200_0000000, &String::from_str(&s.env, "E001-4"));
+    cobrar(&s, &s.freelancer, 300_0000000, "E001-3");
+    cobrar(&s, &s.freelancer, 200_0000000, "E001-4");
 
     assert_eq!(s.contract.month_gross(&s.freelancer, &period), 500_0000000);
     assert_eq!(s.contract.month_gross(&s.freelancer, &(period + 1)), 0);
@@ -248,10 +258,8 @@ fn the_month_closes_at_midnight_in_lima() {
 fn the_contract_never_owes_more_than_it_holds() {
     let s = setup();
     let otro = Address::generate(&s.env);
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-8"));
-    s.contract
-        .pay(&s.payer, &otro, &250_0000000, &String::from_str(&s.env, "E001-9"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-8");
+    cobrar(&s, &otro, 250_0000000, "E001-9");
     s.contract.withdraw_tax(&s.freelancer, &s.payer, &10_0000000);
 
     // Invariante de custodia: lo reservado a nombre de todos cabe en el balance del contrato.
@@ -263,7 +271,7 @@ fn the_contract_never_owes_more_than_it_holds() {
 fn the_reserve_rounds_up() {
     let s = setup();
     // 9 unidades: el 8% exacto es 0.72 y el contrato aparta 1, nunca menos de lo debido.
-    s.contract.pay(&s.payer, &s.freelancer, &9, &String::from_str(&s.env, "E001-10"));
+    cobrar(&s, &s.freelancer, 9, "E001-10");
 
     assert_eq!(s.contract.tax_reserve(&s.freelancer), 1);
     assert_eq!(s.usdc.balance(&s.freelancer), 8);
@@ -272,11 +280,11 @@ fn the_reserve_rounds_up() {
 #[test]
 fn rejects_amounts_that_would_overflow_the_tax() {
     let s = setup();
-    let r = s.contract.try_pay(
-        &s.payer,
+    let r = s.contract.try_issue(
         &s.freelancer,
-        &(MAX_GROSS + 1),
         &String::from_str(&s.env, "E001-11"),
+        &(MAX_GROSS + 1),
+        &String::from_str(&s.env, "Servicios"),
     );
 
     assert_eq!(r, Err(Ok(Error::InvalidAmount)));
@@ -286,8 +294,7 @@ fn rejects_amounts_that_would_overflow_the_tax() {
 fn extend_reserve_renews_the_ttl_without_moving_funds() {
     use soroban_sdk::testutils::storage::Persistent as _;
     let s = setup();
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-12"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-12");
     let antes = s.contract.tax_reserve(&s.freelancer);
 
     s.contract.extend_reserve(&s.freelancer);
@@ -302,8 +309,7 @@ fn extend_reserve_renews_the_ttl_without_moving_funds() {
 #[test]
 fn without_fee_the_whole_gross_stays_with_the_freelancer() {
     let s = setup();
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-13"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-13");
 
     // 460 en su wallet y 40 reservados a su nombre: el contrato no se queda nada.
     assert_eq!(s.usdc.balance(&s.freelancer), 460_0000000);
@@ -315,8 +321,7 @@ fn without_fee_the_whole_gross_stays_with_the_freelancer() {
 fn the_service_fee_comes_out_of_the_gross() {
     // 50 puntos basicos: 0.5% de 500 USDC son 2.50.
     let s = setup_with_fee(50);
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-14"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-14");
 
     assert_eq!(s.usdc.balance(&s.fee_to), 2_5000000);
     assert_eq!(s.contract.tax_reserve(&s.freelancer), 40_0000000);
@@ -328,8 +333,7 @@ fn the_service_fee_comes_out_of_the_gross() {
 #[test]
 fn the_tax_reserve_is_never_touched_by_the_fee() {
     let s = setup_with_fee(MAX_FEE_BPS);
-    s.contract
-        .pay(&s.payer, &s.freelancer, &500_0000000, &String::from_str(&s.env, "E001-15"));
+    cobrar(&s, &s.freelancer, 500_0000000, "E001-15");
 
     // Aun con la comision al tope, la reserva sigue siendo el 8% del bruto.
     assert_eq!(s.contract.tax_reserve(&s.freelancer), 40_0000000);
@@ -347,4 +351,119 @@ fn rejects_a_fee_above_the_cap() {
     let fee_to = Address::generate(&env);
 
     env.register(Honorarios, (sac.address(), MAX_FEE_BPS + 1, fee_to));
+}
+
+// --- Recibos en la cadena: solo se cobra lo que el freelancer emitio, y una vez.
+
+#[test]
+fn pay_reads_the_amount_from_the_receipt() {
+    let s = setup();
+    let r = String::from_str(&s.env, "E001-20");
+    s.contract.issue(&s.freelancer, &r, &250_0000000, &String::from_str(&s.env, "Logo"));
+
+    // El cliente no dice cuanto paga: el contrato cobra lo que dice el recibo.
+    s.contract.pay(&s.payer, &s.freelancer, &r);
+
+    assert_eq!(s.usdc.balance(&s.freelancer), 230_0000000);
+    assert_eq!(s.contract.tax_reserve(&s.freelancer), 20_0000000);
+}
+
+#[test]
+fn rejects_paying_a_receipt_nobody_issued() {
+    let s = setup();
+
+    let r = s.contract.try_pay(&s.payer, &s.freelancer, &String::from_str(&s.env, "E001-21"));
+
+    assert_eq!(r, Err(Ok(Error::UnknownReceipt)));
+    assert_eq!(s.contract.month_gross(&s.freelancer, &s.contract.current_period()), 0);
+}
+
+#[test]
+fn a_receipt_cannot_be_paid_twice() {
+    let s = setup();
+    cobrar(&s, &s.freelancer, 100_0000000, "E001-22");
+
+    let r = s.contract.try_pay(&s.payer, &s.freelancer, &String::from_str(&s.env, "E001-22"));
+
+    assert_eq!(r, Err(Ok(Error::AlreadyPaid)));
+    assert_eq!(s.usdc.balance(&s.freelancer), 92_0000000);
+}
+
+#[test]
+fn rejects_issuing_the_same_receipt_twice() {
+    let s = setup();
+    let r = String::from_str(&s.env, "E001-23");
+    let c = String::from_str(&s.env, "Servicios");
+    s.contract.issue(&s.freelancer, &r, &100_0000000, &c);
+
+    // Reemitir con otro monto cambiaria lo que el cliente ya vio: no se puede.
+    let again = s.contract.try_issue(&s.freelancer, &r, &900_0000000, &c);
+
+    assert_eq!(again, Err(Ok(Error::ReceiptExists)));
+    assert_eq!(s.contract.receipt(&s.freelancer, &r).unwrap().gross, 100_0000000);
+}
+
+#[test]
+fn the_receipt_records_that_it_was_paid() {
+    let s = setup();
+    let r = String::from_str(&s.env, "E001-24");
+    s.contract.issue(&s.freelancer, &r, &100_0000000, &String::from_str(&s.env, "Web"));
+    assert!(!s.contract.receipt(&s.freelancer, &r).unwrap().paid);
+
+    s.contract.pay(&s.payer, &s.freelancer, &r);
+
+    let paid = s.contract.receipt(&s.freelancer, &r).unwrap();
+    assert!(paid.paid);
+    assert_eq!(paid.concept, String::from_str(&s.env, "Web"));
+}
+
+#[test]
+fn rejects_empty_receipt_ref_and_long_concept() {
+    let s = setup();
+    let empty = String::from_str(&s.env, "");
+    let ok_ref = String::from_str(&s.env, "E001-25");
+    let long = String::from_str(
+        &s.env,
+        "Concepto de mas de ochenta caracteres para comprobar que el contrato lo rechaza siempre",
+    );
+    let concept = String::from_str(&s.env, "Servicios");
+
+    let a = s.contract.try_issue(&s.freelancer, &empty, &100_0000000, &concept);
+    let b = s.contract.try_issue(&s.freelancer, &ok_ref, &100_0000000, &long);
+
+    assert_eq!(a, Err(Ok(Error::EmptyReceiptRef)));
+    assert_eq!(b, Err(Ok(Error::ConceptTooLong)));
+}
+
+#[test]
+#[should_panic(expected = "InvalidAction")]
+fn issue_requires_the_freelancer_signature() {
+    let s = setup_enforcing_auth();
+    s.contract.issue(
+        &s.freelancer,
+        &String::from_str(&s.env, "E001-26"),
+        &100_0000000,
+        &String::from_str(&s.env, "Servicios"),
+    );
+}
+
+#[test]
+#[should_panic(expected = "InvalidAction")]
+fn a_stranger_cannot_issue_receipts_in_someone_elses_name() {
+    // Sin esto, un extrano podria inflar el acumulado del mes del freelancer pagandole
+    // recibos inventados. Firmar por si mismo no le basta.
+    let s = setup_enforcing_auth();
+    let extrano = Address::generate(&s.env);
+    let r = String::from_str(&s.env, "E001-27");
+    let c = String::from_str(&s.env, "Servicios");
+    s.env.mock_auths(&[soroban_sdk::testutils::MockAuth {
+        address: &extrano,
+        invoke: &soroban_sdk::testutils::MockAuthInvoke {
+            contract: &s.contract.address,
+            fn_name: "issue",
+            args: (s.freelancer.clone(), r.clone(), 100_0000000i128, c.clone()).into_val(&s.env),
+            sub_invokes: &[],
+        },
+    }]);
+    s.contract.issue(&s.freelancer, &r, &100_0000000, &c);
 }

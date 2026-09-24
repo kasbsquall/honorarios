@@ -61,13 +61,13 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                 },
                 {
-                  "string": "E001-13"
+                  "string": "E001-20"
                 },
                 {
-                  "i128": "5000000000"
+                  "i128": "2500000000"
                 },
                 {
-                  "string": "Servicios"
+                  "string": "Logo"
                 }
               ]
             }
@@ -92,7 +92,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                 },
                 {
-                  "string": "E001-13"
+                  "string": "E001-20"
                 }
               ]
             }
@@ -111,7 +111,7 @@
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                     },
                     {
-                      "i128": "4600000000"
+                      "i128": "2300000000"
                     }
                   ]
                 }
@@ -131,7 +131,7 @@
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
                     },
                     {
-                      "i128": "400000000"
+                      "i128": "200000000"
                     }
                   ]
                 }
@@ -142,7 +142,6 @@
         }
       ]
     ],
-    [],
     [],
     []
   ],
@@ -259,7 +258,7 @@
               },
               "durability": "persistent",
               "val": {
-                "i128": "5000000000"
+                "i128": "2500000000"
               }
             }
           },
@@ -283,7 +282,7 @@
                     "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                   },
                   {
-                    "string": "E001-13"
+                    "string": "E001-20"
                   }
                 ]
               },
@@ -295,7 +294,7 @@
                       "symbol": "concept"
                     },
                     "val": {
-                      "string": "Servicios"
+                      "string": "Logo"
                     }
                   },
                   {
@@ -303,7 +302,7 @@
                       "symbol": "gross"
                     },
                     "val": {
-                      "i128": "5000000000"
+                      "i128": "2500000000"
                     }
                   },
                   {
@@ -341,7 +340,7 @@
               },
               "durability": "persistent",
               "val": {
-                "i128": "400000000"
+                "i128": "200000000"
               }
             }
           },
@@ -449,7 +448,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "5000000000"
+                      "i128": "7500000000"
                     }
                   },
                   {
@@ -501,7 +500,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "400000000"
+                      "i128": "200000000"
                     }
                   },
                   {
@@ -553,7 +552,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "4600000000"
+                      "i128": "2300000000"
                     }
                   },
                   {

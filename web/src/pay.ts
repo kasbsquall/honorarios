@@ -1,7 +1,7 @@
 import "./styles.css";
 import "./pay.css";
 import { StrKey } from "@stellar/stellar-sdk";
-import { EXPLORER, connectWallet, ensureUsdc, fromUnits, payInvoice, serviceFee, short, toUnits } from "./stellar";
+import { EXPLORER, connectWallet, ensureUsdc, fromUnits, paidEvents, payInvoice, readReceipt, serviceFee, short } from "./stellar";
 import { MARK, RECEIPT_EN, esc, receiptCard } from "./ui";
 
 type Step = "connect" | "fund" | "sign" | "done";
@@ -14,15 +14,15 @@ const STEPS: { id: Step; icon: string; title: string; hint: string }[] = [
 const app = document.getElementById("app")!;
 document.getElementById("brand")!.insertAdjacentHTML("afterbegin", MARK);
 
+// El link solo dice a quien y que recibo. El monto y el concepto se leen del recibo que el
+// freelancer emitio en el contrato: editar el link no cambia lo que se cobra.
 const q = new URLSearchParams(location.search);
 const to = q.get("to") ?? "";
-const amountRaw = q.get("amount") ?? "";
-const concept = (q.get("concept") ?? "Professional services").slice(0, 80);
-const ref = (q.get("ref") ?? "E001-1").slice(0, 20);
+const ref = (q.get("ref") ?? "").slice(0, 32);
 const name = (q.get("name") ?? "").slice(0, 60);
 
 let gross = 0n;
-try { gross = toUnits(amountRaw); } catch { gross = 0n; }
+let concept = "";
 const validTo = StrKey.isValidEd25519PublicKey(to) || StrKey.isValidContract(to);
 let payer = "";
 // Lo que el contrato va a cobrar de verdad, leido de la cadena. Si la pantalla lo calculara
@@ -30,14 +30,36 @@ let payer = "";
 let feeBps: bigint | null = null;
 let feeState: "loading" | "ready" | "failed" = "loading";
 
-if (!validTo || gross <= 0n) {
-  app.innerHTML = `<section class="empty rise"><p class="lbl">Invalid link</p><h1>This payment link is incomplete.</h1>
-  <p>Ask the freelancer to send you a new link from their Honorarios panel.</p></section>`;
+const empty = (label: string, title: string, body: string) =>
+  (app.innerHTML = `<section class="empty rise"><p class="lbl">${label}</p><h1>${title}</h1><p>${body}</p></section>`);
+
+if (!validTo || !ref) {
+  empty("Invalid link", "This payment link is incomplete.", "Ask the freelancer to send you a new link from their Honorarios panel.");
 } else {
-  render("connect");
-  serviceFee()
-    .then((f) => { feeBps = f.bps; feeState = "ready"; render("connect"); })
-    .catch(() => { feeState = "failed"; render("connect"); });
+  app.innerHTML = `<section class="summary"><div class="receipt sk" style="height:420px"></div></section>
+    <section class="side"><div class="receipt sk" style="height:300px"></div></section>`;
+  start();
+}
+
+async function start() {
+  const [receipt, fee] = await Promise.allSettled([readReceipt(to, ref), serviceFee()]);
+  if (fee.status === "fulfilled") { feeBps = fee.value.bps; feeState = "ready"; } else { feeState = "failed"; }
+  if (receipt.status === "rejected") {
+    empty("Network error", "We could not read this receipt from Stellar.", "Nothing was charged. Reload the page in a moment.");
+    return;
+  }
+  const r = receipt.value;
+  if (!r) {
+    empty("Unknown receipt", `Receipt ${esc(ref)} was never issued.`,
+      "The contract only accepts payments for receipts the freelancer signed. Ask them for a new link.");
+    return;
+  }
+  gross = r.gross;
+  concept = r.concept || "Professional services";
+  if (!r.paid) return render("connect");
+  // Ya pagado: el contrato rechazaria un segundo pago, asi que se muestra el comprobante.
+  const paid = await paidEvents(to).then((l) => l.find((p) => p.ref === ref)).catch(() => undefined);
+  render("done", { txHash: paid?.txHash, already: true });
 }
 
 function stepState(step: Step, current: Step) {
@@ -46,7 +68,7 @@ function stepState(step: Step, current: Step) {
   return a < b ? "done" : a === b ? "now" : "next";
 }
 
-function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: string } = {}) {
+function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: string; already?: boolean } = {}) {
   const done = current === "done";
   const badge = done
     ? `<span class="badge ok"><i class="ph-light ph-check" aria-hidden="true"></i>Paid</span>`
@@ -65,7 +87,7 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
     <p class="due num">${fromUnits(gross)}<small>USDC</small></p>
     <dl class="lines">
       <div><dt>Service</dt><dd>${esc(concept)}</dd></div>
-      <div><dt>Receipt</dt><dd class="num">${esc(ref)}</dd></div>
+      <div><dt>Receipt</dt><dd class="num">${esc(ref)} · <span class="u">issued on-chain by the freelancer</span></dd></div>
       <div><dt>Pay to</dt><dd class="num">${short(to)}</dd></div>
       <div><dt>Network</dt><dd>Stellar testnet</dd></div>
     </dl>
@@ -93,8 +115,10 @@ function render(current: Step, opts: { error?: string; busy?: boolean; txHash?: 
       : feeState === "failed" ? " We could not read the service fee from the contract, so the split above is the default one. Check the contract before you sign."
       : feeBps === 0n ? " This contract charges no service fee: the split above is read from the contract itself."
       : ` This contract charges a ${(Number(feeBps) / 100).toString()}% service fee, read from the contract itself.`}</p>
-    ${done
+    ${done && opts.already ? `<p class="note"><i class="ph-light ph-seal-check" aria-hidden="true"></i> This receipt is already paid. The contract rejects a second payment of the same receipt, so nothing else can be charged for it.</p>` : ""}
+    ${done && opts.txHash
       ? `<a class="btn wide" href="${EXPLORER}/tx/${opts.txHash}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right" aria-hidden="true"></i>View on Stellar Expert</a>`
+      : done ? ""
       : `<p class="note desktop-only-note"><i class="ph-light ph-desktop" aria-hidden="true"></i> Freighter is a desktop browser extension. Open this link on your computer to pay.</p>
          <button class="btn wide" id="go" ${opts.busy ? "disabled" : ""}>${opts.busy ? `<span class="spin"></span>Waiting for wallet` : action}</button>`}
     ${opts.error ? `<p class="error" role="alert">${esc(opts.error)}</p>` : ""}
@@ -114,7 +138,7 @@ async function advance(current: Step) {
       await ensureUsdc(payer, gross);
       render("sign");
     } else if (current === "sign") {
-      const hash = await payInvoice(payer, to, gross, ref);
+      const hash = await payInvoice(payer, to, ref);
       render("done", { txHash: hash });
     }
   } catch (e) {
@@ -125,6 +149,7 @@ async function advance(current: Step) {
 function friendly(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
   if (/Freighter|Testnet|firma|conexión/.test(msg)) return translate(msg);
+  if (/#8|AlreadyPaid/.test(msg)) return "This receipt was already paid. Nothing was charged.";
   if (/rechazó la transacción/.test(msg)) return "The network rejected the transaction. No funds were moved. You can try again.";
   if (/no devolvió el hash|negativo/.test(msg)) return "The network did not confirm the transaction. Check your wallet before paying again.";
   if (/op_underfunded|insufficient|balance/i.test(msg)) return "Not enough XLM to cover this payment.";

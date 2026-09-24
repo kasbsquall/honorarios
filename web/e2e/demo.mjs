@@ -102,7 +102,8 @@ await page.locator('#newlink input[name="ref"]').pressSequentially("E001-7", { d
 await pause(600);
 await page.locator('#newlink input[name="concept"]').pressSequentially("Diseño de identidad visual", { delay: 45 });
 await pause(1200);
-await page.getByRole("button", { name: "Crear link" }).click();
+await page.getByRole("button", { name: "Emitir recibo y crear link" }).click();
+await page.locator("#linkout code").waitFor({ timeout: 120_000 }); // el recibo se firma y se emite en la cadena
 const link = await page.locator("#linkout code").innerText();
 mark("link_ready", { link });
 await pause(4500);

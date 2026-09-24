@@ -14,6 +14,8 @@ const BPS_DENOMINATOR: i128 = 10_000;
 pub const MAX_FEE_BPS: i128 = 100;
 /// Largo maximo del N de recibo (ej. "E001-12345").
 pub const MAX_REF_LEN: u32 = 32;
+/// Largo maximo del concepto del recibo.
+pub const MAX_CONCEPT_LEN: u32 = 80;
 // ~5 s por ledger: la reserva y la instancia se renuevan a ~30 dias cuando les quedan menos de ~7.
 const DAY_LEDGERS: u32 = 17_280;
 const TTL_THRESHOLD: u32 = 7 * DAY_LEDGERS;
@@ -28,6 +30,18 @@ enum DataKey {
     TaxReserve(Address),
     /// Bruto cobrado por un freelancer en un periodo (mes) determinado.
     MonthGross(Address, u32),
+    /// Recibo por honorarios emitido por el freelancer, con su N° como clave.
+    Receipt(Address, String),
+}
+
+/// Recibo por honorarios registrado en la cadena. Lo emite el freelancer con su firma y
+/// el cliente solo puede pagar lo que dice aqui, una vez.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Receipt {
+    pub gross: i128,
+    pub concept: String,
+    pub paid: bool,
 }
 
 /// Huso horario de Peru: el mes tributario cierra a medianoche de Lima, no en UTC.
@@ -64,6 +78,14 @@ pub enum Error {
     ReceiptRefTooLong = 4,
     /// La comision supera MAX_FEE_BPS.
     FeeTooHigh = 5,
+    /// Ya hay un recibo con ese N° para este freelancer.
+    ReceiptExists = 6,
+    /// Nadie emitio ese recibo: no hay nada que pagar.
+    UnknownReceipt = 7,
+    /// El recibo ya se pago.
+    AlreadyPaid = 8,
+    ConceptTooLong = 9,
+    EmptyReceiptRef = 10,
 }
 
 fn keep_alive(env: &Env, key: &DataKey) {
@@ -84,6 +106,15 @@ pub struct Paid {
     pub receipt_ref: String,
     /// Periodo tributario del cobro (anio * 12 + mes - 1).
     pub period: u32,
+}
+
+#[contractevent]
+pub struct Issued {
+    #[topic]
+    pub freelancer: Address,
+    pub receipt_ref: String,
+    pub gross: i128,
+    pub concept: String,
 }
 
 #[contractevent]
@@ -120,25 +151,73 @@ impl Honorarios {
         env.storage().instance().get(&DataKey::Token).unwrap()
     }
 
-    /// El cliente paga `gross` al freelancer. El neto llega directo a su
-    /// wallet y la reserva queda en el contrato a su nombre.
-    pub fn pay(
+    /// El freelancer emite un recibo por honorarios y lo firma. Es lo unico que un
+    /// cliente puede pagar despues, asi que nadie ajeno puede sumar cobros a su mes.
+    pub fn issue(
         env: Env,
-        payer: Address,
         freelancer: Address,
-        gross: i128,
         receipt_ref: String,
-    ) -> Result<i128, Error> {
-        payer.require_auth();
+        gross: i128,
+        concept: String,
+    ) -> Result<(), Error> {
+        freelancer.require_auth();
         if gross <= 0 || gross > MAX_GROSS {
             return Err(Error::InvalidAmount);
         }
-        if freelancer == payer || freelancer == env.current_contract_address() {
+        if freelancer == env.current_contract_address() {
             return Err(Error::InvalidParty);
+        }
+        if receipt_ref.len() == 0 {
+            return Err(Error::EmptyReceiptRef);
         }
         if receipt_ref.len() > MAX_REF_LEN {
             return Err(Error::ReceiptRefTooLong);
         }
+        if concept.len() > MAX_CONCEPT_LEN {
+            return Err(Error::ConceptTooLong);
+        }
+        let key = DataKey::Receipt(freelancer.clone(), receipt_ref.clone());
+        if env.storage().persistent().has(&key) {
+            return Err(Error::ReceiptExists);
+        }
+        let receipt = Receipt { gross, concept: concept.clone(), paid: false };
+        env.storage().persistent().set(&key, &receipt);
+        keep_alive(&env, &key);
+
+        Issued { freelancer, receipt_ref, gross, concept }.publish(&env);
+        Ok(())
+    }
+
+    pub fn receipt(env: Env, freelancer: Address, receipt_ref: String) -> Option<Receipt> {
+        env.storage().persistent().get(&DataKey::Receipt(freelancer, receipt_ref))
+    }
+
+    /// El cliente paga un recibo emitido. El monto sale del recibo, no del cliente: el
+    /// neto llega directo a la wallet del freelancer y la reserva queda en el contrato.
+    pub fn pay(
+        env: Env,
+        payer: Address,
+        freelancer: Address,
+        receipt_ref: String,
+    ) -> Result<i128, Error> {
+        payer.require_auth();
+        if freelancer == payer || freelancer == env.current_contract_address() {
+            return Err(Error::InvalidParty);
+        }
+        let receipt_key = DataKey::Receipt(freelancer.clone(), receipt_ref.clone());
+        let receipt: Receipt = env
+            .storage()
+            .persistent()
+            .get(&receipt_key)
+            .ok_or(Error::UnknownReceipt)?;
+        if receipt.paid {
+            return Err(Error::AlreadyPaid);
+        }
+        let gross = receipt.gross;
+        env.storage()
+            .persistent()
+            .set(&receipt_key, &Receipt { paid: true, ..receipt });
+        keep_alive(&env, &receipt_key);
 
         let period = period_of(env.ledger().timestamp());
         let month_key = DataKey::MonthGross(freelancer.clone(), period);

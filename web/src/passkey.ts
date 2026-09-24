@@ -59,3 +59,21 @@ export async function withdrawWithPasskey(freelancer: string, to: string, amount
   if (!res.success) throw new Error("El retiro no se completó. Revisa el monto y vuelve a intentar.");
   return res.hash;
 }
+
+/** Emite el recibo firmando con la passkey. Solo lo emitido se puede cobrar despues. */
+export async function issueWithPasskey(freelancer: string, ref: string, gross: bigint, concept: string): Promise<string> {
+  const client = (await contract.Client.from({ contractId: CONTRACT_ID, networkPassphrase: NETWORK, rpcUrl: RPC_URL })) as any;
+  const tx = await client.issue({ freelancer, receipt_ref: ref, gross, concept });
+  const res = await getKit().signAndSubmit(tx);
+  if (!res.success) throw new Error("El recibo no se emitió. Si ya usaste ese N° de recibo, elige otro.");
+  return res.hash;
+}
+
+/** Renueva la vida de la reserva en la red. No mueve fondos y la comision la paga el relayer. */
+export async function extendWithPasskey(freelancer: string): Promise<string> {
+  const client = (await contract.Client.from({ contractId: CONTRACT_ID, networkPassphrase: NETWORK, rpcUrl: RPC_URL })) as any;
+  const tx = await client.extend_reserve({ freelancer }, { restore: true });
+  const res = await getKit().signAndSubmit(tx);
+  if (!res.success) throw new Error("No se pudo renovar la reserva. Intenta de nuevo en un momento.");
+  return res.hash;
+}

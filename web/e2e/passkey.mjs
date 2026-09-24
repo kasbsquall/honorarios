@@ -36,18 +36,24 @@ await page.locator(".kpi:not(.sk)").waitFor({ timeout: 180_000 });
 console.log("wallet:", await page.locator("#who").innerText());
 await pause(1500);
 
-// 2. Link de cobro hacia la smart wallet
+// 2. Recibo emitido en la cadena con la passkey, y su link de cobro
 await page.locator('#newlink input[name="amount"]').pressSequentially("200", { delay: 60 });
 await page.locator('#newlink input[name="ref"]').pressSequentially("E001-3", { delay: 40 });
 await page.locator('#newlink input[name="concept"]').pressSequentially("Ilustración editorial", { delay: 30 });
-await page.getByRole("button", { name: "Crear link" }).click();
+await page.getByRole("button", { name: "Emitir recibo y crear link" }).click();
+await page.locator("#linkout code, #linkout .error").first().waitFor({ timeout: 120_000 });
+if (await page.locator("#linkout .error").count()) throw new Error(await page.locator("#linkout .error").innerText());
+console.log("emision:", await page.locator("#linkout a").first().getAttribute("href"));
 const link = await page.locator("#linkout code").innerText();
 const walletId = new URL(link).searchParams.get("to");
 console.log("smart wallet:", walletId);
 await pause(1200);
 
 // 3. Cliente paga
-await page.goto(`${link}&dev=client`);
+// El link apunta al dominio publico; el recorrido prueba el codigo local.
+const local = new URL(link);
+await page.goto(`${BASE}${local.pathname}${local.search}&dev=client`);
+await page.screenshot({ path: `${OUT}pay-before.png` });
 await pause(1200);
 for (const label of ["Connect Freighter", "Prepare USDC", /^Pay /]) {
   await page.getByRole("button", { name: label }).click();

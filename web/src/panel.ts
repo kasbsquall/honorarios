@@ -1,9 +1,10 @@
 import "./styles.css";
 import "./panel.css";
 import { StrKey } from "@stellar/stellar-sdk";
-import { connectPasskey, createPasskeyWallet, restorePasskey, withdrawWithPasskey } from "./passkey";
+import { connectPasskey, createPasskeyWallet, extendWithPasskey, issueWithPasskey, restorePasskey, withdrawWithPasskey } from "./passkey";
 import {
-  CONTRACT_ID, EXPLORER, FREIGHTER_INSTALL, type Paid, connectWallet, fromUnits, monthGross as chainMonthGross, paidEvents, serviceFee, short, taxReserve, toUnits, withdrawWithWallet,
+  CONTRACT_ID, EXPLORER, FREIGHTER_INSTALL, type Issued, type Paid, addUsdcTrustline, connectWallet, extendWithWallet, fromUnits, issueWithWallet, issuedEvents, readReceipt,
+  monthGross as chainMonthGross, paidEvents, reserveLiveUntil, short, taxReserve, toUnits, usdcBalance, withdrawWithWallet,
 } from "./stellar";
 import { openRheDraft } from "./rhe";
 import { DIRECTOR_CAP_PEN, DIRECTOR_THRESHOLD_PEN, SUSPENSION_CAP_PEN, THRESHOLD_PEN, UIT_PEN, estimate } from "./tax";
@@ -27,10 +28,15 @@ const app = document.getElementById("app")!;
 document.getElementById("brand")!.insertAdjacentHTML("afterbegin", MARK);
 
 type Mode = "passkey" | "freighter" | "demo";
-// Wallet creada con passkey durante la demo grabada, contra el contrato vigente.
-// Si se redespliega el contrato hay que traer aqui una wallet que haya cobrado en el nuevo:
+// Cuenta de pruebas que cobra contra el contrato vigente (web/scripts/seed-demo.mjs).
+// Si se redespliega el contrato hay que traer aqui una cuenta que haya cobrado en el nuevo:
 // `npm run check:demo` avisa cuando esta constante apunta a un despliegue muerto.
-const DEMO_ADDRESS = "CCOEUIDDOVYNHO4XMS2UOUVFD2S456DB3JTTY7YOJB2QVPV35FDXPB4S";
+const DEMO_ADDRESS = "GCY5LQWZD36VIBSH6PSJOHJK4F3LSNFPTMJMRH7UWKI5L4PPKCXZHSSA";
+// Link de pago de un recibo emitido: solo dice a quien y que N°, el monto lo pone el contrato.
+const payLink = (ref: string) => `${PUBLIC_BASE}/pay.html?${new URLSearchParams({ to: me, ref })}`;
+// Dias de vida que le quedan a la reserva por debajo de los cuales se ofrece renovarla.
+// El contrato solo alarga el TTL cuando queda menos de 7 dias; 10 da margen para hacerlo a tiempo.
+const RENEW_DAYS = 10;
 let me = "";
 let mode: Mode = "passkey";
 let events: Paid[] | null = null;
@@ -39,8 +45,16 @@ let reserve: bigint | null = null;
 let loadError = false;
 // Acumulado del mes leido del contrato: sobrevive a la ventana de eventos del RPC.
 let monthly: bigint | null = null;
+// Recibos emitidos que nadie ha pagado todavia.
+let pending: Issued[] = [];
+let liveUntil: Date | null = null;
+// Solo una cuenta G necesita trustline de USDC; una smart wallet recibe por el SAC sin ella.
+let hasTrustline: boolean | null = null;
 
-restorePasskey().then((id) => (id ? enter(id, "passkey") : renderIntro()));
+// `?demo` abre el panel de ejemplo sin pasar por la portada: es el enlace que va en el README.
+// Diferido como la rama de passkey: el panel usa constantes que se declaran mas abajo.
+if (new URLSearchParams(location.search).has("demo")) queueMicrotask(() => enter(DEMO_ADDRESS, "demo"));
+else restorePasskey().then((id) => (id ? enter(id, "passkey") : renderIntro()));
 
 function enter(address: string, how: Mode) {
   me = address;
@@ -56,8 +70,8 @@ function renderIntro(error = "") {
   app.innerHTML = `
   <section class="intro rise">
     <p class="lbl">Para freelancers en Perú que cobran al exterior</p>
-    <h1>Cobra en USDC y deja apartado tu pago a cuenta desde el primer dólar.</h1>
-    <p>Cada cobro pasa por un contrato en Stellar: el 8% queda reservado a tu nombre y el resto llega a tu wallet. Si el mes supera tu umbral de SUNAT, S/ 4,010 en el caso general, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
+    <h1>Tu pago a cuenta de SUNAT, apartado desde el primer dólar que cobras afuera.</h1>
+    <p>Cada cobro del exterior pasa por un contrato en Stellar: el 8% queda reservado a tu nombre, solo tú puedes moverlo, y el resto llega a tu wallet. Si el mes supera tu umbral de SUNAT, S/ 4,010 en el caso general, esa reserva cubre tu pago a cuenta; si no, sigue siendo tuya.</p>
     <label class="field name"><span class="lbl">Tu nombre</span><input id="name" maxlength="40" placeholder="Como quieres que aparezca en tu passkey"></label>
     <div class="actions">
       <button class="btn" id="create"><i class="ph-light ph-fingerprint" aria-hidden="true"></i>Crear wallet con passkey</button>
@@ -72,7 +86,7 @@ function renderIntro(error = "") {
   </section>
   <section class="how rise" style="--i:1">
     <ol>
-      <li><span class="lbl">01</span><div><b>Mandas un link de cobro</b><small>Monto, N° de recibo y concepto. Tu cliente paga con Freighter; si solo tiene XLM, Stellar los cambia en el camino.</small></div></li>
+      <li><span class="lbl">01</span><div><b>Emites tu recibo y mandas el link</b><small>Monto, N° de recibo y concepto. El recibo queda registrado en el contrato y tu cliente solo puede pagar ese monto, una vez. Paga con Freighter; si solo tiene XLM, Stellar los cambia en el camino.</small></div></li>
       <li><span class="lbl">02</span><div><b>El contrato reparte en el acto</b><small>El 8% queda reservado a tu nombre dentro del contrato y el resto llega a tu wallet. Una sola transacción, y cualquiera puede verificarla.</small></div></li>
       <li><span class="lbl">03</span><div><b>Retiras cuando toca declarar</b><small>El panel estima tu pago a cuenta del mes, explica cómo pagarlo en soles y te arma el borrador del recibo por honorarios.</small></div></li>
     </ol>
@@ -103,10 +117,21 @@ function renderIntro(error = "") {
 async function load() {
   // Tres llamadas independientes. El escaneo de eventos es el fragil (muchas ventanas
   // contra el RPC publico); que falle no puede borrar la reserva, que ya respondio.
-  const [r, e, m] = await Promise.allSettled([taxReserve(me), paidEvents(me), chainMonthGross(me)]);
+  const isG = me.startsWith("G");
+  const [r, e, m, iss, ttl, tl] = await Promise.allSettled([
+    taxReserve(me), paidEvents(me), chainMonthGross(me), issuedEvents(me), reserveLiveUntil(me),
+    isG ? usdcBalance(me) : Promise.resolve(0n),
+  ]);
   reserve = r.status === "fulfilled" ? r.value : null;
   events = e.status === "fulfilled" ? e.value : null;
   monthly = m.status === "fulfilled" ? m.value.gross : null;
+  // Si un recibo esta pagado lo dice el contrato, no los eventos: la lista de pagos puede
+  // fallar o quedarse corta y no por eso un recibo pagado vuelve a estar pendiente.
+  const issued = iss.status === "fulfilled" ? iss.value : [];
+  const states = await Promise.all(issued.map((i) => readReceipt(me, i.ref).catch(() => undefined)));
+  pending = issued.filter((_, k) => states[k] === undefined || states[k]?.paid === false);
+  liveUntil = ttl.status === "fulfilled" ? ttl.value : null;
+  hasTrustline = tl.status === "fulfilled" ? tl.value !== null : null;
   // Solo es un error de verdad cuando no se pudo leer nada del contrato.
   loadError = r.status === "rejected" && m.status === "rejected";
   renderPanel();
@@ -194,14 +219,16 @@ function renderPanel() {
     : `<span class="tag ok"><i class="ph-light ph-check" aria-hidden="true"></i>Alcanza para el pago de ${pen2(est.duePen!)}</span>`;
 
   app.innerHTML = `
-  ${loadError ? `<p class="error" role="alert"><i class="ph-light ph-warning" aria-hidden="true"></i> No pudimos leer tus cobros de la red. Lo que ves no es tu saldo: recarga en un momento. <button class="linkbtn" id="retry">Reintentar</button></p>` : ""}
-  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye" aria-hidden="true"></i> Panel de ejemplo con la cuenta de la demo, en testnet: los cobros, la reserva y el acumulado del mes se leen de la cadena en vivo. Este mes cruza el umbral, así que el bloque de abajo muestra un pago a cuenta real. La reserva se queda corta frente a él a propósito: en esta cuenta se retiraron 40 USDC antes del cierre del mes, que es justo lo que la app advierte que no conviene hacer. Puedes crear un link de prueba; retirar necesita la passkey de esa cuenta. <a href="${EXPLORER}/contract/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></p>` : ""}
+  ${loadError ? `<p class="error" role="alert"><i class="ph-light ph-warning" aria-hidden="true"></i> No pudimos leer tus cobros de la red. Lo que ves no es tu saldo: recarga en un momento. <button class="linkbtn" id="retry">Reintentar</button>${
+    mode !== "demo" ? ` Si tu reserva lleva más de un mes sin movimiento, la red pudo archivarla: <button class="linkbtn renew">restáurala</button>, sin mover fondos.` : ""}</p>` : ""}
+  ${mode === "demo" ? `<p class="note" role="status"><i class="ph-light ph-eye" aria-hidden="true"></i> Panel de ejemplo con una cuenta de pruebas, en testnet: los recibos, los cobros, la reserva y el acumulado del mes se leen de la cadena en vivo. Este mes cruza el umbral, así que el bloque de abajo muestra un pago a cuenta real. La reserva se queda corta frente a él a propósito: en esta cuenta se retiraron 40 USDC antes del cierre del mes, que es justo lo que la app advierte que no conviene hacer. Emitir recibos y retirar necesitan la firma de esa cuenta; lo que sí puedes hacer es abrir un recibo de "Por cobrar" y pagarlo con Freighter en testnet. <a href="${EXPLORER}/${DEMO_ADDRESS.startsWith("G") ? "account" : "contract"}/${DEMO_ADDRESS}" target="_blank" rel="noopener">Ver la cuenta <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></p>` : ""}
   <section class="hero rise" style="--i:0">
     <div>
       <p class="lbl"><i class="ph-light ph-vault" aria-hidden="true"></i> Reserva preventiva · 8% de cada cobro</p>
       <p class="kpi num ${loading ? "sk" : ""}">${val(() => fromUnits(reserve!))}<small>USDC</small></p>
       ${reserveState}
       <p class="kpi-note">${mode === "demo" && reserve === 0n ? "Esta cuenta ya retiró su reserva durante la demo, por eso está en cero. " : ""}Solo tú puedes moverla. Cubre tu pago a cuenta si el mes supera tu umbral, S/ ${est.thresholdPen.toLocaleString("es-PE")}; si no, sigue siendo tuya.</p>
+      ${ttlLine()}
       <form id="withdraw" class="withdraw">
         <label class="field"><span class="lbl">Enviar reserva a</span><input class="num" name="to" required placeholder="Cuenta Stellar (G… o C…)"></label>
         <label class="field amt"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" required inputmode="decimal" pattern="\\d+(\\.\\d{1,7})?" value="${reserve ? fromUnits(reserve, 7).replace(/,/g, "").replace(/\.?0+$/, "") : ""}"></label>
@@ -219,17 +246,27 @@ function renderPanel() {
   <section class="grid2">
     <div class="block rise" style="--i:1" id="threshold"></div>
     <form class="block rise" style="--i:2" id="newlink">
-      <p class="lbl"><i class="ph-light ph-link-simple" aria-hidden="true"></i> Nuevo link de cobro</p>
+      <p class="lbl"><i class="ph-light ph-link-simple" aria-hidden="true"></i> Nuevo recibo y link de cobro</p>
+      <p class="u">Firmas el recibo y queda registrado en el contrato. Tu cliente solo puede pagar ese monto, una vez.</p>
       <div class="row2">
         <label class="field"><span class="lbl">Monto (USDC)</span><input class="num" name="amount" inputmode="decimal" required pattern="\\d+(\\.\\d{1,7})?" placeholder="500.00"></label>
         <label class="field"><span class="lbl">N° de recibo</span><input class="num" name="ref" required maxlength="20" placeholder="E001-2"></label>
       </div>
       <label class="field"><span class="lbl">Concepto</span><input name="concept" required maxlength="80" placeholder="Diseño de identidad"></label>
       <label class="field"><span class="lbl">Tu nombre visible</span><input name="name" maxlength="60" placeholder="Opcional"></label>
-      <button class="btn" type="submit"><i class="ph-light ph-plus" aria-hidden="true"></i>Crear link</button>
+      <button class="btn" type="submit"><i class="ph-light ph-plus" aria-hidden="true"></i>Emitir recibo y crear link</button>
       <div id="linkout" class="linkout hidden"></div>
     </form>
   </section>
+  ${pending.length ? `<section class="rise" style="--i:3">
+    <div class="sec-h"><h2>Por cobrar</h2><span class="lbl">Recibos emitidos en la cadena y sin pagar</span></div>
+    <ul class="pending">${pending.map((p, i) => `
+      <li class="rise" style="--i:${Math.min(i, 7)}">
+        <span class="num">${esc(p.ref)}</span><span>${esc(p.concept)}</span><span class="num">${fromUnits(p.gross)} <small>USDC</small></span>
+        <span class="acts"><button type="button" class="btn ghost copy-link" data-ref="${esc(p.ref)}"><i class="ph-light ph-copy" aria-hidden="true"></i>Copiar link</button>
+        <a class="btn ghost" href="${esc(payLink(p.ref))}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right" aria-hidden="true"></i>Abrir</a></span>
+      </li>`).join("")}</ul>
+  </section>` : ""}
   <section class="rise" style="--i:3">
     <div class="sec-h"><h2>Cobros</h2><span class="lbl">Leídos de la red Stellar</span></div>
     <div class="cards">${
@@ -262,6 +299,9 @@ function renderPanel() {
     renderPanel();
     load();
   });
+  app.querySelectorAll<HTMLButtonElement>(".copy-link").forEach((b) =>
+    b.addEventListener("click", () => copy(b, payLink(b.dataset.ref!))));
+  app.querySelectorAll<HTMLButtonElement>(".renew").forEach((b) => b.addEventListener("click", () => renew(b)));
   app.querySelectorAll<HTMLButtonElement>(".rhe-open").forEach((b) =>
     b.addEventListener("click", () => openRheDraft(list[Number(b.dataset.i)], readFx())));
 }
@@ -454,34 +494,123 @@ async function renderOfframp() {
   }
 }
 
+/** Hasta cuando vive la reserva en la red. Pasado ese plazo se archiva y hay que restaurarla. */
+function ttlLine(): string {
+  if (!liveUntil || !reserve) return "";
+  const days = Math.floor((liveUntil.getTime() - Date.now()) / 86_400_000);
+  const date = liveUntil.toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+  const canRenew = mode !== "demo" && days <= RENEW_DAYS;
+  return `<p class="kpi-note ttl"><i class="ph-light ph-hourglass-medium" aria-hidden="true"></i> La red guarda esta reserva hasta el ${date} (${Math.max(days, 0)} días) y cada cobro o retiro alarga el plazo. ${
+    canRenew
+      ? `Queda poco: <button class="linkbtn renew">renuévala ahora</button>, sin mover fondos.`
+      : `Si nadie la toca en ese plazo, se archiva y hay que restaurarla antes de retirar.`}</p>`;
+}
+
+async function renew(b: HTMLButtonElement) {
+  b.disabled = true;
+  b.textContent = mode === "passkey" ? "confirma con tu passkey…" : "firma en Freighter…";
+  try {
+    await (mode === "passkey" ? extendWithPasskey(me) : extendWithWallet(me));
+    loadError = false;
+    await load();
+  } catch (err) {
+    b.disabled = false;
+    b.textContent = err instanceof Error ? err.message : "No se pudo renovar.";
+  }
+}
+
+async function copy(b: HTMLButtonElement, url: string) {
+  try {
+    await navigator.clipboard.writeText(url);
+    b.innerHTML = `<i class="ph-light ph-check" aria-hidden="true"></i>Copiado`;
+  } catch {
+    b.innerHTML = `Copia el link desde Abrir`;
+  }
+}
+
+// El contrato mide el concepto en bytes, y una tilde ocupa dos.
+const MAX_CONCEPT_BYTES = 80;
+
 function bindLinkForm() {
   const form = app.querySelector<HTMLFormElement>("#newlink")!;
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const d = new FormData(form);
-    const amount = String(d.get("amount"));
-    if (toUnits(amount) <= 0n) return;
-    const params = new URLSearchParams({
-      to: me, amount, ref: String(d.get("ref")), concept: String(d.get("concept")),
-    });
-    const name = String(d.get("name") ?? "").trim();
-    if (name) params.set("name", name);
-    // El link se lo mandas a un cliente en el extranjero: tiene que apuntar al dominio
-    // publico, no a la maquina desde la que lo generaste.
-    const url = `${PUBLIC_BASE}/pay.html?${params}`;
-    const out = form.querySelector("#linkout")!;
+  const out = form.querySelector("#linkout")!;
+  const show = (html: string) => {
     out.classList.remove("hidden");
-    out.innerHTML = `<code class="mono">${esc(url)}</code>
-      <div class="row2"><button type="button" class="btn ghost" id="copy"><i class="ph-light ph-copy" aria-hidden="true"></i>Copiar</button>
-      <a class="btn ghost" href="${esc(url)}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right" aria-hidden="true"></i>Abrir</a></div>`;
-    out.querySelector("#copy")!.addEventListener("click", async (ev) => {
-      const b = ev.currentTarget as HTMLButtonElement;
+    out.innerHTML = html;
+  };
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (mode === "demo") {
+      show(`<p class="error">Emitir un recibo exige la firma de la cuenta, y el panel de ejemplo es solo lectura. Abajo, en "Por cobrar", hay un recibo emitido que sí puedes abrir y pagar.</p>`);
+      return;
+    }
+    const d = new FormData(form);
+    const gross = toUnits(String(d.get("amount")));
+    const ref = String(d.get("ref")).trim();
+    const concept = String(d.get("concept")).trim();
+    if (gross <= 0n || !ref) return;
+    if (new TextEncoder().encode(concept).length > MAX_CONCEPT_BYTES) {
+      show(`<p class="error">El concepto es demasiado largo para el recibo. Acórtalo un poco.</p>`);
+      return;
+    }
+    // Sin trustline, la cuenta no puede recibir el neto y el pago fallaria del lado del cliente.
+    // Se comprueba aqui mismo: el dato de la carga puede no haber llegado todavia.
+    if (me.startsWith("G")) {
       try {
-        await navigator.clipboard.writeText(url);
-        b.innerHTML = `<i class="ph-light ph-check" aria-hidden="true"></i>Copiado`;
+        hasTrustline = (await usdcBalance(me)) !== null;
       } catch {
-        b.innerHTML = `Copia el texto de arriba`;
+        show(`<p class="error">No pudimos comprobar si tu cuenta acepta USDC. Intenta de nuevo en un momento.</p>`);
+        return;
       }
-    });
+    }
+    if (me.startsWith("G") && !hasTrustline) {
+      offerTrustline(show, out);
+      return;
+    }
+    const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spin"></span>${mode === "passkey" ? "Firma el recibo con tu passkey" : "Firma el recibo en Freighter"}`;
+    try {
+      const hash = await (mode === "passkey" ? issueWithPasskey(me, ref, gross, concept) : issueWithWallet(me, ref, gross, concept));
+      const params = new URLSearchParams({ to: me, ref });
+      const name = String(d.get("name") ?? "").trim();
+      if (name) params.set("name", name);
+      // El link se lo mandas a un cliente en el extranjero: tiene que apuntar al dominio
+      // publico, no a la maquina desde la que lo generaste.
+      const url = `${PUBLIC_BASE}/pay.html?${params}`;
+      show(`<p class="u"><i class="ph-light ph-seal-check" aria-hidden="true"></i> Recibo ${esc(ref)} emitido en la cadena por ${fromUnits(gross)} USDC. <a href="${EXPLORER}/tx/${hash}" target="_blank" rel="noopener">Ver transacción <i class="ph-light ph-arrow-up-right" aria-hidden="true"></i></a></p>
+        <code class="mono">${esc(url)}</code>
+        <div class="row2"><button type="button" class="btn ghost" id="copy"><i class="ph-light ph-copy" aria-hidden="true"></i>Copiar</button>
+        <a class="btn ghost" href="${esc(url)}" target="_blank" rel="noopener"><i class="ph-light ph-arrow-up-right" aria-hidden="true"></i>Abrir</a></div>`);
+      out.querySelector<HTMLButtonElement>("#copy")!.addEventListener("click", (ev) => copy(ev.currentTarget as HTMLButtonElement, url));
+      form.reset();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      show(`<p class="error">${/#6\b|ReceiptExists|ya usaste/.test(msg)
+        ? `Ya emitiste un recibo con el N° ${esc(ref)}. Cada recibo se emite una sola vez: usa el siguiente número.`
+        : esc(msg || "No se pudo emitir el recibo.")}</p>`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="ph-light ph-plus" aria-hidden="true"></i>Emitir recibo y crear link`;
+    }
+  });
+}
+
+function offerTrustline(show: (html: string) => void, out: Element) {
+  show(`<p class="error">Tu cuenta todavía no acepta USDC, así que el pago de tu cliente fallaría al firmar. Actívalo una vez y vuelve a emitir el recibo.</p>
+    <button type="button" class="btn ghost" id="trust"><i class="ph-light ph-plus-circle" aria-hidden="true"></i>Aceptar USDC en mi cuenta</button>`);
+  out.querySelector<HTMLButtonElement>("#trust")!.addEventListener("click", async (ev) => {
+    const b = ev.currentTarget as HTMLButtonElement;
+    b.disabled = true;
+    b.innerHTML = `<span class="spin"></span>Firma en Freighter`;
+    try {
+      await addUsdcTrustline(me);
+      hasTrustline = true;
+      show(`<p class="u">Listo: tu cuenta ya acepta USDC. Emite el recibo otra vez.</p>`);
+    } catch (err) {
+      b.disabled = false;
+      b.innerHTML = `Reintentar`;
+      out.insertAdjacentHTML("beforeend", `<p class="error">${esc(err instanceof Error ? err.message : "No se pudo activar.")}</p>`);
+    }
   });
 }

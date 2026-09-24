@@ -35,13 +35,14 @@ await page.locator('#newlink input[name="amount"]').pressSequentially("500", { d
 await page.locator('#newlink input[name="ref"]').pressSequentially(ref, { delay: 40 });
 await page.locator('#newlink input[name="concept"]').pressSequentially("Diseño de identidad", { delay: 30 });
 await page.locator('#newlink input[name="name"]').pressSequentially("Kevin Soto", { delay: 30 });
-await page.getByRole("button", { name: "Crear link" }).click();
+await page.getByRole("button", { name: "Emitir recibo y crear link" }).click();
+await page.locator("#linkout code").waitFor({ timeout: 120_000 }); // el recibo se firma y se emite en la cadena
 const link = await page.locator("#linkout code").innerText();
 console.log("link:", link);
 await pause(1500);
 
 // 2. Cliente extranjero paga
-await page.goto(`${link}&dev=client`);
+await page.goto(`${link.replace(/^https?:\/\/[^/]+/, BASE)}&dev=client`);
 await pause(1800);
 for (const label of ["Connect Freighter", "Prepare USDC", /^Pay /]) {
   await page.getByRole("button", { name: label }).click();
