@@ -68,3 +68,11 @@ Estado final que devolvió el ancla: `completed`.
 `3b638479f746a5d29ee95e05de719d7860550822819e4c93e213ff41c11f285f`.
 
 Estado de la cuenta del panel de ejemplo al cierre: bruto del mes 2,420.00 USDC, reserva 148.60 USDC.
+
+## Ensayo de la demo en vivo en producción
+
+`web/e2e/ensayo.mjs` contra https://honorarios-pe.vercel.app, wallet con passkey `CBYX…FFNK`,
+recibo E001-48 por 250 USDC. Emisión `247af9c9cc92788b8ef5320726fd5ac97bd8c6e75b38e0087b0122bf0b079fb5`,
+pago (firma de prueba desde `npm run dev`, mismo contrato) `11bb108ea4d089bd1020989038a51e9e4f6d5b62a3c7f5264be4df4803d4c978`,
+retiro con passkey `f9b7f28a6c176a0a024600c9ff87925b938640ca8795d4d335775b64e035e2c6`.
+Tiempos en `docs/demo-en-vivo.md`.

@@ -813,3 +813,14 @@ entre 2.5 y 3.5 s en producción (cuatro mediciones); el README decía 2 y se co
 
 Video: la recomendación fue no rehacerlo, y el usuario no pidió rehacerlo. Muestra el v2, que sigue verificable, y un video nuevo cambiaría el
 link que ya está en el formulario enviado.
+
+## 2026-09-24 · Ensayo de la demo en vivo y capturas
+
+Corrección de fecha: las dos entradas anteriores fechadas 2026-09-25 son del 24 de septiembre;
+`date` en esta máquina dice jueves 24.
+
+El usuario pidió que el ensayo lo hiciera Claude. `web/e2e/ensayo.mjs` recorrió la demo en el
+dominio público con passkey: crear wallet 16.3 s, emitir recibo 10.6 s, pago 10.1 s, retiro
+11.5 s. El pago lo firmó la cuenta de prueba desde local porque Freighter no existe sin interfaz.
+Guion, tiempos y plan B en `docs/demo-en-vivo.md`; capturas en `docs/capturas/` y cinco de ellas
+en el README. El usuario pidió no rotar ninguna clave.

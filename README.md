@@ -28,6 +28,22 @@ El freelancer emite su recibo en la app y le manda el link a su cliente. Cuando 
 
 Los links de cobro con cripto ya existen. Lo que agrega Honorarios es lo que pasa dentro del cobro: la reserva del 8%, el recibo registrado y el umbral de SUNAT.
 
+## Cómo se ve
+
+Capturas del dominio público durante el ensayo de la demo en vivo del 24 de septiembre. El guion, los tiempos medidos de cada paso y el plan B están en [docs/demo-en-vivo.md](docs/demo-en-vivo.md).
+
+| Panel de ejemplo: un mes que cruza el umbral | Estimado del pago a cuenta en soles |
+|---|---|
+| <img src="docs/capturas/06-panel-de-ejemplo.png" alt="Panel de ejemplo con la reserva de 148.60 USDC y el aviso de que falta para cubrir el pago a cuenta" width="440"> | <img src="docs/capturas/07-pago-a-cuenta.png" alt="Bloque del pago a cuenta: S/ 726 estimados, umbral de S/ 4,010 superado" width="300"> |
+
+| Lo que ve el cliente: monto y concepto leídos del recibo en la cadena | El mismo link después del pago: el contrato no acepta un segundo pago |
+|---|---|
+| <img src="docs/capturas/03-pago-pendiente.png" alt="Página de pago de un recibo de 250 USDC, con el reparto 230 al freelancer y 20 a la reserva" width="440"> | <img src="docs/capturas/04-pago-hecho.png" alt="El mismo recibo marcado como pagado, con enlace a la transacción" width="440"> |
+
+Y así se ve en Stellar Expert uno de los ataques rechazados, el segundo pago del recibo E001-1:
+
+<img src="docs/capturas/09-ataque-rechazado.png" alt="Transacción fallida en Stellar Expert: pay con el recibo E001-1, ya pagado" width="640">
+
 ## Cómo te paga tu cliente del exterior
 
 Hoy, en testnet, con una wallet de Stellar en su navegador (Freighter) y USDC o XLM. Si solo tiene XLM, la app arma un path payment que compra los USDC que faltan en la misma operación. Un cliente que nunca usó cripto necesita antes una forma de convertir sus dólares a USDC sobre Stellar; esa pieza no la resuelve esta app y está en la lista de lo pendiente.
@@ -127,7 +143,7 @@ web/src/tax.ts     estimación del pago a cuenta, aislada de la interfaz y con s
 web/scripts/       seed del panel de ejemplo, ataques rechazados y check-demo
 web/e2e/           guiones de Playwright que ejecutan el flujo en testnet y lo graban
 design/            tres propuestas de identidad visual
-docs/              arquitectura y bitácora de decisiones
+docs/              arquitectura, bitácora de decisiones, guion de la demo en vivo y capturas
 ```
 
 ## Contrato
@@ -175,6 +191,8 @@ Guiones de recorrido en testnet, sin aserciones: sirven para grabar y para compr
 node web/e2e/record.mjs    # recibo firmado y cobro con Freighter
 node web/e2e/passkey.mjs   # passkey con autenticador WebAuthn virtual: wallet, recibo, cobro y retiro
 node web/e2e/demo.mjs      # recorrido completo, grabado sin cortes para el video
+node web/e2e/sep24.mjs     # retiro de la reserva por el ancla de pruebas de SDF
+node web/e2e/ensayo.mjs    # ensayo de la demo en vivo contra el dominio público, con tiempos y capturas
 ```
 
 `node scripts/check-demo.mjs`, desde `web/` y también en CI, comprueba que la cuenta del panel de ejemplo cobró en el contrato vigente. Existe porque un redespliegue dejó esa constante apuntando a un contrato muerto y el panel mostró ceros hasta que alguien lo abrió.
