@@ -854,3 +854,9 @@ bancaria con separación automática. Tres cambios en el README, sin tocar contr
   obliga a pagar a SUNAT.
 - El activo del track 03 pasa a ser el recibo por honorarios, en el papel de la factura del
   ejemplo del track, en vez de "remesa".
+
+## 2026-09-25 · El párrafo "Por qué en la cadena" deja de abrir con la cuenta aparte
+
+En la ronda final del jurado simulado, tres jueces citaron la primera frase del párrafo ("separar
+el impuesto también se hace con una cuenta aparte") para bajar "Stellar es core". Se quita esa
+frase del inicio. La comparación con Found, Lili y Qapital sigue en "Qué de esto ya existe".
