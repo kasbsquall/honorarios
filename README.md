@@ -28,6 +28,10 @@ El freelancer emite su recibo en la app y le manda el link a su cliente. Cuando 
 
 Los links de cobro con cripto ya existen. Lo que agrega Honorarios es lo que pasa dentro del cobro: la reserva del 8%, el recibo registrado y el umbral de SUNAT.
 
+**Por qué en la cadena y no en una cuenta aparte.** Separar el impuesto al cobrar también se hace con una cuenta aparte en un banco o una fintech (ver [Qué de esto ya existe](#qué-de-esto-ya-existe)). Aquí la separación la hace el propio pago: el cliente del exterior paga en USDC desde su wallet de Stellar, sin cuenta en un banco peruano, y el contrato aparta el 8% en esa misma transacción, antes de que el dinero llegue a la wallet del freelancer. El recibo que se cobra también está en la cadena: su monto lo fijó el freelancer al firmarlo, el cliente lo ve antes de pagar y se paga una sola vez. La reserva no depende de confiar en nosotros: solo el titular la puede mover, y el código desplegado se puede comparar byte a byte con el de este repositorio ([cómo](#verifica-que-el-contrato-desplegado-es-este-código)).
+
+Lo que el contrato no hace es obligar al freelancer a pagarle a SUNAT: la reserva es suya y la puede retirar cuando quiera. Bloquearla hasta el vencimiento es posible, pero dejaría el dinero de terceros retenido por un servicio, con las consecuencias regulatorias que se explican en [Lo que este proyecto no ha resuelto](#lo-que-este-proyecto-no-ha-resuelto).
+
 ## Cómo se ve
 
 Capturas del dominio público tomadas en un recorrido de prueba en producción el 24 de septiembre. Los tiempos medidos de cada paso están en [docs/demo-en-vivo.md](docs/demo-en-vivo.md).
@@ -75,7 +79,7 @@ Corrida del 24 de septiembre, 5 USDC (el ancla de pruebas acepta de 1 a 10 por r
 
 ## Controles de cumplimiento (track 03)
 
-El track pide activos reales con controles legales. Aquí el activo es el cobro que llega del exterior, lo que el track llama remesa, y su respaldo es el recibo por honorarios, que vive en el contrato con su estado: emitido por el freelancer y pagado una sola vez. El control legal es el pago a cuenta de cuarta categoría. Cada fila dice dónde se hace cumplir; si la regla vive en el contrato, la aplica la red y nadie la puede saltar desde la app.
+El track pide activos reales con controles legales y pone las facturas como ejemplo. Aquí el activo es el recibo por honorarios, el comprobante con el que un freelancer cobra, que cumple ese mismo papel. Vive en el contrato con su estado: lo emite y firma el freelancer con un monto fijo, y se paga una sola vez con el dinero que llega del exterior. El control legal es el pago a cuenta de cuarta categoría. Cada fila dice dónde se hace cumplir; si la regla vive en el contrato, la aplica la red y nadie la puede saltar desde la app.
 
 | Control | Cómo se cumple | Dónde |
 |---|---|---|
@@ -113,6 +117,20 @@ cd web
 node scripts/seed-demo.mjs    # recibos, cobros y un retiro válidos
 node scripts/rejections.mjs   # los cinco ataques; imprime hash, estado y error de cada uno
 ```
+
+## Verifica que el contrato desplegado es este código
+
+El contrato no tiene administrador ni función de actualización: no hay ninguna en [`lib.rs`](contracts/split/src/lib.rs). Para comprobar que lo desplegado en testnet es ese mismo código, compila el repositorio y compara el resultado con el WASM que guarda la red:
+
+```sh
+git clone https://github.com/kasbsquall/honorarios && cd honorarios
+stellar contract build
+sha256sum target/wasm32v1-none/release/split.wasm
+stellar contract fetch --id CAWIYCJAOXFIL5XHIIXK34XOSLSFTLUU5LP6JEL65QECGZM5WATUXDDF --network testnet -o desplegado.wasm
+sha256sum desplegado.wasm
+```
+
+Los dos dan `14602007fd438ffbbb144962cb37c6a03bb576e16cb336219c450a603c7853df`. Lo comprobamos el 25 de septiembre desde un clon limpio, con rustc 1.97.1 y stellar-cli 28.0.0; otra versión del compilador puede producir bytes distintos a partir del mismo código.
 
 ## Evidencia on-chain (testnet)
 

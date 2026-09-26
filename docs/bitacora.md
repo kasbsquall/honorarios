@@ -840,3 +840,17 @@ ocurre en septiembre. El jurado ve el formulario, el README, el video y la app p
 `docs/demo-en-vivo.md` queda como registro del ensayo en producción (tiempos y capturas), sin uso
 para una presentación. El aviso de que el panel de ejemplo sale vacío desde el 1 de octubre deja
 de ser urgente mientras la revisión termine en septiembre.
+
+## 2026-09-25 · El README prueba el WASM desplegado y responde a la subcuenta bancaria
+
+Dos horas antes del cierre, un jurado simulado repitió dos críticas: que "sin administrador ni
+función de actualización" estaba afirmado sin prueba, y que la reserva se parece a una subcuenta
+bancaria con separación automática. Tres cambios en el README, sin tocar contrato, app ni video:
+
+- Sección "Verifica que el contrato desplegado es este código". Un clon limpio de `main` compilado
+  con rustc 1.97.1 y stellar-cli 28.0.0 da el mismo sha256 que el WASM de `CAWIYCJA…XDDF` bajado
+  con `stellar contract fetch`: `14602007…7853df`.
+- Párrafo "Por qué en la cadena y no en una cuenta aparte", que también admite que el contrato no
+  obliga a pagar a SUNAT.
+- El activo del track 03 pasa a ser el recibo por honorarios, en el papel de la factura del
+  ejemplo del track, en vez de "remesa".
